@@ -3,20 +3,26 @@ package com.example.HealthPower.service;
 import com.example.HealthPower.dto.JoinDTO;
 import com.example.HealthPower.entity.UserEntity;
 import com.example.HealthPower.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Date;
 
 @Service
+@RequiredArgsConstructor
 public class JoinService {
 
-    private PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    public JoinService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    //bCryptPasswordEncoder = null로 인해 @Autowired 추가
+    @Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public void join(JoinDTO joinDTO) {
 
@@ -26,9 +32,9 @@ public class JoinService {
 
         String nickname = joinDTO.getNickname();
 
-        String password = joinDTO.getPassword();
+        //String password = joinDTO.getPassword();
 
-        String encodedPasswrod = passwordEncoder.encode(joinDTO.getPassword());
+        String password = bCryptPasswordEncoder.encode(joinDTO.getPassword());
 
         String phoneNumber = joinDTO.getPhoneNumber();
 
@@ -38,11 +44,13 @@ public class JoinService {
 
         String photo = joinDTO.getPhoto();
 
-        String role = joinDTO.getRole();
+        Collection<GrantedAuthority> authorities = joinDTO.getAuthorities();
 
-        LocalDateTime createdAt = joinDTO.getCreatedAt();
+        LocalDateTime createdAt = LocalDateTime.now();
 
-        UserEntity userEntity = joinDTO.toEntity(encodedPasswrod);
+        System.out.println(createdAt);
+
+        UserEntity userEntity = joinDTO.toEntity();
 
         userRepository.save(userEntity);
 

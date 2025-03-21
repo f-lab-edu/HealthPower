@@ -17,6 +17,9 @@ public class JoinController {
 
     @PostMapping("/join")
     public String join(JoinDTO joinDTO) {
+
+        joinService.join(joinDTO);
+
         return "join";
     }
 }

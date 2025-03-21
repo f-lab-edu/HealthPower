@@ -4,8 +4,10 @@ import com.example.HealthPower.entity.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.apache.catalina.User;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Getter
 @AllArgsConstructor
@@ -29,11 +31,11 @@ public class JoinDTO {
 
     private String photo;
 
-    private String role;
+    private Collection<GrantedAuthority> authorities;
 
     private LocalDateTime createdAt;
 
-    public UserEntity toEntity(String password) {
+    public UserEntity toEntity() {
         return UserEntity.builder()
                 .userId(userId)
                 .email(email)
@@ -44,7 +46,7 @@ public class JoinDTO {
                 .address(address)
                 .birth(birth)
                 .photo(photo)
-                .role(role)
+                .authorities(authorities)
                 .createdAt(createdAt)
                 .build();
     }

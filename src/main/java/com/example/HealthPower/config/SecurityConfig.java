@@ -2,6 +2,7 @@ package com.example.HealthPower.config;
 
 import com.example.HealthPower.handler.CustomAuthFailureHandler;
 import com.example.HealthPower.handler.CustomAuthSuccessHandler;
+//import com.example.HealthPower.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.stereotype.Controller;
 
@@ -18,15 +21,17 @@ import org.springframework.stereotype.Controller;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    //private final JwtTokenProvider jwtTokenProvider;
+
     private final CustomAuthSuccessHandler authSuccessHandler;
     private final CustomAuthFailureHandler authFailureHandler;
 
     private static final String[] AUTH_WHITELIST = {
-            "/", "/login", "/signup"
+            "/", "/login", "/join"
     };
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         //csrf, cors, basichttp 비활성화
         http
@@ -42,13 +47,17 @@ public class SecurityConfig {
         //ForLogin, Logout 활성화
         http
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .successHandler(authSuccessHandler)
-                        .failureHandler(authFailureHandler)
+                                .loginPage("/login")
+                                .usernameParameter("userId")
+                                .passwordParameter("password")
+                                .failureUrl("/login?failed")
+                                .loginProcessingUrl("/login/process")
+                        /*.successHandler(authSuccessHandler)
+                        .failureHandler(authFailureHandler)*/
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/api/v1/auth/logout")
-                        .logoutSuccessUrl("/login")
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/")
                 );
         // permit, authenticated 경로 설정
         http
@@ -61,6 +70,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    //BcryptPasswordEncoder는 위의 PasswordEncoder의 구현 클래스이며, Bcrypt 해시 함수를 사용해 비밀번호를 암호화한다.
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
