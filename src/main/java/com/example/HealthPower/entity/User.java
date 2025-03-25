@@ -1,27 +1,26 @@
 package com.example.HealthPower.entity;
 
+import com.example.HealthPower.userType.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 
 @Entity
+@Table(name = "user")
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserEntity implements UserDetails {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private int id;
+    @Column(name = "id")
+    private Long id;
 
     @Column(name = "userId", unique = true, nullable = false)
     private String userId;
@@ -29,11 +28,11 @@ public class UserEntity implements UserDetails {
     @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "username", nullable = false)
+    private String username;
 
-    @Column(name = "nickName", unique = true, nullable = false)
-    private String nickName;
+    @Column(name = "nickname", unique = true, nullable = false)
+    private String nickname;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -59,6 +58,10 @@ public class UserEntity implements UserDetails {
 
     @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
+
+    //Ordinal을 사용 X
+    @Enumerated(EnumType.STRING)
+    private Role Role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

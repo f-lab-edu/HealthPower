@@ -1,6 +1,6 @@
 package com.example.HealthPower.impl;
 
-import com.example.HealthPower.entity.UserEntity;
+import com.example.HealthPower.entity.User;
 import com.example.HealthPower.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,9 +17,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        UserEntity userEntity = userRepository.findByUserId(username).orElseThrow(() -> new
+        User user = userRepository.findByUserId(username).orElseThrow(() -> new
                 UsernameNotFoundException("일치하는 아이디가 없습니다."));
 
-        return userEntity;
+        return user;
     }
 }

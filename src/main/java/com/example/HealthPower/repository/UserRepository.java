@@ -1,16 +1,19 @@
 package com.example.HealthPower.repository;
 
-import com.example.HealthPower.entity.UserEntity;
+import com.example.HealthPower.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.math.BigInteger;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<UserEntity, BigInteger> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<UserEntity> findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
-    Optional<UserEntity> findByUserId(String userId);
+    Optional<User> findByUserId(String userId);
+
+    //boolean existsByUsername(String name);
+
+    boolean existsByUserId(String username);
 
 
 }

@@ -1,9 +1,11 @@
 package com.example.HealthPower.dto;
 
-import com.example.HealthPower.entity.UserEntity;
+import com.example.HealthPower.entity.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.catalina.User;
+import org.hibernate.annotations.processing.Pattern;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDateTime;
@@ -17,11 +19,17 @@ public class JoinDTO {
 
     private String email;
 
-    private String name;
+    private String username;
 
     private String nickname;
 
+    @NotBlank(message="비밀번호는 필수 입력 값입니다.")
+    @JsonProperty("password")
     private String password;
+
+    @NotBlank(message="비밀번호는 필수 입력 값입니다.")
+    @JsonProperty("passwordCheck")
+    private String passwordCheck;
 
     private String phoneNumber;
 
@@ -35,12 +43,12 @@ public class JoinDTO {
 
     private LocalDateTime createdAt;
 
-    public UserEntity toEntity() {
-        return UserEntity.builder()
+    public User toEntity() {
+        return User.builder()
                 .userId(userId)
                 .email(email)
-                .name(name)
-                .nickName(nickname)
+                .username(username)
+                .nickname(nickname)
                 .password(password)
                 .phoneNumber(phoneNumber)
                 .address(address)

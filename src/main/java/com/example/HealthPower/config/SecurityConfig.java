@@ -27,7 +27,7 @@ public class SecurityConfig {
     private final CustomAuthFailureHandler authFailureHandler;
 
     private static final String[] AUTH_WHITELIST = {
-            "/", "/login", "/join"
+            "/", "/login", "/join", "/h2-console/**"
     };
 
     @Bean
@@ -44,26 +44,12 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
 
-        //ForLogin, Logout 활성화
-        http
-                .formLogin(form -> form
-                                .loginPage("/login")
-                                .usernameParameter("userId")
-                                .passwordParameter("password")
-                                .failureUrl("/login?failed")
-                                .loginProcessingUrl("/login/process")
-                        /*.successHandler(authSuccessHandler)
-                        .failureHandler(authFailureHandler)*/
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
-                );
         // permit, authenticated 경로 설정
         http
                 .authorizeHttpRequests(authorize -> authorize
                         // 지정한 경로는 인증 없이 접근 허용
-                        .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers(AUTH_WHITELIST)
+                        .permitAll()
                         //나머지 모든 경로는 인증 필요
                         .anyRequest().authenticated());
 

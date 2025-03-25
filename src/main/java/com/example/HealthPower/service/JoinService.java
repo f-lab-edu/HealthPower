@@ -1,18 +1,17 @@
 package com.example.HealthPower.service;
 
 import com.example.HealthPower.dto.JoinDTO;
-import com.example.HealthPower.entity.UserEntity;
+import com.example.HealthPower.entity.User;
 import com.example.HealthPower.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,35 +25,58 @@ public class JoinService {
 
     public void join(JoinDTO joinDTO) {
 
-        String email = joinDTO.getEmail();
+        try {
 
-        String name = joinDTO.getName();
+            if (!joinDTO.getPassword().equals(joinDTO.getPasswordCheck())) {
+                System.out.println("비밀번호 불일치");
+                return;
+            }
+            //String userId = joinDTO.getUserId();
 
-        String nickname = joinDTO.getNickname();
+            String email = joinDTO.getEmail();
 
-        //String password = joinDTO.getPassword();
+            String userId = joinDTO.getUsername();
 
-        String password = bCryptPasswordEncoder.encode(joinDTO.getPassword());
+            boolean isUserId = userRepository.existsByUserId(userId);
+            if (isUserId) {
+                System.out.println("exist userId");
+                return;
+            }
 
-        String phoneNumber = joinDTO.getPhoneNumber();
+            String nickname = joinDTO.getNickname();
 
-        String address = joinDTO.getAddress();
+            String password = bCryptPasswordEncoder.encode(joinDTO.getPassword());
 
-        String birth = joinDTO.getBirth();
+            String phoneNumber = joinDTO.getPhoneNumber();
 
-        String photo = joinDTO.getPhoto();
+            String address = joinDTO.getAddress();
 
-        Collection<GrantedAuthority> authorities = joinDTO.getAuthorities();
+            String birth = joinDTO.getBirth();
 
-        LocalDateTime createdAt = LocalDateTime.now();
+            String photo = joinDTO.getPhoto();
 
-        System.out.println(createdAt);
+            Collection<GrantedAuthority> authorities = joinDTO.getAuthorities();
 
-        UserEntity userEntity = joinDTO.toEntity();
+            LocalDateTime createdAt = LocalDateTime.now();
 
-        userRepository.save(userEntity);
+            User user = joinDTO.toEntity();
 
-        System.out.println("save success in service");
+            System.out.println(user.getUserId() + ", " + user.getNickname() + ", " + user.getEmail());
 
+            userRepository.save(user);
+
+
+        } catch (Exception e) {
+            System.out.println("이미 존재하는 사용자입니다." + joinDTO.getUserId());
+            throw new RuntimeException("이미 존재하는 사용자 " + joinDTO.getUserId());
+        }
+
+    }
+
+    private void validateDuplicateUser(User user) {
+        Optional<User> findUser = userRepository.findByUserId(user.getUserId());
+        if (findUser != null) {
+            throw new IllegalStateException("이미 가입된 회원입니다.");
+        }
     }
 }
