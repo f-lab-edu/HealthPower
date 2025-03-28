@@ -20,6 +20,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByUserId(username).orElseThrow(() -> new
                 UsernameNotFoundException("일치하는 아이디가 없습니다."));
 
-        return user;
+        return (UserDetails) user;
     }
 }

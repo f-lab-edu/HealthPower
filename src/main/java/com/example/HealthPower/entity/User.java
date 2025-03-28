@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Set;
 
 @Entity
 @Table(name = "user")
@@ -15,7 +16,7 @@ import java.util.Collection;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,9 +50,9 @@ public class User implements UserDetails {
     @Column(name = "photo")
     private String photo;
 
-    @Column(name = "authorities")
+    /*@Column(name = "authorities")
     //private String role;
-    private Collection<GrantedAuthority> authorities;	//권한 목록
+    private Collection<GrantedAuthority> authorities;	//권한 목록*/
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
@@ -63,7 +64,17 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role Role;
 
-    @Override
+    @Column(name = "activated")
+    private boolean activated;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_authority",
+            joinColumns = {@JoinColumn(name = "id", referencedColumnName = "id")},
+            inverseJoinColumns = {@JoinColumn(name = "authority_name", referencedColumnName = "authority_name")})
+    private Set<Authority> authorities;
+
+    /*@Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
@@ -76,5 +87,5 @@ public class User implements UserDetails {
     @Override
     public String getPassword() {
         return password;
-    }
+    }*/
 }
