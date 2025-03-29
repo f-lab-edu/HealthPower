@@ -27,10 +27,6 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-    private static final String[] AUTH_WHITELIST = {
-            "/", "/login", "/join", "/h2-console/**", "/test"
-    };
-
     //BcryptPasswordEncoder는 위의 PasswordEncoder의 구현 클래스이며, Bcrypt 해시 함수를 사용해 비밀번호를 암호화한다.
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -42,11 +38,10 @@ public class SecurityConfig {
         // REST API이므로 basic auth 및 csrf 보안을 사용하지 않음
         //csrf, cors, basichttp 비활성화
         http
-                //.csrf(AbstractHttpConfigurer::disable).addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .accessDeniedHandler(jwtAccessDeniedHandler)
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -54,16 +49,16 @@ public class SecurityConfig {
                 // permit, authenticated 경로 설정
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         // 지정한 경로는 인증 없이 접근 허용
-                        .requestMatchers(AUTH_WHITELIST).permitAll()
+                        .requestMatchers("/", "/login", "/join", "/h2-console/**", "/test").permitAll()
                         //나머지 모든 경로는 인증 필요
                         .anyRequest().authenticated()
                 )
         //세션 관리 구성(세션을 사용하지 않기 때문에 STATELESS로 설정)
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                );
 
-                .with(new JwtConfig(jwtTokenProvider), customizer -> {});
+                //.with(new JwtConfig(jwtTokenProvider), customizer -> {});
 
                 //.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 

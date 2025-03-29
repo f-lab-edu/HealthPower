@@ -31,12 +31,7 @@ public class JwtTokenProvider {
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 
-        // keyBytes 값이 제대로 디코딩되었는지 확인
-        System.out.println("Decoded key bytes: " + Arrays.toString(keyBytes));
-
         this.key = Keys.hmacShaKeyFor(keyBytes);
-        // key 값이 정상적으로 설정되었는지 확인
-        System.out.println("Key for signing: " + Arrays.toString(key.getEncoded()));  // key 출력
     }
 
     // User 정보를 가지고 AccessToken, RefreshToken을 생성하는 메서드
@@ -144,6 +139,8 @@ public class JwtTokenProvider {
             log.info("Unsupported JWT Token", e);
         } catch (IllegalArgumentException e) {
             log.info("JWT claims string is empty.", e);
+        } catch (Exception e) {
+            log.info("asdfadsf");
         }
         return false;
     }

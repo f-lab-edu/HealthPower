@@ -1,3 +1,4 @@
+/*
 package com.example.HealthPower.config;
 
 import com.example.HealthPower.jwt.JwtAuthenticationFilter;
@@ -23,3 +24,4 @@ public class JwtConfig extends SecurityConfigurerAdapter<DefaultSecurityFilterCh
     }
 
 }
+*/

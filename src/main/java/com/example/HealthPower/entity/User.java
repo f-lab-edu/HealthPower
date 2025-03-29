@@ -23,7 +23,7 @@ public class User {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "userId", unique = true, nullable = false)
+    @Column(name = "user_id", unique = true, nullable = false)
     private String userId;
 
     @Column(name = "email", unique = true, nullable = false)
@@ -38,7 +38,7 @@ public class User {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "phoneNumber")
+    /*@Column(name = "phoneNumber")
     private String phoneNumber;
 
     @Column(name = "address")
@@ -48,16 +48,16 @@ public class User {
     private String birth;
 
     @Column(name = "photo")
-    private String photo;
+    private String photo;*/
 
     /*@Column(name = "authorities")
-    //private String role;
-    private Collection<GrantedAuthority> authorities;	//권한 목록*/
+    private String role;
+    private Collection<GrantedAuthority> authorities;*/	//권한 목록*/
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
-    @Column(name = "updatedAt")
+    /*@Column(name = "updatedAt")
     private LocalDateTime updatedAt;
 
     //Ordinal을 사용 X
@@ -65,14 +65,14 @@ public class User {
     private Role Role;
 
     @Column(name = "activated")
-    private boolean activated;
+    private boolean activated;*/
 
-    @ManyToMany
+   /* @ManyToMany
     @JoinTable(
             name = "user_authority",
             joinColumns = {@JoinColumn(name = "id", referencedColumnName = "id")},
             inverseJoinColumns = {@JoinColumn(name = "authority_name", referencedColumnName = "authority_name")})
-    private Set<Authority> authorities;
+    private Set<Authority> authorities;*/
 
     /*@Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

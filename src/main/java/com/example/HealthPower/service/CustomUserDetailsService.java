@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     //로그인 시 DB에서 유저정보와 권한정로를 가져옴
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
         return userRepository.findOneWithAuthoritiesByUserId(userId)
-                //.map(this::createUserDetails)
+                .map(this::createUserDetails)
                 .map(user -> createUser(userId, user))
                 .orElseThrow(()->new UsernameNotFoundException(userId + " : 해당 아이디를 가진 회원을 찾을 수 없습니다."));
     }
@@ -42,12 +43,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     private org.springframework.security.core.userdetails.User createUser(String username, User user) {
-        if (!user.isActivated()) {
+        /*if (!user.isActivated()) {
             throw new RuntimeException(username + " -> 활성화되어 있지 않습니다.");
-        }
-        List<GrantedAuthority> grantedAuthorities = user.getAuthorities().stream()
+        }*/
+        List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+                /*user.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthorityName()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
         return new org.springframework.security.core.userdetails.User(user.getUsername(),
                 user.getPassword(),
                 grantedAuthorities);

@@ -1,3 +1,4 @@
+/*
 package com.example.HealthPower.impl;
 
 import com.example.HealthPower.entity.User;
@@ -23,3 +24,4 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return (UserDetails) user;
     }
 }
+*/

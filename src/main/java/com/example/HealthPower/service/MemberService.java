@@ -9,6 +9,7 @@ import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MemberService {
 
     private final UserRepository userRepository;
@@ -43,15 +45,20 @@ public class MemberService {
                 .build();
 
         User user = User.builder()
+                .username(joinDTO.getUsername())
                 .userId(joinDTO.getUserId())
                 .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
                 .email(joinDTO.getEmail())
                 .nickname(joinDTO.getNickname())
-                .activated(true)
-                .authorities(Collections.singleton(authority))
+                /*.activated(true)*/
+                /*.authorities(Collections.singleton(authority))*/
                 .build();
 
-        return JoinDTO.from(userRepository.save(user));
+        User save = userRepository.save(user);
+
+        System.out.println(save);
+
+        return JoinDTO.from(save);
     }
 
     @Transactional(readOnly = true)
@@ -130,11 +137,18 @@ public class MemberService {
 
         // 2. 실제 검증. authenticate() 메서드를 통해 요청된 Member에 대한 검증 진행
         // authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        try {
+            // 3. 인증 정보를 기반으로 JWT 토큰 생성
+            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            JwtToken jwtToken = jwtTokenProvider.generateToken(authentication);
+            return jwtToken;
+        } catch (Exception e) {
+            log.error("에러발생{}", e.getMessage());
+            e.printStackTrace();
+        }
 
-        // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        JwtToken jwtToken = jwtTokenProvider.generateToken(authentication);
+        return null;
 
-        return jwtToken;
+
     }
 }

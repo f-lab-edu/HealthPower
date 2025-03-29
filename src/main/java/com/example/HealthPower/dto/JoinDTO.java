@@ -2,6 +2,7 @@ package com.example.HealthPower.dto;
 
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.util.SecurityUtil;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.processing.Pattern;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-//회원가입 시 사용할 DTO
+//회원가입 시 사용할 DTO = signUpDTO
 public class JoinDTO {
 
     private String userId;
@@ -64,15 +66,15 @@ public class JoinDTO {
                 .username(user.getUsername())
                 .nickname(user.getNickname())
                 .password(user.getPassword())
-                .phoneNumber(user.getPhoneNumber())
+/*                .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .birth(user.getBirth())
-                .photo(user.getPhoto())
-                .createdAt(user.getCreatedAt())
-                .authorityDtoSet(user.getAuthorities().stream()
+                .photo(user.getPhoto())*/
+                /*.createdAt(user.getCreatedAt())*/
+                /*.authorityDtoSet(user.getAuthorities().stream()
                         .map(authority -> AuthorityDTO.builder()
                                 .authorityName(authority.getAuthorityName()).build())
-                        .collect(Collectors.toSet()))
+                        .collect(Collectors.toSet()))*/
                 .build();
     }
 }

@@ -18,10 +18,15 @@ public class JoinController {
     private final MemberService memberService;
 
     @PostMapping("/join")
-    public String join(JoinDTO joinDTO, Model model) {
+    //@RequestBody를 통해 joinDTO에 바인딩
+    public String join(@RequestBody JoinDTO joinDTO, Model model) {
 
+        //null 확인
         try {
             memberService.join(joinDTO);
+            System.out.println(joinDTO.getUserId());
+            System.out.println(joinDTO.getUsername());
+            System.out.println(joinDTO.getNickname());
             return "home";
         } catch (RuntimeException e) {
             model.addAttribute("error", e.getMessage());
