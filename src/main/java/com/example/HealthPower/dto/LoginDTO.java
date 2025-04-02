@@ -18,4 +18,6 @@ public class LoginDTO {
 
     @NotNull
     private String password;
+
+    private boolean activated;
 }

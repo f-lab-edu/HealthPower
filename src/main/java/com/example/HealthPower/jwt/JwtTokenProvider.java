@@ -102,9 +102,14 @@ public class JwtTokenProvider {
         //Jwt 토큰 복호화
         Claims claims = parseClaims(accessToken);
 
+        Object authClaim = claims.get("auth");
+        System.out.println("first_auth claim: " + authClaim);
+
         if (claims.get("auth") == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
+
+        System.out.println("second_auth claim: " + authClaim);
 
         // 클레임에서 권한 정보 가져오기
         Collection<? extends GrantedAuthority> authorities =

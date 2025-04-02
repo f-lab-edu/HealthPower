@@ -2,11 +2,10 @@ package com.example.HealthPower.dto;
 
 import lombok.*;
 
-@Getter
-@Setter
-@Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthorityDTO {
-    private String authorityName;
+    private String userId;
+    private String authority;
 }

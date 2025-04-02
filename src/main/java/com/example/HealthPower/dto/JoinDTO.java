@@ -1,6 +1,7 @@
 package com.example.HealthPower.dto;
 
 import com.example.HealthPower.entity.User;
+import com.example.HealthPower.userType.Role;
 import com.example.HealthPower.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -55,7 +56,9 @@ public class JoinDTO {
 
     private LocalDateTime createdAt;
 
-    private Set<AuthorityDTO> authorityDtoSet;
+    private boolean activated;
+
+    private Role role;
 
     public static JoinDTO from(User user) {
         if (user == null) return null;
@@ -66,15 +69,14 @@ public class JoinDTO {
                 .username(user.getUsername())
                 .nickname(user.getNickname())
                 .password(user.getPassword())
+                .activated(user.isActivated())
+                .role(Role.USER)
 /*                .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
                 .birth(user.getBirth())
                 .photo(user.getPhoto())*/
                 /*.createdAt(user.getCreatedAt())*/
-                /*.authorityDtoSet(user.getAuthorities().stream()
-                        .map(authority -> AuthorityDTO.builder()
-                                .authorityName(authority.getAuthorityName()).build())
-                        .collect(Collectors.toSet()))*/
+                /*.authorities(authorities)*/
                 .build();
     }
 }

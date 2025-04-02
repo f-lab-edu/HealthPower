@@ -4,10 +4,12 @@ import com.example.HealthPower.userType.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 @Entity
@@ -16,7 +18,7 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User implements UserDetails{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,22 +52,24 @@ public class User {
     @Column(name = "photo")
     private String photo;*/
 
-    /*@Column(name = "authorities")
-    private String role;
-    private Collection<GrantedAuthority> authorities;*/	//권한 목록*/
+    @Column(name = "authorities")
+    //private String role;
+    private Collection<GrantedAuthority> authorities;
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
     /*@Column(name = "updatedAt")
     private LocalDateTime updatedAt;
+    */
 
     //Ordinal을 사용 X
     @Enumerated(EnumType.STRING)
-    private Role Role;
+    @Column(name = "role")
+    private Role role;
 
     @Column(name = "activated")
-    private boolean activated;*/
+    private boolean activated;
 
    /* @ManyToMany
     @JoinTable(
@@ -74,18 +78,9 @@ public class User {
             inverseJoinColumns = {@JoinColumn(name = "authority_name", referencedColumnName = "authority_name")})
     private Set<Authority> authorities;*/
 
-    /*@Override
+    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
 
-    @Override
-    public String getUsername() {
-        return userId;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }*/
 }
