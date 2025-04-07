@@ -63,7 +63,9 @@ public class JwtTokenProvider {
 
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim("auth", authorities)
+                //.claim("auth", authorities)
+                //테스트용
+                .claim("auth", "test_admin")
                 .signWith(key, SignatureAlgorithm.HS256) //key 값이 서버에서 검증하는 key 값과 동일해야 함.
                 .setExpiration(accessTokenExpiresln)
                 .compact();

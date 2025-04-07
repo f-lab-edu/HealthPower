@@ -47,11 +47,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     private org.springframework.security.core.userdetails.User createUser(String userId, User user) {
+
         if (!user.isActivated()) {
             throw new RuntimeException(userId + " -> 활성화되어 있지 않습니다.");
         }
+
+        System.out.println("=============");
+        System.out.println(user);
+        System.out.println(user.getAuthorities());
+        System.out.println("=============");
+
+
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
-                user.getAuthorities().stream()
+                user.getAuthorities().stream()//이부분에서 예외가 터짐
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
                 .collect(Collectors.toList());
         return new org.springframework.security.core.userdetails.User(user.getUsername(),

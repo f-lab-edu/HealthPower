@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 @Entity
 @Table(name = "user")
@@ -79,8 +78,13 @@ public class User implements UserDetails{
     private Set<Authority> authorities;*/
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+    //public Collection<? extends GrantedAuthority> getAuthorities() {
+    //JoinDTO getAuthorities() 오류로 타입 변경??
+    public Collection<GrantedAuthority> getAuthorities() {
+        if (role != null) {
+            return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
+        }
+        return Collections.emptyList(); // role이 null일 경우 빈 리스트 반환
     }
 
 }

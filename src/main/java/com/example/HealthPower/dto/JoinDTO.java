@@ -76,7 +76,7 @@ public class JoinDTO {
                 .birth(user.getBirth())
                 .photo(user.getPhoto())*/
                 /*.createdAt(user.getCreatedAt())*/
-                /*.authorities(authorities)*/
+                .authorities(user.getAuthorities())
                 .build();
     }
 }

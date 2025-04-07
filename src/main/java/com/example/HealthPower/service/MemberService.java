@@ -64,7 +64,7 @@ public class MemberService {
                 .nickname(joinDTO.getNickname())
                 .activated(true)
                 .role(joinDTO.getRole())
-                /*.authorities(Collections.singleton(authority)*/
+                .authorities(joinDTO.getAuthorities())
                 .build();
 
         User save = userRepository.save(user);
@@ -119,10 +119,6 @@ public class MemberService {
     public JwtToken login(UserDTO userDTO, String userId, String password) {
 
         Optional<User> findUserId = userRepository.findByUserId(userId);
-
-        System.out.println("==========");
-        System.out.println(findUserId.get().getPassword());
-        System.out.println("==========");
 
         if (findUserId.isEmpty()) {
             System.out.println("존재하지 않는 사용자입니다.");
