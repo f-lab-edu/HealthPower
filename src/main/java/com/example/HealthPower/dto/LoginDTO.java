@@ -13,6 +13,8 @@ import lombok.ToString;
 //controller에서 요청을 보내기 위해 사용할 LoginDto를 작성한다.
 public class LoginDTO {
 
+    private Long id;
+
     @NotNull
     private String userId;
 

@@ -1,9 +1,7 @@
 package com.example.HealthPower.controller;
 
 import com.example.HealthPower.dto.RefreshTokenDTO;
-import com.example.HealthPower.service.MemberService;
 import com.example.HealthPower.service.RefreshTokenService;
-import com.example.HealthPower.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -1,8 +1,10 @@
 package com.example.HealthPower.dto;
 
+import com.example.HealthPower.userType.Gender;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -11,13 +13,22 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+/* 회원정보 */
 public class UserDTO {
+
+    private Long id;
+
+    private String photo;
 
     private String userId;
 
     private String email;
 
     private String password;
+
+    private Gender gender;
+
+    private LocalDate birth;
 
     private Collection<GrantedAuthority> authorities;
 

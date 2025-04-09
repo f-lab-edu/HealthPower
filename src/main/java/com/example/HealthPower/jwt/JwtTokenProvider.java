@@ -1,5 +1,9 @@
 package com.example.HealthPower.jwt;
 
+import com.example.HealthPower.dto.JoinDTO;
+import com.example.HealthPower.dto.UserDTO;
+import com.example.HealthPower.impl.UserDetailsImpl;
+import com.example.HealthPower.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -17,6 +21,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,8 +32,11 @@ public class JwtTokenProvider {
 
     private final Key key;
 
+    private final UserRepository userRepository;
+
     // application.yml(properties)에서 secret 값 가져와서 key에 저장
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey, UserRepository userRepository) {
+        this.userRepository = userRepository;
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
 
         this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -40,7 +48,7 @@ public class JwtTokenProvider {
     // 토큰의 Claims에서 권한 정보를 추출하고, User 객체를 생성하여 Authentication 객체로 반환
     // Collection<? extends GrantedAuthority>로 리턴받는 이유
     // 권한 정보를 다양한 타입의 객체로 처리할 수 있고, 더 큰 유연성과 확장성을 가질 수 있음
-    public JwtToken generateToken(Authentication authentication) {
+    public JwtToken generateToken(Authentication authentication, UserDTO userDTO) {
 
         System.out.println("generateToken method called");
         if (authentication == null) {
@@ -61,11 +69,14 @@ public class JwtTokenProvider {
 
         System.out.println("Key used to sign the token: " + Arrays.toString(key.getEncoded()));  // key 출력
 
+        //accessToken을 통해 jwt토큰을 복호화하기 때문에 여기서 내가 원하는 정보를 설정
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 //.claim("auth", authorities)
                 //테스트용
                 .claim("auth", "test_admin")
+                .claim("userId", userDTO.getUserId())
+                .claim("id", userDTO.getId())
                 .signWith(key, SignatureAlgorithm.HS256) //key 값이 서버에서 검증하는 key 값과 동일해야 함.
                 .setExpiration(accessTokenExpiresln)
                 .compact();
@@ -76,6 +87,7 @@ public class JwtTokenProvider {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
+        //id설정을 어떻게 해줘야하지?
         return JwtToken.builder()
                 .grantType("Bearer")
                 .accessToken(accessToken)
@@ -88,12 +100,16 @@ public class JwtTokenProvider {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
+        String jti = UUID.randomUUID().toString(); // 고유한 JWT ID 생성
+
         long now = (new Date()).getTime();
         Date validity = new Date(now + 86400000);
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim("auth", authorities)
+                .claim("jti", jti)
+                .claim("userId",authentication.getPrincipal()) //마이페이지를 위해 추가
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();
@@ -105,23 +121,33 @@ public class JwtTokenProvider {
         Claims claims = parseClaims(accessToken);
 
         Object authClaim = claims.get("auth");
-        System.out.println("first_auth claim: " + authClaim);
+        String userId = (String)claims.get("userId");
+        System.out.println("first_auth claim: " + authClaim + ", userId : " + userId);
 
         if (claims.get("auth") == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
 
-        System.out.println("second_auth claim: " + authClaim);
+        if (claims.get("userId") == null) {
+            throw new RuntimeException("유저 id 정보가 없습니다.");
+        }
+
+        System.out.println("second_auth claim: " + authClaim + ", userId : " + userId);
 
         // 클레임에서 권한 정보 가져오기
-        Collection<? extends GrantedAuthority> authorities =
+        //Collection<? extends GrantedAuthority> authorities =
+        Collection<GrantedAuthority> authorities =
                 Arrays.stream(claims.get("auth").toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-        //UserDetails 객체를 만들어서 Authentication return
+
+        //UserDetails 객체를 만들어서 Authentication 반환
         //UserDetails: interface, User: UserDetails를 구현한 class
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
+
+        //UserDetails principal = new User(claims.getSubject(), "", authorities);
+
+        UserDetails principal = new UserDetailsImpl(claims.getSubject(), "", authorities, userId); // userId 추가
         //return new UsernamePasswordAuthenticationToken(principal, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
     }

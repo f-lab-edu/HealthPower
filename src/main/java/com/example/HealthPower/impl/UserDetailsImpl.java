@@ -1,15 +1,11 @@
 package com.example.HealthPower.impl;
 
 import com.example.HealthPower.entity.User;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.List;
 
 
 @Getter
@@ -19,8 +15,20 @@ public class UserDetailsImpl implements UserDetails {
 
     private final User user;
 
+    // 기존 생성자 (User 객체만 받는 경우)
     public UserDetailsImpl(User user) {
         this.user = user;
+        this.userId = user.getUserId();  // User 객체에서 userId를 추출
+        this.authorities = user.getAuthorities();  // User 객체에서 권한을 추출
+    }
+
+    // userId와 authorities를 받는 생성자 추가
+    public UserDetailsImpl(String subject, String id, Collection<GrantedAuthority> authorities, String userId) {
+        this.user = null;  // 실제 User 객체를 저장하지 않음
+        this.username = subject;
+        this.userId = userId;  // 외부에서 전달된 userId 설정
+        this.authorities = authorities; // 외부에서 전달된 권한 설정
+        this.id = id;
     }
 
     //임의로 설정
@@ -28,7 +36,8 @@ public class UserDetailsImpl implements UserDetails {
 
     private String id;	// DB에서 PK 값
     private String userId;		// 로그인용 ID 값
-    private String password;	// 비밀번호
+    private String password;    // 비밀번호
+    private String username; // 유저 이름
     private String nickname;	//닉네임
     private String email;	//이메일
     private boolean emailVerified;	//이메일 인증 여부
@@ -49,8 +58,11 @@ public class UserDetailsImpl implements UserDetails {
 
     //pk값
     @Override
-    public String getUsername() {
+    /*public String getUsername() {
         return id;
+    }*/
+    public String getUsername() {
+        return userId;
     }
 
     //계정의 만료 여부 리턴

@@ -1,34 +1,25 @@
 package com.example.HealthPower.service;
 
 import com.example.HealthPower.dto.JoinDTO;
-import com.example.HealthPower.dto.RefreshTokenDTO;
 import com.example.HealthPower.dto.UserDTO;
 /*import com.example.HealthPower.entity.Authority;*/
-import com.example.HealthPower.entity.RefreshToken;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.DuplicateMemberException;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
-import com.example.HealthPower.userType.Role;
 import com.example.HealthPower.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Collections;
 import java.util.Optional;
 
 @Service
@@ -45,16 +36,13 @@ public class MemberService {
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    /* 회원가입 */
     @Transactional
     public JoinDTO join(JoinDTO joinDTO) {
         if (userRepository.findByUserId(joinDTO.getUserId()).orElse(null) != null) {
             log.info("이미 가입되어 있는 아이디");
             throw new DuplicateMemberException("이미 가입되어 있는 아이디입니다.");
         }
-
-        /*Authority authority = Authority.builder()
-                .authorityName(Role.USER)
-                .build();*/
 
         User user = User.builder()
                 .username(joinDTO.getUsername())
@@ -64,7 +52,10 @@ public class MemberService {
                 .nickname(joinDTO.getNickname())
                 .activated(true)
                 .role(joinDTO.getRole())
-                .authorities(joinDTO.getAuthorities())
+                .birth(joinDTO.getBirth())
+                .gender(joinDTO.getGender())
+                .createdAt(joinDTO.getCreatedAt())
+                .authorities(joinDTO.getAuthorities()) //당연히 null값이 올 수 밖에 없음.
                 .build();
 
         User save = userRepository.save(user);
@@ -140,7 +131,7 @@ public class MemberService {
         try {
             // 3. 인증 정보를 기반으로 JWT 토큰 생성
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-            JwtToken jwtToken = jwtTokenProvider.generateToken(authentication);
+            JwtToken jwtToken = jwtTokenProvider.generateToken(authentication, userDTO);
             return jwtToken;
         } catch (Exception e) {
             log.error("에러발생{}", e.getMessage());
@@ -149,6 +140,11 @@ public class MemberService {
 
         return null;
 
+    }
+
+    /* 마이페이지 (회원 상세 조회) */
+    public Optional<User> myInfo(String userId) {
+        return userRepository.findByUserId(userId);
     }
 
     //회원 탈퇴

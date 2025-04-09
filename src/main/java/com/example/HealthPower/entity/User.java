@@ -1,5 +1,6 @@
 package com.example.HealthPower.entity;
 
+import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,14 +47,17 @@ public class User implements UserDetails{
     @Column(name = "address")
     private String address;
 
-    @Column(name = "birth")
-    private String birth;
-
     @Column(name = "photo")
     private String photo;*/
 
+    @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    @Column(name = "birth")
+    private LocalDate birth;
+
     @Column(name = "authorities")
-    //private String role;
     private Collection<GrantedAuthority> authorities;
 
     @Column(name = "createdAt")

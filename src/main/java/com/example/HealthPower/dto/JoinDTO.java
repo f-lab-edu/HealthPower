@@ -1,6 +1,7 @@
 package com.example.HealthPower.dto;
 
 import com.example.HealthPower.entity.User;
+import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import com.example.HealthPower.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -15,7 +16,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -48,7 +51,9 @@ public class JoinDTO {
 
     private String address;
 
-    private String birth;
+    private LocalDate birth;
+
+    private Gender gender;
 
     private String photo;
 
@@ -63,6 +68,15 @@ public class JoinDTO {
     public static JoinDTO from(User user) {
         if (user == null) return null;
 
+        // LocalDateTime 객체 생성
+        LocalDateTime localDateTime = LocalDateTime.now();
+
+        // 날짜와 시간 포맷 정의 (yyyy-MM-dd HH:mm:ss 형식)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // LocalDateTime을 String으로 변환
+        String formattedDate = localDateTime.format(formatter);
+
         return JoinDTO.builder()
                 .userId(user.getUserId())
                 .email(user.getEmail())
@@ -70,15 +84,17 @@ public class JoinDTO {
                 .nickname(user.getNickname())
                 .password(user.getPassword())
                 .activated(user.isActivated())
-                .role(Role.USER)
-/*                .phoneNumber(user.getPhoneNumber())
+                .role(user.getRole())
+                .gender(user.getGender())
+/*              .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
-                .birth(user.getBirth())
                 .photo(user.getPhoto())*/
-                /*.createdAt(user.getCreatedAt())*/
+                .birth(user.getBirth())
+                .createdAt(LocalDateTime.now())
                 .authorities(user.getAuthorities())
                 .build();
     }
+
 }
 
     /*public User toEntity() {

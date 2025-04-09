@@ -1,8 +1,10 @@
 package com.example.HealthPower.jwt;
 
 import com.example.HealthPower.exception.JwtExceptionCode;
+import com.example.HealthPower.service.BlackListService;
 import com.example.HealthPower.token.JwtAuthenticationToken;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
@@ -13,6 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -33,6 +37,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     private final JwtTokenProvider jwtTokenProvider;
     /*private final AuthenticationManager authenticationManager;*/
 
+    @Autowired
+    private BlackListService blackListService;
+
     // 실제 필터링 로직은 doFilterInternal 에 들어감
     // JWT 토큰의 인증 정보를 현재 쓰레드의 SecurityContext 에 저장하는 역할 수행
     @Override
@@ -46,6 +53,7 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
         chain.doFilter(request, response);
 
     }
@@ -56,6 +64,23 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
+
+        //블랙리스트 추가 부분 수정 필요
+        /*String token = resolveToken((HttpServletRequest) request);
+
+        String jti = Jwts.parser()
+                .setSigningKey("${jwt.secret}")
+                .parseClaimsJws(token)
+                .getBody()
+                .getId();
+
+        // 블랙리스트 확인
+        if (blackListService.isBlacklisted(jti)) {
+            //HttpServletResponse로 변경할 시에만 적용
+            //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "로그아웃된 토큰입니다.");
+            System.out.println("로그아웃된 토큰입니다.");
+        }*/
+
         return null;
     }
 
