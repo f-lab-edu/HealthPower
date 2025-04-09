@@ -3,6 +3,7 @@ package com.example.HealthPower.service;
 import com.example.HealthPower.dto.JoinDTO;
 import com.example.HealthPower.dto.UserDTO;
 /*import com.example.HealthPower.entity.Authority;*/
+import com.example.HealthPower.dto.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.DuplicateMemberException;
 import com.example.HealthPower.jwt.JwtToken;
@@ -16,11 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -147,13 +152,37 @@ public class MemberService {
         return userRepository.findByUserId(userId);
     }
 
+    /* 마이페이지 정보 업데이트 */
+    public User myInfoUpdate(UserModifyDTO userModifyDTO) {
+        //DTO를 Entity형태로 저장해야함.(JPA는 엔티티 객체를 DB에 저장하기 때문에)
+
+        //1.DTO에서 User 엔티티 객체로 변환
+        User user = userRepository.findByUserId(userModifyDTO.getUserId())
+                .orElseThrow(()->new RuntimeException("조회되는 회원 아이디가 없습니다."));
+
+        // 2. 변환된 User 엔티티에 DTO 값 업데이트
+        // 엔티티에선 @Setter를 사용안하는 걸 권장하는데, 그럼 정보 수정을 다른 방식으로 하는 방법이 있나?
+        user.setUsername(userModifyDTO.getUsername());
+        user.setPassword(userModifyDTO.getPassword());
+        user.setGender(userModifyDTO.getGender());
+        user.setEmail(userModifyDTO.getEmail());
+        user.setNickname(userModifyDTO.getNickname());
+        user.setBirth(userModifyDTO.getBirth());
+        user.setRole(userModifyDTO.getRole());
+        user.setActivated(userModifyDTO.isActivated());
+        //user.setAuthorities(authorities); // 권한 업데이트 에러(타입 불일치)
+
+        return userRepository.save(user);
+
+    }
+
     //회원 탈퇴
     //회원 탈퇴는 RefreshToken, AccessToken, 사용자 정보를 모두 삭제해주면 됨.
     public void deleteMember(HttpServletRequest request) {
 
         String refreshToken = request.getHeader("Refresh-Token");
 
-        if(!jwtTokenProvider.validateToken(refreshToken)){
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
             System.out.println("리프레쉬 토큰이 만료되었음.");
             return;
         }
