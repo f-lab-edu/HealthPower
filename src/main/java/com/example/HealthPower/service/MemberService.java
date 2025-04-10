@@ -163,7 +163,7 @@ public class MemberService {
         // 2. 변환된 User 엔티티에 DTO 값 업데이트
         // 엔티티에선 @Setter를 사용안하는 걸 권장하는데, 그럼 정보 수정을 다른 방식으로 하는 방법이 있나?
         user.setUsername(userModifyDTO.getUsername());
-        user.setPassword(userModifyDTO.getPassword());
+        user.setPassword(bCryptPasswordEncoder.encode(userModifyDTO.getPassword()));
         user.setGender(userModifyDTO.getGender());
         user.setEmail(userModifyDTO.getEmail());
         user.setNickname(userModifyDTO.getNickname());
