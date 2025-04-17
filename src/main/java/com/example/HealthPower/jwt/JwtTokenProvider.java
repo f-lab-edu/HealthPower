@@ -86,9 +86,12 @@ public class JwtTokenProvider {
                 .setSubject(authentication.getName())
                 .claim("id", userDTO.getId())
                 .claim("userId", userDTO.getUserId())
-                .setExpiration(new Date(now + 86400000))
+                .setExpiration(new Date(now + 864000000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+
+        System.out.println("서버 현재 시간 : " + new Date());
+        System.out.println("access 만료 시간 : " + accessTokenExpiresln);
 
         //id설정을 어떻게 해줘야하지?
         return JwtToken.builder()
@@ -228,6 +231,6 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         Date expiration = claims.getExpiration();
-        return expiration.getTime() - System.currentTimeMillis();
+        return expiration.getTime();
     }
 }
