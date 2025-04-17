@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +38,7 @@ public class MemberService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     //bCryptPasswordEncoder = null로 인해 @Autowired 추가
     @Autowired
@@ -71,28 +74,31 @@ public class MemberService {
     // 리프레시 토큰 Redis에서 제거(구현x)
     // 액세스 토큰 Redis에 저장(로그아웃 확인용)
     // 로그아웃과 회원탈퇴에서 모두 사용 -> type이 delete면 회원을 찾아 db에서 영구 삭제
-    /*public void logout(String accessToken) {
+    public void logout(String accessToken, String userId) {
+
+        //1. AccessToken이 유효한 지 확인
         try {
-            jwtUtil.validateToken(accessToken);
-        } catch (JwtExceptionHandler e) {
-            throw new JwtExceptionHandler(ErrorStatus.NOT_VALID_TOKEN.getMessage());
+            if (!jwtTokenProvider.validateToken(accessToken)) {
+                throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+            }
+        } catch (Exception e) {
+            log.error("토큰이 유효하지 않습니다", e);
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다");
         }
 
-        String email = jwtUtil.getEmail(accessToken);
+        //2. AccessToken 만료시간 확인
+        long expirationAT = jwtTokenProvider.getExpiration(accessToken);
 
-        if (redisTemplate.opsForValue().get("RT" + email) != null) {
-            redisTemplate.delete("RT" + email);
+        if (expirationAT <= System.currentTimeMillis()) {
+            throw new IllegalArgumentException("이미 만료된 토큰입니다.");
         }
 
-        Long expiration = JwtUtil.getExpiration(accessToken);
-        redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
+        //3. Redis에 AccessToken -> 로그아웃 토큰으로 등록(블랙리스트로 등록)
+        redisTemplate.opsForValue().set(accessToken, "logout", expirationAT, TimeUnit.MILLISECONDS);
 
-        if (type.equals("DELETE")) {
-            Member member = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new MemberHandler(ErrorStatus.NO_MEMBER_EXIST));
-            memberRepository.delete(member);
-        }
-    }*/
+        //4. Redis에서 RefreshToken 제거
+        redisTemplate.delete(userId);
+    }
 
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities(String userId) {

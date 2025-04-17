@@ -1,6 +1,8 @@
 package com.example.HealthPower.dto;
 
 import com.example.HealthPower.userType.Gender;
+import com.example.HealthPower.userType.Role;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -36,4 +38,11 @@ public class UserDTO {
 
     private List<AuthorityDTO> securityAuthList;
 
+    private Role role;
+
+    public UserDTO(Long id, String userId, Role role) {
+        this.id = id;
+        this.userId = userId;
+        this.role = role;
+    }
 }
