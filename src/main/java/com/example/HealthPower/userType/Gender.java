@@ -7,11 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public enum Role {
-    USER("ROLE_USER"),
-    TRAINER("ROLE_USER"),
-    GYM_ADMIN("ROLE_USER"),
-    ADMIN("ROLE_ADMIN");
+public enum Gender {
+    MAN("남자"),
+    WOMAN("여자");
 
-    private String Role;
+    private String Gender;
 }
