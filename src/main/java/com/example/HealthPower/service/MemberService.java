@@ -2,10 +2,10 @@ package com.example.HealthPower.service;
 
 import com.example.HealthPower.dto.JoinDTO;
 import com.example.HealthPower.dto.UserDTO;
-/*import com.example.HealthPower.entity.Authority;*/
 import com.example.HealthPower.dto.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.DuplicateMemberException;
+import com.example.HealthPower.jwt.JwtAuthenticationFilter;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
@@ -15,19 +15,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,8 +35,8 @@ public class MemberService {
 
     private final UserRepository userRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RefreshTokenService refreshTokenService;
     private final RedisTemplate<String, String> redisTemplate;
 
     //bCryptPasswordEncoder = null로 인해 @Autowired 추가
@@ -155,7 +154,13 @@ public class MemberService {
 
     /* 마이페이지 (회원 상세 조회) */
     public Optional<User> myInfo(String userId) {
-        return userRepository.findByUserId(userId);
+        try {
+            return userRepository.findByUserId(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            e.getMessage();
+            return null;
+        }
     }
 
     /* 마이페이지 정보 업데이트 */
@@ -164,7 +169,7 @@ public class MemberService {
 
         //1.DTO에서 User 엔티티 객체로 변환
         User user = userRepository.findByUserId(userModifyDTO.getUserId())
-                .orElseThrow(()->new RuntimeException("조회되는 회원 아이디가 없습니다."));
+                .orElseThrow(() -> new RuntimeException("조회되는 회원 아이디가 없습니다."));
 
         // 2. 변환된 User 엔티티에 DTO 값 업데이트
         // 엔티티에선 @Setter를 사용안하는 걸 권장하는데, 그럼 정보 수정을 다른 방식으로 하는 방법이 있나?
@@ -184,23 +189,31 @@ public class MemberService {
 
     //회원 탈퇴
     //회원 탈퇴는 RefreshToken, AccessToken, 사용자 정보를 모두 삭제해주면 됨.
-    public void deleteMember(HttpServletRequest request) {
+    public ResponseEntity deleteMember(HttpServletRequest request) {
+
+        String accessToken = jwtAuthenticationFilter.resolveToken(request);
+        if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않는 토큰입니다");
+        }
 
         String refreshToken = request.getHeader("Refresh-Token");
-
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            System.out.println("리프레쉬 토큰이 만료되었음.");
-            return;
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("리프레쉬 토큰이 만료되었음");
         }
 
         // 사용자 정보 받아오기
-        /*UserDTO userDto = jwtService.getUser(Authorization)
-                .orElseThrow(() -> new NoSuchElementException("getUserInfo :: 존재하지 않는 사용자입니다."));
+        String userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException());
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 사용자입니다."));
 
-        userRepository.delete(userDTO);
-*/
+        userRepository.delete(user);
+
+        long expiration = jwtTokenProvider.getRemainingTime(accessToken);
+        redisTemplate.opsForValue().set("blackList : " + accessToken, "delete", expiration, TimeUnit.MILLISECONDS);
+
+        return ResponseEntity.ok("회원탈퇴 완료");
     }
+
 }
+

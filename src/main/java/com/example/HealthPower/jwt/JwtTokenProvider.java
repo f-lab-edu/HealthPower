@@ -1,6 +1,5 @@
 package com.example.HealthPower.jwt;
 
-import com.example.HealthPower.dto.JoinDTO;
 import com.example.HealthPower.dto.UserDTO;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
@@ -13,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -205,9 +203,9 @@ public class JwtTokenProvider {
     }
 
     // UserDTO로 사용자 정보를 가져오는 메서드 (예시)
-    private UserDTO getUserById(String userId) {
+    public UserDTO getUserById(String userId) {
         return userRepository.findByUserId(userId)
-                .map(user -> new UserDTO(user.getId(), user.getUsername(), user.getRole()))
+                .map(user -> new UserDTO(user.getId(), user.getUserId(), user.getRole()))
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
     }
 
@@ -232,5 +230,23 @@ public class JwtTokenProvider {
                 .getBody();
         Date expiration = claims.getExpiration();
         return expiration.getTime();
+    }
+
+    public String getUserIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("userId", String.class); // 보통 userId나 email이 들어감
+    }
+
+    public long getRemainingTime(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getExpiration().getTime();
     }
 }

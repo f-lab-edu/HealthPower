@@ -1,13 +1,11 @@
-package com.example.HealthPower.controller;
+package com.example.HealthPower.controller.member;
 
 import com.example.HealthPower.dto.LoginDTO;
 import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.entity.User;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.MemberService;
-import com.example.HealthPower.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @Slf4j
 @RestController //@Controller에 @ResponseBody가 추가된 것 + Json 형태로 객체 데이터를 반환

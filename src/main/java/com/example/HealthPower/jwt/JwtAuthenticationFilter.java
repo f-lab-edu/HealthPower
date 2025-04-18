@@ -45,98 +45,30 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
         if (token != null && jwtTokenProvider.validateToken(token)) {
 
             // 👉 블랙리스트(로그아웃된 토큰) 체크
-            String isLogout = (String) redisTemplate.opsForValue().get(token);
-
-            System.out.println(isLogout);
-
-            if ("logout".equals(isLogout)) {
-                log.warn("이 토큰은 로그아웃 된 토큰입니다..");
-                return;
+            Boolean isBlackListed = redisTemplate.hasKey("blackList : " + token);
+            if (isBlackListed) {
+                throw new RuntimeException("로그아웃 혹은 탈퇴한 사용자입니다.");
             }
 
-            // 👉 블랙리스트 아니면 정상 인증 처리
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        // 👉 블랙리스트 아니면 정상 인증 처리
+        Authentication authentication = jwtTokenProvider.getAuthentication(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
 
-        chain.doFilter(request, response);
+        chain.doFilter(request,response);
+
+}
+
+// Request Header에서 Token 정보 추출
+public String resolveToken(HttpServletRequest request) {
+    String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+
+        System.out.println("확인용 토큰: " + bearerToken.substring(7));
+        return bearerToken.substring(7); //"Bearer "제거
 
     }
 
-    // Request Header에서 Token 정보 추출
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-
-            System.out.println("확인용 토큰: " + bearerToken.substring(7));
-            return bearerToken.substring(7); //"Bearer "제거
-
-        }
-
-        return null;
-    }
-
-
-    /*
-    //public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-        String token="";
-        try {
-            token = getToken(request);
-            if (StringUtils.hasText(token)) {
-                getAuthentication(token);
-            }
-            filterChain.doFilter(request, response);
-        }
-        catch (NullPointerException | IllegalStateException e) {
-            request.setAttribute("exception", JwtExceptionCode.NOT_FOUND_TOKEN.getCode());
-            log.error("Not found Token // token : {}", token);
-            log.error("Set Request Exception Code : {}", request.getAttribute("exception"));
-            throw new BadCredentialsException("throw new not found token exception");
-        } catch (SecurityException | MalformedJwtException e) {
-            request.setAttribute("exception", JwtExceptionCode.INVALID_TOKEN.getCode());
-            log.error("Invalid Token // token : {}", token);
-            log.error("Set Request Exception Code : {}", request.getAttribute("exception"));
-            throw new BadCredentialsException("throw new invalid token exception");
-        } catch (ExpiredJwtException e) {
-            request.setAttribute("exception", JwtExceptionCode.EXPIRED_TOKEN.getCode());
-            log.error("EXPIRED Token // token : {}", token);
-            log.error("Set Request Exception Code : {}", request.getAttribute("exception"));
-            throw new BadCredentialsException("throw new expired token exception");
-        } catch (UnsupportedJwtException e) {
-            request.setAttribute("exception", JwtExceptionCode.UNSUPPORTED_TOKEN.getCode());
-            log.error("Unsupported Token // token : {}", token);
-            log.error("Set Request Exception Code : {}", request.getAttribute("exception"));
-            throw new BadCredentialsException("throw new unsupported token exception");
-        } catch (Exception e) {
-            log.error("====================================================");
-            log.error("JwtFilter - doFilterInternal() 오류 발생");
-            log.error("token : {}", token);
-            log.error("Exception Message : {}", e.getMessage());
-            log.error("Exception StackTrace : {");
-            e.printStackTrace();
-            log.error("}");
-            log.error("====================================================");
-            throw new BadCredentialsException("throw new exception");
-        }
-    }
-
-    private void getAuthentication(String token) {
-        JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(token);
-        Authentication authenticate = authenticationManager.authenticate(authenticationToken);
-        SecurityContextHolder.getContext()
-                .setAuthentication(authenticate);
-    }
-
-    private String getToken(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer")){
-            String[] arr = authorization.split(" ");
-            return arr[1];
-        }
-        return null;
-    }*/
+    return null;
+}
 }
