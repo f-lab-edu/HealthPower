@@ -1,15 +1,10 @@
 package com.example.HealthPower.controller;
 
-import com.example.HealthPower.dto.LogoutDTO;
-import com.example.HealthPower.service.BlackListService;
 import com.example.HealthPower.service.MemberService;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
