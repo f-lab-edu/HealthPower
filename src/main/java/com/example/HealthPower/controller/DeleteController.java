@@ -1,23 +1,16 @@
 package com.example.HealthPower.controller;
 
-import com.example.HealthPower.dto.LogoutDTO;
-import com.example.HealthPower.service.BlackListService;
 import com.example.HealthPower.service.MemberService;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@Slf4j
+@Controller
 @RequiredArgsConstructor
 @RequestMapping("/members")
 //회원탈퇴는 블랙리스트 방식으로 구현(Redis)
@@ -46,8 +39,7 @@ public class DeleteController {
 
             memberService.deleteMember(request);
 
-            log.info("{}", "회원탈퇴 완료");
-
+            System.out.println("회원탈퇴 완료");
             return new ResponseEntity(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

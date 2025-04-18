@@ -1,10 +1,8 @@
 package com.example.HealthPower.service;
 
 import com.example.HealthPower.entity.RefreshToken;
-import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
