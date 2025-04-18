@@ -1,9 +1,7 @@
 package com.example.HealthPower.config;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,16 +21,14 @@ public class RedisConfig {
     }
 
     @Bean
-    @Primary
     public RedisTemplate<String, String> redisTemplate() {
         // redisTemplate를 받아와서 set, get, delete를 사용
         RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        // setKeySerializer, setValueSerializer 설정
         // redis-cli을 통해 직접 데이터를 조회 시 알아볼 수 없는 형태로 출력되는 것을 방지
-        // 직렬화 설정 꼭 추가해야함!
-        // 문자열 키-값 저장을 위해 꼭 필요함!
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new StringRedisSerializer());
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
 
         return redisTemplate;
     }

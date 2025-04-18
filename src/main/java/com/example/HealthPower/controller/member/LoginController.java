@@ -3,14 +3,11 @@ package com.example.HealthPower.controller.member;
 import com.example.HealthPower.dto.LoginDTO;
 import com.example.HealthPower.dto.UserDTO;
 import com.example.HealthPower.jwt.JwtToken;
-import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +24,6 @@ public class LoginController {
 
     private final MemberService memberService;
     private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @PostMapping("/login")
@@ -53,14 +49,4 @@ public class LoginController {
         return jwtToken;
     }
 
-    @PostMapping("/refreshAccessToken")
-    public ResponseEntity<JwtToken> refreshAccessToken(@RequestBody String refreshToken) {
-        try {
-            // refreshToken을 통해 새로운 accessToken을 발급
-            JwtToken jwtToken = jwtTokenProvider.refreshAccessToken(refreshToken);
-            return ResponseEntity.ok(jwtToken);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null); // refreshToken이 유효하지 않은 경우
-        }
-    }
 }
