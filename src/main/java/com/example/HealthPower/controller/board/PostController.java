@@ -52,10 +52,12 @@ public class PostController {
 
     @PostMapping("/products/post")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> createProduct(@LoginUser UserDTO userDTO, @RequestBody ProductDTO productDTO, BindingResult bindingResult) {
+    public ResponseEntity<String> createProduct(@LoginUser UserDTO userDTO,
+                                                @RequestBody ProductDTO productDTO,
+                                                BindingResult bindingResult) {
 
         // 현재 로그인된 사용자 정보를 가져옴
-        //UserDetailsImpl currentUser = getCurrentUser();
+        UserDetailsImpl currentUser = getCurrentUser();
 
         if (userDTO == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
@@ -68,7 +70,7 @@ public class PostController {
         //상품 등록
         //postService.createProduct(productDTO, currentUser);
 
-        postService.createProduct(userDTO, productDTO);
+        postService.createProduct(productDTO, currentUser);
 
         return ResponseEntity.ok("상품등록 성공");
     }
@@ -77,7 +79,13 @@ public class PostController {
     public ResponseEntity updateProduct(@PathVariable("id") Long id,
                                         @LoginUser UserDTO loginUser,
                                         @RequestBody ProductDTO productDTO) {
-        postService.updateProduct(id, loginUser, productDTO);
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) principal;
+        String userId = userDetails.getUserId();
+
+        postService.updateProduct(id, userId, productDTO);
         return ResponseEntity.ok("상품 수정 완료");
     }
 }

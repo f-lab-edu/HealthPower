@@ -15,13 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class LogoutController {
 
     private final MemberService memberService;
-    //private final RefreshTokenService refreshTokenService;
-
-    /*@DeleteMapping("/logout")
-    public ResponseEntity logout(@RequestBody RefreshTokenDTO refreshTokenDTO) {
-        refreshTokenService.deleteRefreshToken(refreshTokenDTO.getRefreshToken());
-        return new ResponseEntity<>(HttpStatus.OK);
-    }*/
 
     @PostMapping("/logout")
     public ResponseEntity logout(
