@@ -1,6 +1,7 @@
 package com.example.HealthPower.dto;
 
 import com.example.HealthPower.userType.Gender;
+import com.example.HealthPower.userType.Role;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -12,7 +13,7 @@ import java.util.List;
 @Setter //Setter를 가급적이면 쓰지 말라고 했는데, 로그인 시 임시로 userDTO를 세팅하기 위해서 넣어줌.
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@RequiredArgsConstructor
 /* 회원정보 */
 public class UserDTO {
 
@@ -36,4 +37,6 @@ public class UserDTO {
 
     private List<AuthorityDTO> securityAuthList;
 
+    public UserDTO(Long id, String userId, Role role) {
+    }
 }

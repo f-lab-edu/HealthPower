@@ -18,7 +18,7 @@ public class Board {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long user_id; //이게 공통부분일까??
+    private String userId; //작성자 아이디
 
     private String boardName; //게시판 이름
 

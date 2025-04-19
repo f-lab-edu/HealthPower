@@ -1,4 +1,4 @@
-package com.example.HealthPower.controller;
+package com.example.HealthPower.controller.member;
 
 import com.example.HealthPower.dto.JoinDTO;
 import com.example.HealthPower.entity.User;
@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 

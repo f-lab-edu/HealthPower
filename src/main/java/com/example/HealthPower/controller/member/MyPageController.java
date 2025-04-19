@@ -1,4 +1,4 @@
-package com.example.HealthPower.controller;
+package com.example.HealthPower.controller.member;
 
 import com.example.HealthPower.dto.UserDTO;
 import com.example.HealthPower.dto.UserModifyDTO;
@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
