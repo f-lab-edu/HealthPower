@@ -25,6 +25,10 @@
 
 # DB ERD
 
+![image](https://github.com/user-attachments/assets/403bf4c3-8dd0-4fc7-a807-e14fdf886b92)
+
+![image](https://github.com/user-attachments/assets/2924f71b-c201-4563-a871-63381e2264d0)
+
 
 ---
 
