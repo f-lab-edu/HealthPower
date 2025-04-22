@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,7 +39,7 @@ public class PostService {
 
 
     //ProductDTO => 엔티티로 변환
-    public Product convertToEntity(ProductDTO productDTO, UserDTO userDTO) {
+    public Product convertToEntity(ProductDTO productDTO, UserDetailsImpl currentUser) {
         Product product = new Product();
 
         product.setProductName(productDTO.getProductName());
@@ -46,7 +47,7 @@ public class PostService {
         product.setCategory(productDTO.getCategory());
 
         // Board 엔티티의 공통 필드 설정
-        product.setUserId(userDTO.getUserId());
+        product.setUserId(currentUser.getUserId());
         product.setContent(productDTO.getContent()); //board 필드
         product.setBoardName(productDTO.getBoardName()); //board 필드
         product.setCreatedAt(LocalDateTime.now()); //테스트로 현재시각 세팅
@@ -56,12 +57,10 @@ public class PostService {
 
     // 상품 등록 메서드
     //public void createProduct(ProductDTO productDTO, UserDetailsImpl currentUser) {
-    public void createProduct(UserDTO userDTO, ProductDTO productDTO) {
+    public void createProduct(ProductDTO productDTO, UserDetailsImpl currentUser) {
         // 로그인된 사용자 정보가 있을 경우
-        //if (currentUser != null) {
-        if (userDTO != null) {
-            // DTO를 엔티티로 변환
-            Product product = convertToEntity(productDTO, userDTO);
+        if (currentUser != null) {
+            Product product = convertToEntity(productDTO, currentUser);
 
             // 상품 저장
             productRepository.save(product);
@@ -69,11 +68,12 @@ public class PostService {
     }
 
     // 상품 수정 메서드
-    public void updateProduct(Long productId, UserDTO currentUser, ProductDTO productDTO) {
+    @Transactional // JPA가 변경된 엔티티를 감지하고 flush해서 DB에 반영.
+    public void updateProduct(Long productId, String userId, ProductDTO productDTO) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
 
-        if (!product.getUserId().equals(currentUser.getUserId())) {
+        if (!product.getUserId().equals(userId)) {
             throw new RuntimeException("작성자만 수정이 가능합니다.");
         }
 

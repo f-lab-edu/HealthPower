@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,7 +21,7 @@ import java.io.IOException;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class JwtAuthenticationFilter extends GenericFilterBean {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -30,7 +31,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
     @Qualifier("redisTemplate")
     private final RedisTemplate<String, String> redisTemplate;
-    private final BlackListService blackListService;
 
     // 실제 필터링 로직은 doFilterInternal 에 들어감
     // JWT 토큰의 인증 정보를 현재 쓰레드의 SecurityContext 에 저장하는 역할 수행
@@ -63,12 +63,8 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 public String resolveToken(HttpServletRequest request) {
     String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
     if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-
-        System.out.println("확인용 토큰: " + bearerToken.substring(7));
         return bearerToken.substring(7); //"Bearer "제거
-
     }
-
     return null;
 }
 }
