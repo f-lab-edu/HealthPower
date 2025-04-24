@@ -16,10 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,39 +58,49 @@ public class JwtTokenProvider {
 
         long now = (new Date()).getTime();
 
-        // Access Token 생성
-        // Access Token 유효 시간 설정
-        Date accessTokenExpiresln = new Date(now + 86400000);
+        // Access Token 생성 + 유효 시간 설정
+        Date accessTokenExpiry = new Date(now + 86400000); //1일
+        Date refreshTokenExpiry = new Date(now + 864000000); //10일
 
         log.info("Key used to sign the token: " + Arrays.toString(key.getEncoded())); //key 출력
 
+        // 🔹 공통 클레임 구성
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("id", userDTO.getId());
+        claims.put("userId", userDTO.getUserId());
+        claims.put("email", userDTO.getEmail());
+        claims.put("auth", authorities);
+
         //accessToken을 통해 jwt토큰을 복호화하기 때문에 여기서 내가 원하는 정보를 설정
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())
-                //.claim("auth", authorities)
+                //.setSubject(authentication.getName())
+                .setClaims(claims)
+                .setSubject(userDTO.getUserId())
+                .setIssuedAt(new Date(now))
                 //테스트용
-                .claim("auth", "test_admin")
-                .claim("userId", userDTO.getUserId())
-                .claim("id", userDTO.getId())
+                //.claim("auth", "test_admin")
+                //.claim("id", userDTO.getId())
                 .signWith(key, SignatureAlgorithm.HS256) //key 값이 서버에서 검증하는 key 값과 동일해야 함.
-                .setExpiration(accessTokenExpiresln)
+                .setExpiration(accessTokenExpiry)
                 .compact();
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
-                .setSubject(authentication.getName())
+                //.setSubject(authentication.getName())
+                .setSubject(userDTO.getUserId())
                 .claim("id", userDTO.getId())
                 .claim("userId", userDTO.getUserId())
-                .setExpiration(new Date(now + 864000000))
+                .setIssuedAt(new Date(now))
+                .setExpiration(refreshTokenExpiry)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        System.out.println("서버 현재 시간 : " + new Date());
-        System.out.println("access 만료 시간 : " + accessTokenExpiresln);
+        log.info("AccessToken Expiry: {}", accessTokenExpiry);
+        log.info("RefreshToken Expiry: {}", refreshTokenExpiry);
 
-        //id설정을 어떻게 해줘야하지?
         return JwtToken.builder()
-                .userId(userDTO.getUserId()) //왜 return 시 userId가 null이 되지?
+                .userId(userDTO.getUserId())
+                .id(userDTO.getId())
                 .grantType("Bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -150,7 +157,9 @@ public class JwtTokenProvider {
 
         //UserDetails principal = new User(claims.getSubject(), "", authorities);
 
-        UserDetails principal = new UserDetailsImpl(claims.getSubject(), "", authorities, userId); // userId 추가
+        Long id = Long.valueOf(claims.getId());
+
+        UserDetails principal = new UserDetailsImpl(claims.getSubject(), id, authorities, userId); // userId 추가
         //return new UsernamePasswordAuthenticationToken(principal, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
     }

@@ -3,6 +3,8 @@ package com.example.HealthPower.userType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Getter
 @NoArgsConstructor
@@ -14,4 +16,8 @@ public enum Role {
     ADMIN("ROLE_ADMIN");
 
     private String Role;
+
+    public GrantedAuthority toAuthority() {
+        return new SimpleGrantedAuthority(this.name());
+    }
 }

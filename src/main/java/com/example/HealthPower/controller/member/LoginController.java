@@ -27,22 +27,13 @@ public class LoginController {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @PostMapping("/login")
-    public JwtToken signIn(@RequestBody @Valid LoginDTO loginDTO) {
+    public JwtToken Login(@RequestBody @Valid LoginDTO loginDTO) {
 
-        //id를 직접 입력하는 것이 아니라 db자체에 저장되어있는 id값으로 가져와야함(or userId로 조회하는 방식으로 만들던가)
-        Long id = loginDTO.getId();
         String userId = loginDTO.getUserId();
         String password = loginDTO.getPassword();
 
-        //login메서드를 사용하기 위해서 userDTO객체 생성(이걸 꼭 넣어줘야하나?)
-        UserDTO userDTO = new UserDTO();
-
-        userDTO.setId(id);
-        userDTO.setUserId(userId);
-        userDTO.setPassword(bCryptPasswordEncoder.encode(password));
-
-        JwtToken jwtToken = memberService.login(userDTO, userId, password);
-        log.info("request id={}, username = {}, password = {}", id, userId, password);
+        JwtToken jwtToken = memberService.login(userId, password);
+        log.info("request username = {}, password = {}", userId, password);
         log.info("jwtToken accessToken = {}, refreshToken = {}",
                 jwtToken.getAccessToken(),
                 jwtToken.getRefreshToken());

@@ -57,7 +57,7 @@ public class JoinDTO {
 
     private String photo;
 
-    private Collection<GrantedAuthority> authorities;
+    private Collection<? extends GrantedAuthority> authorities;
 
     private LocalDateTime createdAt;
 

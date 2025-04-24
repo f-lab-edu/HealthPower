@@ -1,6 +1,7 @@
 package com.example.HealthPower.controller.member;
 
 import com.example.HealthPower.impl.UserDetailsImpl;
+import com.example.HealthPower.loginUser.LoginUser;
 import com.example.HealthPower.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +20,13 @@ public class LogoutController {
     @PostMapping("/logout")
     public ResponseEntity logout(
             @RequestHeader("Authorization") String bearerToken,
-            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            LoginUser loginUser) {
 
         String accessToken = bearerToken.replace("Bearer ", "");
         String userId = userDetails.getUserId();
+
+        System.out.println("loginUser = " + loginUser);
 
         memberService.logout(accessToken, userId);
 

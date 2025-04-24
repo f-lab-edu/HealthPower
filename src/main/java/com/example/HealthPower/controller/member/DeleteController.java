@@ -24,7 +24,7 @@ public class DeleteController {
 
     private final MemberService memberService;
 
-    @PostMapping("/delete")
+    @DeleteMapping("/delete")
     public ResponseEntity deleteMember(HttpServletRequest request) throws Exception {
 
         memberService.deleteMember(request);

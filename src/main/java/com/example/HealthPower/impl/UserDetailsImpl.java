@@ -1,11 +1,13 @@
 package com.example.HealthPower.impl;
 
 import com.example.HealthPower.entity.User;
+import com.example.HealthPower.userType.Role;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.Collections;
 
 
 @Getter
@@ -18,12 +20,14 @@ public class UserDetailsImpl implements UserDetails {
     // 기존 생성자 (User 객체만 받는 경우)
     public UserDetailsImpl(User user) {
         this.user = user;
+        this.id = user.getId(); //이 부분을 추가해야 포스트맨 응답시 id값이 제대로 들어오나?
         this.userId = user.getUserId();  // User 객체에서 userId를 추출
-        this.authorities = user.getAuthorities();  // User 객체에서 권한을 추출
+        //this.authorities = user.getAuthorities();  // User 객체에서 권한을 추출
+        this.authorities = Collections.singletonList(user.getRole().toAuthority());
     }
 
     // userId와 authorities를 받는 생성자 추가
-    public UserDetailsImpl(String subject, String id, Collection<GrantedAuthority> authorities, String userId) {
+    public UserDetailsImpl(String subject, Long id, Collection<GrantedAuthority> authorities, String userId) {
         this.user = null;  // 실제 User 객체를 저장하지 않음
         this.username = subject;
         this.userId = userId;  // 외부에서 전달된 userId 설정
@@ -34,7 +38,7 @@ public class UserDetailsImpl implements UserDetails {
     //임의로 설정
     private static final long serialVersionUID = 174726374856727L;
 
-    private String id;	// DB에서 PK 값
+    private Long id;	// DB에서 PK 값 => String 에서 Long으로 교체 (25.04.23)
     private String userId;		// 로그인용 ID 값
     private String password;    // 비밀번호
     private String username; // 유저 이름

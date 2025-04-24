@@ -57,16 +57,9 @@ public class BoardController {
         // 현재 로그인된 사용자 정보를 가져옴
         UserDetailsImpl currentUser = getCurrentUser();
 
-        if (userDTO == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-        }
-
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body("상품 등록 중 잘못된 입력값이 있습니다.");
         }
-
-        //상품 등록
-        //postService.createProduct(productDTO, currentUser);
 
         postService.createProduct(productDTO, currentUser);
 
@@ -79,6 +72,8 @@ public class BoardController {
                                         @RequestBody ProductDTO productDTO) {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        System.out.println("loginUser = " + loginUser);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) principal;
         String userId = userDetails.getUserId();

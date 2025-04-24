@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -117,19 +118,18 @@ public class MemberService {
     }
 
     @Transactional
-    public JwtToken login(UserDTO userDTO, String userId, String password) {
+    public JwtToken login(String userId, String password) {
 
-        Optional<User> findUserId = userRepository.findByUserId(userId);
+        //DB에서 실제 유저 정보 조회(id 포함)
+        Optional<User> findUser = userRepository.findByUserId(userId);
 
-        if (findUserId.isEmpty()) {
-            System.out.println("존재하지 않는 사용자입니다.");
-            findUserId.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-        }
+        User user = findUser.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        UserDTO userDTO = new UserDTO(Optional.ofNullable(user));
 
         //기존의 userDTO에서 비밀번호와 현재 입력한 비밀번호가 일치하는지 비교
-        if (bCryptPasswordEncoder.matches(bCryptPasswordEncoder.encode(password), findUserId.get().getPassword())) {
+        if (!bCryptPasswordEncoder.matches(password, findUser.get().getPassword())) {
             System.out.println("계정의 비밀번호가 올바르지 않습니다.");
-            findUserId.orElseThrow(() -> new IllegalArgumentException("계정의 비밀번호가 올바르지 않습니다"));
+            throw new IllegalArgumentException("계정의 비밀번호가 올바르지 않습니다");
         }
 
         // 1. username + password 를 기반으로 Authentication 객체 생성
@@ -143,12 +143,13 @@ public class MemberService {
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
             JwtToken jwtToken = jwtTokenProvider.generateToken(authentication, userDTO);
             return jwtToken;
+        } catch (BadCredentialsException e) {
+            log.warn("비밀번호 불일치 : {}", e.getMessage());
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         } catch (Exception e) {
-            log.error("에러발생{}", e.getMessage());
-            e.printStackTrace();
+            log.error("로그인 중 알 수 없는 에러 발생", e);
+            throw new RuntimeException("로그인 처리 중 오류가 발생했습니다");
         }
-
-        return null;
 
     }
 
@@ -157,8 +158,6 @@ public class MemberService {
         try {
             return userRepository.findByUserId(userId);
         } catch (Exception e) {
-            e.printStackTrace();
-            e.getMessage();
             return null;
         }
     }
