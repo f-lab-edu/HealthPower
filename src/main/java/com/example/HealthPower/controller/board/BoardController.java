@@ -52,14 +52,14 @@ public class BoardController {
 
     @PostMapping("/products/post")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> createProduct(@LoginUser UserDTO userDTO,
+    public ResponseEntity<String> createProduct(@LoginUser UserDTO loginUser,
                                                 @RequestBody ProductDTO productDTO,
                                                 BindingResult bindingResult) {
 
         // 현재 로그인된 사용자 정보를 가져옴
         UserDetailsImpl currentUser = getCurrentUser();
 
-        if (userDTO == null) {
+        if (loginUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
         }
 

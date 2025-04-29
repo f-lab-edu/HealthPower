@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class PaymentDTO {
+    private String userId;
     private Double amount;
     private String orderId;
     private String orderName;

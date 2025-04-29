@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>결제하기</title>
+    <script src="https://js.tosspayments.com/v1"></script>
+</head>
+<body>
+<h1>간단 결제하기</h1>
+
+<button id="payment-button">결제하기</button>
+
+<script>
+    const tossPayments = TossPayments('test_ck_DpexMgkW36N5NAm2MW5M3GbR5ozO');
+    const userId = 'tester_Lee';
+    const orderName = '1년 헬스권';
+    const orderId = `order-${Date.now()}`;
+    const amount = 365000;
+
+    tossPayments.requestPayment('카드', {
+        amount: amount,
+        orderId: orderId,
+        orderName: orderName,
+        successUrl: `http://localhost:8080/payment/success?userId=${userId}&orderName=${encodeURIComponent(orderName)}`,
+        failUrl: `http://localhost:8080/payment/fail?userId=${userId}&orderName=${encodeURIComponent(orderName)}`
+    });
+</script>
+</body>
+</html>
