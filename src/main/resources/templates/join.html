@@ -1,32 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
-<form action="/join" method="post">
-    <input type="text" name="userId" id="userId" placeholder="아이디">
-    <br/>
-    <input type="email" name="email" id="email" placeholder="email">
-    <br/>
-    <input type="text" name="username" id="username" placeholder="이름">
-    <br/>
-    <input type="text" name="nickname" id="nickname" placeholder="닉네임">
-    <br/>
-    <input type="password" name="password" id="password" placeholder="비밀번호">
-    <br/>
-    <input type="password" name="passwordCheck" id="passwordCheck" placeholder="비밀번호 확인">
-    <br/>
-    <input type="text" name="phoneNumber" id="phoneNumber" placeholder="핸드폰 번호">
-    <br/>
-    <input type="text" name="address" id="address" placeholder="address">
-    <br/>
-    <input type="date" name="birth" id="birth" placeholder="생년월일">
-    <br/>
-    <input type="image" name="photo" id="photo" placeholder="사진">
-    <br/>
-    <button type="submit">회원가입</button>
-</form>
+    <h1>회원가입</h1>
+    <form th:action="@{/members/join}" th:object="${joinDTO}" method="post" enctype="multipart/form-data">
+        <div>
+            <label>아이디:</label>
+            <input type="text" th:field="*{userId}" />
+            <div th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
+        </div>
+        <div>
+            <label>이메일:</label>
+            <input type="email" th:field="*{email}" />
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+        </div>
+        <div>
+            <label>이름:</label>
+            <input type="text" th:field="*{username}" />
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+        </div>
+        <div>
+            <label>비밀번호:</label>
+            <input type="password" th:field="*{password}" />
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+        </div>
+        <div>
+            <label>비밀번호 확인:</label>
+            <input type="password" th:field="*{passwordCheck}" />
+            <div th:if="${#fields.hasErrors('passwordCheck')}" th:errors="*{passwordCheck}"></div>
+        </div>
+        <div>
+            <label>닉네임:</label>
+            <input type="text" th:field="*{nickname}" />
+            <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
+        </div>
+        <div>
+            <label>휴대폰 번호:</label>
+            <input type="text" th:field="*{phoneNumber}" />
+            <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+        </div>
+        <div>
+            <label>주소:</label>
+            <input type="text" th:field="*{address}" />
+            <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+        </div>
+        <div>
+            <label>생년월일:</label>
+            <input type="date" th:field="*{birth}" />
+            <div th:if="${#fields.hasErrors('birth')}" th:errors="*{birth}"></div>
+        </div>
+        <div>
+            <label>성별:</label><br/>
+            <input type="radio" th:field="*{gender}" value="MAN" id="MAN" />
+            <label for="MAN">남성</label>
+            <input type="radio" th:field="*{gender}" value="WOMAN" id="WOMAN" />
+            <label for="WOMAN">여성</label>
+            <div th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></div>
+        </div>
+
+        <div>
+            <label>가입 유형:</label><br/>
+            <input type="radio" th:field="*{role}" value="USER" id="roleUser" />
+            <label for="roleUser">일반사용자</label>
+            <input type="radio" th:field="*{role}" value="TRAINER" id="roleTrainer" />
+            <label for="roleTrainer">트레이너</label>
+            <input type="radio" th:field="*{role}" value="GYM_ADMIN" id="roleGymAdmin" />
+            <label for="roleGymAdmin">헬스장 관리자</label>
+            <div th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+        <div>
+            <label>프로필 사진:</label>
+            <input type="file" th:field="*{photo}" accept="image/*" />
+        </div>
+        <button type="submit">가입하기</button>
+    </form>
 </body>
 </html>

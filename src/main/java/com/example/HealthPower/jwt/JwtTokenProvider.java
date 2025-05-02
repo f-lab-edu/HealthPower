@@ -13,13 +13,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,10 +52,14 @@ public class JwtTokenProvider {
             log.info("Authentication: " + authentication.getName());
         }
 
-        //권한 가져오기
+        List<GrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + userDTO.getAuthorities())
+        );
+
+/*        //권한 가져오기
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(","));*/
 
         long now = (new Date()).getTime();
 
@@ -70,9 +72,7 @@ public class JwtTokenProvider {
         //accessToken을 통해 jwt토큰을 복호화하기 때문에 여기서 내가 원하는 정보를 설정
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
-                //.claim("auth", authorities)
-                //테스트용
-                .claim("auth", "test_admin")
+                .claim("auth", authorities)
                 .claim("userId", userDTO.getUserId())
                 .claim("id", userDTO.getId())
                 .signWith(key, SignatureAlgorithm.HS256) //key 값이 서버에서 검증하는 key 값과 동일해야 함.
@@ -123,6 +123,16 @@ public class JwtTokenProvider {
 
     // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
     public Authentication getAuthentication(String accessToken) {
+
+        /*
+
+        이렇게 추가하라고 권장.
+
+        String userId = getUserIdFromToken(accessToken);
+        UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(userId);
+
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());*/
+
         //Jwt 토큰 복호화
         Claims claims = parseClaims(accessToken);
 
@@ -143,6 +153,8 @@ public class JwtTokenProvider {
                 Arrays.stream(claims.get("auth").toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
+
+        System.out.println("authorities = " + authorities);
 
 
         //UserDetails 객체를 만들어서 Authentication 반환

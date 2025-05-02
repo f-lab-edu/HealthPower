@@ -44,18 +44,15 @@ public class User implements UserDetails{
     @Column(name = "password", nullable = false)
     private String password;
 
-    /*@Column(name = "phoneNumber")
+    @Column(name = "phoneNumber")
     private String phoneNumber;
 
     @Column(name = "address")
-    private String address;*/
+    private String address;
 
-    @Transient
+/*    @Transient
     @Column(name = "photo")
-    private MultipartFile photo;
-
-    /*@Column(name = "photo")
-    private String photo;*/
+    private MultipartFile photo;*/
 
     @Column(name = "photo_path")
     private String photoPath;

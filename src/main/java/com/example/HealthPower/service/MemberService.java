@@ -9,6 +9,7 @@ import com.example.HealthPower.jwt.JwtAuthenticationFilter;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
+import com.example.HealthPower.userType.Role;
 import com.example.HealthPower.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,9 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -64,11 +65,12 @@ public class MemberService {
             throw new DuplicateMemberException("이미 가입되어 있는 아이디입니다.");
         }
 
-        //프로필 이미지가 있으면 저장
-        MultipartFile file = joinDTO.getPhoto();
-
-        if (file != null && !file.isEmpty()) {
-            storeProfileImage(joinDTO.getUserId(), file);
+        // Role 값에 따라 authorities 지정
+        Collection<GrantedAuthority> authorities;
+        if (joinDTO.getRole() == Role.ADMIN) {
+            authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
         }
 
         User user = User.builder()
@@ -76,19 +78,26 @@ public class MemberService {
                 .userId(joinDTO.getUserId())
                 .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
                 .email(joinDTO.getEmail())
+                .phoneNumber(joinDTO.getPhoneNumber())
+                .address(joinDTO.getAddress())
                 .nickname(joinDTO.getNickname())
                 .activated(true)
-                .photo(joinDTO.getPhoto())
                 .role(joinDTO.getRole())
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
                 .createdAt(joinDTO.getCreatedAt())
-                .authorities(joinDTO.getAuthorities()) //당연히 null값이 올 수 밖에 없음.
+                .authorities(authorities)
                 .build();
 
-        User save = userRepository.save(user);
+        User joinedUser = userRepository.save(user);
 
-        return JoinDTO.from(save);
+        //프로필 이미지가 있으면 저장
+        MultipartFile file = joinDTO.getPhoto();
+        if (file != null && !file.isEmpty()) {
+            storeProfileImage(joinedUser, file);
+        }
+
+        return JoinDTO.from(joinedUser);
     }
 
     // 리프레시 토큰 Redis에서 제거(구현x)
@@ -127,6 +136,7 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public Optional<User> getMyUserWithAuthorities() {
+        System.out.println("🔐 current userId: " + SecurityUtil.getCurrentUsername());
         return SecurityUtil.getCurrentUsername().flatMap(userRepository::findOneWithAuthoritiesByUserId);
     }
 
@@ -237,7 +247,7 @@ public class MemberService {
     }
 
     //프로필 이미지 저장
-    public void storeProfileImage(String userId, MultipartFile file) {
+    public void storeProfileImage(User user, MultipartFile file) {
         try {
             String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
             String filename = UUID.randomUUID() + "." + ext;
@@ -245,10 +255,10 @@ public class MemberService {
             Files.createDirectories(target.getParent());
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
-            User findUser = userRepository.findByUserId(userId)
-                    .orElseThrow(() -> new NoSuchElementException("회원이 없습니다."));
-            findUser.setPhotoPath(filename);
-            userRepository.save(findUser);
+            log.info("[파일 저장 호출] 사용자 ID: " + user.getUserId());
+
+            user.setPhotoPath(filename);
+            userRepository.save(user);
 
         } catch (IOException e) {
             throw new UncheckedIOException("이미지 저장 실패", e);

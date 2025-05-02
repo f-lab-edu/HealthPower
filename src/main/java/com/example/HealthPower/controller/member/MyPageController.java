@@ -5,10 +5,12 @@ import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.service.MemberService;
+import com.example.HealthPower.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -32,6 +34,21 @@ public class MyPageController {
         Optional<User> infoResult = memberService.myInfo(userId);
 
         return infoResult;
+    }
+
+    //마이페이지 사진 제대로 들어오는지 뷰로 확인
+    @GetMapping("/myPage")
+    public String myPage(Model model) {
+        System.out.println("🟡 마이페이지 컨트롤러 호출됨");
+        String userId = SecurityUtil.getCurrentUsername()
+                .orElseThrow(() -> new RuntimeException("로그인 정보 없음"));
+
+        User user = memberService.myInfo(userId)
+                .orElseThrow(() -> new RuntimeException("회원 정보가 없습니다."));
+
+        model.addAttribute("user", user);
+
+        return "myPage";
     }
 
     /* 마이페이지 수정 */

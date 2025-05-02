@@ -52,10 +52,10 @@ public class JoinController {
     )
     @PreAuthorize("#memberId == principal.id or hasRole('ADMIN')")
     public ResponseEntity<?> uploadProfileImage(
-            @PathVariable String userId,
+            @PathVariable User user,
             @RequestPart("file") MultipartFile file
     ) {
-        memberService.storeProfileImage(userId, file);
+        memberService.storeProfileImage(user, file);
         return ResponseEntity.ok().build();
     }
 

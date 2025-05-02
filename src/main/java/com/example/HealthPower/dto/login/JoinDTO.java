@@ -5,10 +5,7 @@ import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,18 +15,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 //회원가입 시 사용할 DTO = signUpDTO
 public class JoinDTO {
-
+    @NotBlank(message = "아이디는 필수 입력 값입니다.")
     private String userId;
 
+    @NotBlank(message = "이메일은 필수 입력 값입니다.")
     private String email;
 
+    @NotBlank(message = "이름은 필수 입력 값입니다.")
     private String username;
 
+    @NotBlank(message = "닉네임은 필수 입력 값입니다.")
     private String nickname;
 
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
@@ -49,8 +50,6 @@ public class JoinDTO {
     private Gender gender;
 
     private MultipartFile photo;
-
-    /*private String photo;*/
 
     private Collection<GrantedAuthority> authorities;
 

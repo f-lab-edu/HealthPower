@@ -38,12 +38,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     // 해당하는 User 의 데이터가 존재한다면 UserDetails 객체로 만들어서 return
     private User createUserDetails(User user) {
+
+        //spring Security가 인식할 수 있도록 SimpleGrantedAuthority로 변환
+        List<GrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+        );
+
         return User.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .password(user.getPassword())
                 .activated(user.isActivated())
-                .authorities(user.getAuthorities())
+                .authorities(authorities)
                 .build();
     }
 
@@ -54,7 +60,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
-                user.getAuthorities().stream()//이부분에서 예외가 터짐
+                user.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
                 .collect(Collectors.toList());
         return new org.springframework.security.core.userdetails.User(user.getUsername(),
