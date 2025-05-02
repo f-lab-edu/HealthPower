@@ -1,4 +1,4 @@
-package com.example.HealthPower.dto;
+package com.example.HealthPower.dto.login;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

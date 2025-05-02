@@ -1,5 +1,6 @@
 package com.example.HealthPower.dto;
 
+import com.example.HealthPower.dto.user.UserDTO;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

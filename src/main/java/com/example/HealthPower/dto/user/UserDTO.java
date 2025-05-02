@@ -1,9 +1,11 @@
-package com.example.HealthPower.dto;
+package com.example.HealthPower.dto.user;
 
+import com.example.HealthPower.dto.AuthorityDTO;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -19,7 +21,9 @@ public class UserDTO {
 
     private Long id;
 
-    private String photo;
+    /*private String photo;*/
+
+    private MultipartFile photo;
 
     private String userId;
 

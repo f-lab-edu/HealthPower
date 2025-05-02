@@ -1,7 +1,7 @@
 package com.example.HealthPower.controller.member;
 
-import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.dto.UserModifyDTO;
+import com.example.HealthPower.dto.user.UserDTO;
+import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.service.MemberService;

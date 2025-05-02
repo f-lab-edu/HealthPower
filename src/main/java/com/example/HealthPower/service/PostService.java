@@ -1,9 +1,6 @@
 package com.example.HealthPower.service;
 
-import com.example.HealthPower.dto.ProductDTO;
-import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.entity.User;
-import com.example.HealthPower.entity.board.Board;
+import com.example.HealthPower.dto.product.ProductDTO;
 import com.example.HealthPower.entity.board.Post;
 import com.example.HealthPower.entity.board.Product;
 import com.example.HealthPower.impl.UserDetailsImpl;

@@ -1,9 +1,6 @@
-package com.example.HealthPower.dto;
-
-import org.springframework.security.core.GrantedAuthority;
+package com.example.HealthPower.dto.product;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 
 public class OrderDTO {
     private String userId;

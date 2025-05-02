@@ -1,7 +1,7 @@
 package com.example.HealthPower.controller.member;
 
-import com.example.HealthPower.dto.LoginDTO;
-import com.example.HealthPower.dto.UserDTO;
+import com.example.HealthPower.dto.login.LoginDTO;
+import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.MemberService;

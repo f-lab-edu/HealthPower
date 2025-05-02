@@ -1,6 +1,6 @@
 package com.example.HealthPower.entity.board;
 
-import com.example.HealthPower.dto.ProductDTO;
+import com.example.HealthPower.dto.product.ProductDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

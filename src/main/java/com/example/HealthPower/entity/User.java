@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,10 +48,17 @@ public class User implements UserDetails{
     private String phoneNumber;
 
     @Column(name = "address")
-    private String address;
+    private String address;*/
 
+    @Transient
     @Column(name = "photo")
+    private MultipartFile photo;
+
+    /*@Column(name = "photo")
     private String photo;*/
+
+    @Column(name = "photo_path")
+    private String photoPath;
 
     @Column(name = "gender")
     @Enumerated(EnumType.STRING)

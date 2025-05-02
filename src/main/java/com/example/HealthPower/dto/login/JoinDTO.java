@@ -1,28 +1,21 @@
-package com.example.HealthPower.dto;
+package com.example.HealthPower.dto.login;
 
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
-import com.example.HealthPower.util.SecurityUtil;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.processing.Pattern;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -55,7 +48,9 @@ public class JoinDTO {
 
     private Gender gender;
 
-    private String photo;
+    private MultipartFile photo;
+
+    /*private String photo;*/
 
     private Collection<GrantedAuthority> authorities;
 

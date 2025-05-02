@@ -1,6 +1,6 @@
 package com.example.HealthPower.jwt;
 
-import com.example.HealthPower.dto.UserDTO;
+import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
 import io.jsonwebtoken.*;

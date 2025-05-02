@@ -1,6 +1,6 @@
 package com.example.HealthPower.loginUser;
 
-import com.example.HealthPower.dto.UserDTO;
+import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.jwt.JwtAuthenticationFilter;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
