@@ -52,7 +52,8 @@ public class SecurityConfig {
         //csrf, cors, basichttp 비활성화
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
+                //.cors(AbstractHttpConfigurer::disable) form-data 테스트를 위해서 주석처리
+                .cors(cors -> {})
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling

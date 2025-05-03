@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 
@@ -19,7 +20,7 @@ public class UserDetailsImpl implements UserDetails {
     public UserDetailsImpl(User user) {
         this.user = user;
         this.userId = user.getUserId();  // User 객체에서 userId를 추출
-        this.authorities = user.getAuthorities();  // User 객체에서 권한을 추출
+        this.authorities = new ArrayList<>(user.getAuthorities());  // User 객체에서 권한을 추출
     }
 
     // userId와 authorities를 받는 생성자 추가

@@ -48,8 +48,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .password(user.getPassword())
+                .role(user.getRole())
                 .activated(user.isActivated())
-                .authorities(authorities)
                 .build();
     }
 
@@ -59,7 +59,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new RuntimeException(userId + " -> 활성화되어 있지 않습니다.");
         }
 
-        List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        List<GrantedAuthority> grantedAuthorities =
                 user.getAuthorities().stream()
                 .map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
                 .collect(Collectors.toList());

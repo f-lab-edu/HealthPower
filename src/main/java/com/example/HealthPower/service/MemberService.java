@@ -66,7 +66,8 @@ public class MemberService {
         }
 
         // Role 값에 따라 authorities 지정
-        Collection<GrantedAuthority> authorities;
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
         if (joinDTO.getRole() == Role.ADMIN) {
             authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
         } else {
@@ -86,7 +87,6 @@ public class MemberService {
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
                 .createdAt(joinDTO.getCreatedAt())
-                .authorities(authorities)
                 .build();
 
         User joinedUser = userRepository.save(user);

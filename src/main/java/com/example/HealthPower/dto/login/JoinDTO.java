@@ -80,12 +80,10 @@ public class JoinDTO {
                 .activated(user.isActivated())
                 .role(user.getRole())
                 .gender(user.getGender())
-/*              .phoneNumber(user.getPhoneNumber())
+                .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
-                .photo(user.getPhoto())*/
                 .birth(user.getBirth())
                 .createdAt(LocalDateTime.now())
-                .authorities(user.getAuthorities())
                 .build();
     }
 

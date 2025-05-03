@@ -52,14 +52,12 @@ public class JwtTokenProvider {
             log.info("Authentication: " + authentication.getName());
         }
 
-        List<GrantedAuthority> authorities = List.of(
-                new SimpleGrantedAuthority("ROLE_" + userDTO.getAuthorities())
-        );
-
-/*        //권한 가져오기
+        //권한 가져오기
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));*/
+                .collect(Collectors.joining(","));
+
+        System.out.println("🔥 AUTH IN TOKEN: " + authorities);
 
         long now = (new Date()).getTime();
 
@@ -90,6 +88,8 @@ public class JwtTokenProvider {
 
         System.out.println("서버 현재 시간 : " + new Date());
         System.out.println("access 만료 시간 : " + accessTokenExpiresln);
+
+        log.info("👉 권한 정보: {}", authentication.getAuthorities());
 
         //id설정을 어떻게 해줘야하지?
         return JwtToken.builder()
@@ -162,7 +162,7 @@ public class JwtTokenProvider {
 
         //UserDetails principal = new User(claims.getSubject(), "", authorities);
 
-        UserDetails principal = new UserDetailsImpl(claims.getSubject(), "", authorities, userId); // userId 추가
+        UserDetails principal = new UserDetailsImpl(claims.getSubject(), "", authorities, userId);
         //return new UsernamePasswordAuthenticationToken(principal, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
     }
@@ -206,7 +206,7 @@ public class JwtTokenProvider {
             // 사용자 정보 기반으로 새로운 accessToken 생성
             UserDTO userDTO = getUserById(userId); // userDTO는 사용자 정보를 담고 있는 DTO
 
-            Authentication authentication = new UsernamePasswordAuthenticationToken(userDTO, null, Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDTO, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
             return generateToken(authentication, userDTO);  // 새로운 accessToken과 refreshToken을 발급하여 반환
         } catch (Exception e) {
             log.error("Refresh Token 처리 중 오류 발생", e);

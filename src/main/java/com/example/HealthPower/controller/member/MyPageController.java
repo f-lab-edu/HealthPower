@@ -9,6 +9,7 @@ import com.example.HealthPower.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +39,11 @@ public class MyPageController {
 
     //마이페이지 사진 제대로 들어오는지 뷰로 확인
     @GetMapping("/myPage")
-    public String myPage(Model model) {
-        System.out.println("🟡 마이페이지 컨트롤러 호출됨");
+    public String myPage(Model model, Authentication authentication) {
+
+        System.out.println("🔥 컨트롤러에서 authentication = " + authentication);
+        System.out.println("🔥 principal = " + (authentication != null ? authentication.getPrincipal() : "null"));
+
         String userId = SecurityUtil.getCurrentUsername()
                 .orElseThrow(() -> new RuntimeException("로그인 정보 없음"));
 
@@ -47,6 +51,10 @@ public class MyPageController {
                 .orElseThrow(() -> new RuntimeException("회원 정보가 없습니다."));
 
         model.addAttribute("user", user);
+
+        System.out.println("🧪 controller authentication: " + authentication);
+        System.out.println("🧪 name: " + (authentication != null ? authentication.getName() : "null"));
+        System.out.println("🧪 authorities: " + (authentication != null ? authentication.getAuthorities() : "null"));
 
         return "myPage";
     }

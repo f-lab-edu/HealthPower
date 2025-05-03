@@ -64,9 +64,6 @@ public class User implements UserDetails{
     @Column(name = "birth")
     private LocalDate birth;
 
-    @Column(name = "authorities")
-    private Collection<GrantedAuthority> authorities;
-
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
@@ -92,9 +89,9 @@ public class User implements UserDetails{
     @Override
     //public Collection<? extends GrantedAuthority> getAuthorities() {
     //JoinDTO getAuthorities() 오류로 타입 변경??
-    public Collection<GrantedAuthority> getAuthorities() {
+    public Collection<? extends GrantedAuthority> getAuthorities() {
         if (role != null) {
-            return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
         }
         return Collections.emptyList(); // role이 null일 경우 빈 리스트 반환
     }
