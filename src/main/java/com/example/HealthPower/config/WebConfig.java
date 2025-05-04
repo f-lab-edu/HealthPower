@@ -1,7 +1,6 @@
 package com.example.HealthPower.config;
 
 import com.example.HealthPower.loginUser.LoginUserArgumentResolver;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;

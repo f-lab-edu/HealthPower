@@ -61,7 +61,7 @@ public class SecurityConfig {
                 // permit, authenticated 경로 설정
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         // 지정한 경로는 인증 없이 접근 허용
-                        .requestMatchers("/", "/members/login", "/members/join", "/test").permitAll()
+                        .requestMatchers("/", "/members/login", "/members/join", "/test", "/payment/**").permitAll()
                         //나머지 모든 경로는 인증 필요
                         .anyRequest().authenticated()
                 )

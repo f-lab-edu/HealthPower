@@ -6,9 +6,11 @@ import com.example.HealthPower.entity.board.Post;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.loginUser.LoginUser;
 import com.example.HealthPower.service.PostService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
@@ -50,16 +52,23 @@ public class BoardController {
 
     @PostMapping("/products/post")
     //@PreAuthorize("isAuthenticated()")
-    public ResponseEntity<String> createProduct(@LoginUser UserDTO userDTO,
+    public ResponseEntity<String> createProduct(@LoginUser UserDTO loginUser,
                                                 @RequestBody ProductDTO productDTO,
                                                 BindingResult bindingResult) {
 
         // 현재 로그인된 사용자 정보를 가져옴
         UserDetailsImpl currentUser = getCurrentUser();
 
+        if (loginUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+        }
+
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest().body("상품 등록 중 잘못된 입력값이 있습니다.");
         }
+
+        //상품 등록
+        //postService.createProduct(productDTO, currentUser);
 
         postService.createProduct(productDTO, currentUser);
 
@@ -72,8 +81,6 @@ public class BoardController {
                                         @RequestBody ProductDTO productDTO) {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        System.out.println("loginUser = " + loginUser);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) principal;
         String userId = userDetails.getUserId();
