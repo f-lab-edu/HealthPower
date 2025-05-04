@@ -1,7 +1,6 @@
 package com.example.HealthPower.repository;
 
-import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.dto.UserModifyDTO;
+import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 

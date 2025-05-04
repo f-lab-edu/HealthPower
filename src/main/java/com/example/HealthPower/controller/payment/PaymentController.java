@@ -1,19 +1,9 @@
 package com.example.HealthPower.controller.payment;
 
-import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.dto.payment.PaymentConfirmDTO;
-import com.example.HealthPower.dto.payment.PaymentDTO;
-import com.example.HealthPower.impl.UserDetailsImpl;
-import com.example.HealthPower.loginUser.LoginUser;
 import com.example.HealthPower.service.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 
 //@RestController
 @Controller

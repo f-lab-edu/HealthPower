@@ -1,6 +1,5 @@
-package com.example.HealthPower.dto;
+package com.example.HealthPower.dto.token;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

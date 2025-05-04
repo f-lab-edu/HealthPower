@@ -1,42 +1,36 @@
-package com.example.HealthPower.dto;
+package com.example.HealthPower.dto.login;
 
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
-import com.example.HealthPower.util.SecurityUtil;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.processing.Pattern;
-import org.springframework.format.annotation.DateTimeFormat;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 //회원가입 시 사용할 DTO = signUpDTO
 public class JoinDTO {
-
+    @NotBlank(message = "아이디는 필수 입력 값입니다.")
     private String userId;
 
+    @NotBlank(message = "이메일은 필수 입력 값입니다.")
     private String email;
 
+    @NotBlank(message = "이름은 필수 입력 값입니다.")
     private String username;
 
+    @NotBlank(message = "닉네임은 필수 입력 값입니다.")
     private String nickname;
 
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
@@ -55,7 +49,7 @@ public class JoinDTO {
 
     private Gender gender;
 
-    private String photo;
+    private MultipartFile photo;
 
     private Collection<? extends GrantedAuthority> authorities;
 
@@ -86,12 +80,10 @@ public class JoinDTO {
                 .activated(user.isActivated())
                 .role(user.getRole())
                 .gender(user.getGender())
-/*              .phoneNumber(user.getPhoneNumber())
+                .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
-                .photo(user.getPhoto())*/
                 .birth(user.getBirth())
                 .createdAt(LocalDateTime.now())
-                .authorities(user.getAuthorities())
                 .build();
     }
 

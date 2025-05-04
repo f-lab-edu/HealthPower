@@ -51,25 +51,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        //1. Request Header 에서 토큰을 꺼냄
-        String token = resolveToken((HttpServletRequest) request);
 
-        // 2. validateToken 으로 토큰 유효성 검사
-        // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        try {
+            //1. Request Header 에서 토큰을 꺼냄
+            String token = resolveToken((HttpServletRequest) request);
 
-            // 👉 블랙리스트(로그아웃된 토큰) 체크
-            Boolean isBlackListed = redisTemplate.hasKey("blackList : " + token);
-            if (isBlackListed) {
-                throw new RuntimeException("로그아웃 혹은 탈퇴한 사용자입니다.");
+            // 2. validateToken 으로 토큰 유효성 검사
+            // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+
+                log.info("🧪 추출된 토큰: " + token); // ✅ 찍히는지 확인
+
+                // 👉 블랙리스트(로그아웃된 토큰) 체크
+                Boolean isBlackListed = redisTemplate.hasKey("blackList : " + token);
+                if (isBlackListed) {
+                    throw new RuntimeException("로그아웃 혹은 탈퇴한 사용자입니다.");
+                }
+
+                // 👉 블랙리스트 아니면 정상 인증 처리
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                System.out.println("🟢 추출된 Authentication: " + authentication);
+                System.out.println("🟢 인증된 사용자 ID: " + authentication.getName());
+                System.out.println("🟢 권한: " + authentication.getAuthorities());
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.info("✅ 인증 성공 → SecurityContextHolder.setAuthentication(): {}", authentication.getName());
+
             }
 
-            // 👉 블랙리스트 아니면 정상 인증 처리
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "jwt 인증 실패");
         }
-
-        filterChain.doFilter(request, response);
     }
 
 

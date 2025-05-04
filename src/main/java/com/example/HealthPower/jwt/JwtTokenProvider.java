@@ -1,6 +1,6 @@
 package com.example.HealthPower.jwt;
 
-import com.example.HealthPower.dto.UserDTO;
+import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
 import io.jsonwebtoken.*;
@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -56,51 +57,43 @@ public class JwtTokenProvider {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
+        System.out.println("🔥 AUTH IN TOKEN: " + authorities);
+
         long now = (new Date()).getTime();
 
-        // Access Token 생성 + 유효 시간 설정
-        Date accessTokenExpiry = new Date(now + 86400000); //1일
-        Date refreshTokenExpiry = new Date(now + 864000000); //10일
+        // Access Token 생성
+        // Access Token 유효 시간 설정
+        Date accessTokenExpiresln = new Date(now + 86400000);
 
         log.info("Key used to sign the token: " + Arrays.toString(key.getEncoded())); //key 출력
 
-        // 🔹 공통 클레임 구성
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("id", userDTO.getId());
-        claims.put("userId", userDTO.getUserId());
-        claims.put("email", userDTO.getEmail());
-        claims.put("auth", authorities);
-
         //accessToken을 통해 jwt토큰을 복호화하기 때문에 여기서 내가 원하는 정보를 설정
         String accessToken = Jwts.builder()
-                //.setSubject(authentication.getName())
-                .setClaims(claims)
-                .setSubject(userDTO.getUserId())
-                .setIssuedAt(new Date(now))
-                //테스트용
-                //.claim("auth", "test_admin")
-                //.claim("id", userDTO.getId())
+                .setSubject(authentication.getName())
+                .claim("auth", authorities)
+                .claim("userId", userDTO.getUserId())
+                .claim("id", userDTO.getId())
                 .signWith(key, SignatureAlgorithm.HS256) //key 값이 서버에서 검증하는 key 값과 동일해야 함.
-                .setExpiration(accessTokenExpiry)
+                .setExpiration(accessTokenExpiresln)
                 .compact();
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
-                //.setSubject(authentication.getName())
-                .setSubject(userDTO.getUserId())
+                .setSubject(authentication.getName())
                 .claim("id", userDTO.getId())
                 .claim("userId", userDTO.getUserId())
-                .setIssuedAt(new Date(now))
-                .setExpiration(refreshTokenExpiry)
+                .setExpiration(new Date(now + 864000000))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        log.info("AccessToken Expiry: {}", accessTokenExpiry);
-        log.info("RefreshToken Expiry: {}", refreshTokenExpiry);
+        System.out.println("서버 현재 시간 : " + new Date());
+        System.out.println("access 만료 시간 : " + accessTokenExpiresln);
 
+        log.info("👉 권한 정보: {}", authentication.getAuthorities());
+
+        //id설정을 어떻게 해줘야하지?
         return JwtToken.builder()
-                .userId(userDTO.getUserId())
-                .id(userDTO.getId())
+                .userId(userDTO.getUserId()) //왜 return 시 userId가 null이 되지?
                 .grantType("Bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -130,6 +123,16 @@ public class JwtTokenProvider {
 
     // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
     public Authentication getAuthentication(String accessToken) {
+
+        /*
+
+        이렇게 추가하라고 권장.
+
+        String userId = getUserIdFromToken(accessToken);
+        UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(userId);
+
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());*/
+
         //Jwt 토큰 복호화
         Claims claims = parseClaims(accessToken);
 
@@ -151,15 +154,15 @@ public class JwtTokenProvider {
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
+        System.out.println("authorities = " + authorities);
+
 
         //UserDetails 객체를 만들어서 Authentication 반환
         //UserDetails: interface, User: UserDetails를 구현한 class
 
         //UserDetails principal = new User(claims.getSubject(), "", authorities);
 
-        Long id = Long.valueOf(claims.getId());
-
-        UserDetails principal = new UserDetailsImpl(claims.getSubject(), id, authorities, userId); // userId 추가
+        UserDetails principal = new UserDetailsImpl(claims.getSubject(), "", authorities, userId);
         //return new UsernamePasswordAuthenticationToken(principal, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
     }
@@ -203,7 +206,7 @@ public class JwtTokenProvider {
             // 사용자 정보 기반으로 새로운 accessToken 생성
             UserDTO userDTO = getUserById(userId); // userDTO는 사용자 정보를 담고 있는 DTO
 
-            Authentication authentication = new UsernamePasswordAuthenticationToken(userDTO, null, Arrays.asList(new SimpleGrantedAuthority("ROLE_USER")));
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDTO, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
             return generateToken(authentication, userDTO);  // 새로운 accessToken과 refreshToken을 발급하여 반환
         } catch (Exception e) {
             log.error("Refresh Token 처리 중 오류 발생", e);

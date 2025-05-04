@@ -1,28 +1,15 @@
 package com.example.HealthPower.service;
 
-import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.dto.payment.PaymentDTO;
 import com.example.HealthPower.dto.payment.PaymentResultDTO;
 import com.example.HealthPower.entity.payment.Payment;
-import com.example.HealthPower.impl.UserDetailsImpl;
-import com.example.HealthPower.loginUser.LoginUser;
 import com.example.HealthPower.repository.PaymentRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.constraints.Null;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;

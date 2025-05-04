@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,14 +44,18 @@ public class User implements UserDetails{
     @Column(name = "password", nullable = false)
     private String password;
 
-    /*@Column(name = "phoneNumber")
+    @Column(name = "phoneNumber")
     private String phoneNumber;
 
     @Column(name = "address")
     private String address;
 
+/*    @Transient
     @Column(name = "photo")
-    private String photo;*/
+    private MultipartFile photo;*/
+
+    @Column(name = "photo_path")
+    private String photoPath;
 
     @Column(name = "gender")
     @Enumerated(EnumType.STRING)
@@ -58,9 +63,6 @@ public class User implements UserDetails{
 
     @Column(name = "birth")
     private LocalDate birth;
-
-    @Column(name = "authorities")
-    private Collection<? extends GrantedAuthority> authorities;
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
@@ -85,10 +87,13 @@ public class User implements UserDetails{
     private Set<Authority> authorities;*/
 
     @Override
+    //public Collection<? extends GrantedAuthority> getAuthorities() {
+    //JoinDTO getAuthorities() 오류로 타입 변경??
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(role.toAuthority()); // role이 null일 경우 빈 리스트 반환
+        if (role != null) {
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        }
+        return Collections.emptyList(); // role이 null일 경우 빈 리스트 반환
     }
-
-
 
 }

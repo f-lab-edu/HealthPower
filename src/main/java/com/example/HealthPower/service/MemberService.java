@@ -1,19 +1,21 @@
 package com.example.HealthPower.service;
 
-import com.example.HealthPower.dto.JoinDTO;
-import com.example.HealthPower.dto.UserDTO;
-import com.example.HealthPower.dto.UserModifyDTO;
+import com.example.HealthPower.dto.login.JoinDTO;
+import com.example.HealthPower.dto.user.UserDTO;
+import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.DuplicateMemberException;
 import com.example.HealthPower.jwt.JwtAuthenticationFilter;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
+import com.example.HealthPower.userType.Role;
 import com.example.HealthPower.util.SecurityUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +23,21 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -40,6 +51,9 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
 
+    @Value("${app.upload.dir}")
+    private String uploadDir;
+
     //bCryptPasswordEncoder = null로 인해 @Autowired 추가
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -52,23 +66,39 @@ public class MemberService {
             throw new DuplicateMemberException("이미 가입되어 있는 아이디입니다.");
         }
 
+        // Role 값에 따라 authorities 지정
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        if (joinDTO.getRole() == Role.ADMIN) {
+            authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        } else {
+            authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
+
         User user = User.builder()
                 .username(joinDTO.getUsername())
                 .userId(joinDTO.getUserId())
                 .password(bCryptPasswordEncoder.encode(joinDTO.getPassword()))
                 .email(joinDTO.getEmail())
+                .phoneNumber(joinDTO.getPhoneNumber())
+                .address(joinDTO.getAddress())
                 .nickname(joinDTO.getNickname())
                 .activated(true)
                 .role(joinDTO.getRole())
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
                 .createdAt(joinDTO.getCreatedAt())
-                .authorities(joinDTO.getAuthorities()) //당연히 null값이 올 수 밖에 없음.
                 .build();
 
-        User save = userRepository.save(user);
+        User joinedUser = userRepository.save(user);
 
-        return JoinDTO.from(save);
+        //프로필 이미지가 있으면 저장
+        MultipartFile file = joinDTO.getPhoto();
+        if (file != null && !file.isEmpty()) {
+            storeProfileImage(joinedUser, file);
+        }
+
+        return JoinDTO.from(joinedUser);
     }
 
     // 리프레시 토큰 Redis에서 제거(구현x)
@@ -107,6 +137,7 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public Optional<User> getMyUserWithAuthorities() {
+        System.out.println("🔐 current userId: " + SecurityUtil.getCurrentUsername());
         return SecurityUtil.getCurrentUsername().flatMap(userRepository::findOneWithAuthoritiesByUserId);
     }
 
@@ -212,6 +243,25 @@ public class MemberService {
         redisTemplate.opsForValue().set("blackList : " + accessToken, "delete", expiration, TimeUnit.MILLISECONDS);
 
         return ResponseEntity.ok("회원탈퇴 완료");
+    }
+
+    //프로필 이미지 저장
+    public void storeProfileImage(User user, MultipartFile file) {
+        try {
+            String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String filename = UUID.randomUUID() + "." + ext;
+            Path target = Paths.get(uploadDir).resolve(filename);
+            Files.createDirectories(target.getParent());
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            log.info("[파일 저장 호출] 사용자 ID: " + user.getUserId());
+
+            user.setPhotoPath(filename);
+            userRepository.save(user);
+
+        } catch (IOException e) {
+            throw new UncheckedIOException("이미지 저장 실패", e);
+        }
     }
 
 }

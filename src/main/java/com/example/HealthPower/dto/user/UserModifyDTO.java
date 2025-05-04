@@ -1,4 +1,4 @@
-package com.example.HealthPower.dto;
+package com.example.HealthPower.dto.user;
 
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
@@ -6,11 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 

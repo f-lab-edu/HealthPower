@@ -1,7 +1,7 @@
 package com.example.HealthPower.controller;
 
-import com.example.HealthPower.dto.LoginDTO;
-import com.example.HealthPower.dto.TokenDTO;
+import com.example.HealthPower.dto.login.LoginDTO;
+import com.example.HealthPower.dto.token.TokenDTO;
 import com.example.HealthPower.jwt.JwtAuthenticationFilter;
 import com.example.HealthPower.jwt.JwtTokenProvider;
 import jakarta.validation.Valid;
