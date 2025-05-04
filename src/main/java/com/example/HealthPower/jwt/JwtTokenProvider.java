@@ -124,15 +124,6 @@ public class JwtTokenProvider {
     // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
     public Authentication getAuthentication(String accessToken) {
 
-        /*
-
-        이렇게 추가하라고 권장.
-
-        String userId = getUserIdFromToken(accessToken);
-        UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(userId);
-
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());*/
-
         //Jwt 토큰 복호화
         Claims claims = parseClaims(accessToken);
 
@@ -163,8 +154,8 @@ public class JwtTokenProvider {
         //UserDetails principal = new User(claims.getSubject(), "", authorities);
 
         UserDetails principal = new UserDetailsImpl(claims.getSubject(), "", authorities, userId);
-        //return new UsernamePasswordAuthenticationToken(principal, "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
+        return new UsernamePasswordAuthenticationToken(principal, null, authorities);
+        //return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
     }
 
     //토큰 정보를 검증하는 메서드
