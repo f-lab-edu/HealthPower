@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>채팅방</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body onload="scrollToBottom()">
+<h2>채팅방: <span th:text="${roomId}"></span></h2>
+
+<!-- 채팅방 상단 정보 -->
+<div style="display: flex; align-items: center; margin-bottom: 12px;">
+    <img th:src="@{'/images/' + ${partnerProfile}}" width="40" height="40"
+         style="border-radius: 50%; margin-right: 10px;" alt="상대방 프로필">
+    <strong th:text="${partnerName}"></strong>
+</div>
+
+<div id="chat-box" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px;">
+    <!-- 서버에서 불러온 메시지 -->
+    <div th:each="msg, iterStat : ${messages}">
+        <!-- 이전 메시지와 날짜 비교해서 다르면 날짜 출력 -->
+        <div th:if="${iterStat.index == 0 or
+                     #temporals.format(msg.sentAt, 'yyyy-MM-dd') !=
+                     #temporals.format(messages[iterStat.index - 1].sentAt, 'yyyy-MM-dd')}">
+            <div style="text-align: center; margin: 12px 0; color: gray; font-size: 0.9em;">
+                <span th:text="${#temporals.format(msg.sentAt, 'yyyy년 M월 d일 E요일')}"></span>
+            </div>
+        </div>
+
+        <div th:if="${msg.senderId == currentUserId}"
+             style="text-align: right; margin-bottom: 8px;">
+            <span th:text="${msg.content}" style="background-color: #dcf8c6; padding: 6px; border-radius: 8px;"></span>
+            <small th:text="${#temporals.format(msg.sentAt, 'a hh:mm')}"></small>
+        </div>
+        <div th:if="${msg.senderId != currentUserId}"
+             style="text-align: left; margin-bottom: 8px;">
+            <b th:text="${msg.senderId}"></b><br>
+            <span th:text="${msg.content}" style="background-color: #eee; padding: 6px; border-radius: 8px;"></span>
+            <small th:text="${#temporals.format(msg.sentAt, 'HH:mm')}"></small>
+        </div>
+    </div>
+</div>
+
+
+<!-- 메시지 입력 -->
+<input type="text" id="messageInput" placeholder="메시지 입력" style="width: 70%;">
+<button onclick="sendMessage()">보내기</button>
+
+<script th:inline="javascript">
+    const roomId = /*[[${roomId}]]*/ '';
+    const currentUserId = /*[[${currentUserId}]]*/ '';
+    const receiverId = /*[[${receiverId}]]*/ '';
+
+    const headers = {
+        Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiLquYDrr7zsiJgiLCJhdXRoIjoiUk9MRV9VU0VSIiwidXNlcklkIjoiaGVhbHRocG93ZXIxIiwiZXhwIjoxNzQ2NzYzMjA1fQ.gret2XR3WOIZGAarWaMa9UKe96Jb9D4M8-q0UcrKg4c"
+    }
+
+    const socket = new SockJS("/ws");
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect(headers, function (frame) {
+        console.log("WebSocket 연결 성공", frame);
+
+    stompClient.subscribe("/topic/" + roomId, function (message) {
+    const msg = JSON.parse(message.body);
+    const box = document.getElementById("chat-box");
+    const div = document.createElement("div");
+    div.style.marginBottom = "8px";
+
+    if (msg.senderId === currentUserId) {
+        div.style.textAlign = "right";
+        div.innerHTML = `<span style="background-color: #dcf8c6; padding: 6px; border-radius: 8px;">${msg.content}</span>`;
+    } else {
+        div.style.textAlign = "left";
+        div.innerHTML = `<b>${msg.senderId}</b><br>
+                         <span style="background-color: #eee; padding: 6px; border-radius: 8px;">${msg.content}</span>`;
+    }
+
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    scrollToBottom();
+    });
+});
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const input = document.getElementById("messageInput");
+
+        input.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+                document.getElementById("messageInput").focus();
+            }
+        });
+    });
+
+    function scrollToBottom() {
+        const box = document.getElementById("chat-box");
+        box.scrollTop = box.scrollHeight;
+    }
+
+
+    function sendMessage() {
+        const content = document.getElementById("messageInput").value;
+        if (!content) return;
+
+        const msg = {
+            roomId: roomId,
+            senderId: currentUserId,
+            receiverId: receiverId,
+            content: content
+        };
+
+        stompClient.send("/app/chat.send", {}, JSON.stringify(msg));
+        document.getElementById("messageInput").value = '';
+    }
+</script>
+</body>
+</html>

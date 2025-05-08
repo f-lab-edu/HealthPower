@@ -3,6 +3,7 @@ package com.example.HealthPower.jwt;
 import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
+import com.example.HealthPower.userType.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -16,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -177,7 +179,7 @@ public class JwtTokenProvider {
         } catch (IllegalArgumentException e) {
             log.info("JWT claims string is empty.", e);
         } catch (Exception e) {
-            log.info("asdfadsf");
+            log.info("토큰 검증 실패 " + e.getMessage());
         }
         return false;
     }
@@ -251,5 +253,28 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.getExpiration().getTime();
+    }
+
+    //테스트용
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    public String generateToken2(String userId, Role role) {
+
+        long expirationMs = 1000 * 60 * 60; // 1시간
+
+        Claims claims = Jwts.claims().setSubject(userId);
+        claims.put("auth", "ROLE_" + role.name());
+        claims.put("userId", userId);
+
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expirationMs);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 }

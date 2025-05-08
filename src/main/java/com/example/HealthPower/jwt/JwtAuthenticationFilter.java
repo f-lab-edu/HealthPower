@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -82,11 +83,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             }
 
-            filterChain.doFilter(request, response);
+            //쿠키 확인 - 프론트 화면 테스트를 위한 코드
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                System.out.println("📦 쿠키 개수: " + cookies.length);
+                for (Cookie cookie : cookies) {
+                    System.out.println("🔍 쿠키 이름: " + cookie.getName() + ", 값: " + cookie.getValue());
+                }
+            } else {
+                System.out.println("❌ 요청에 쿠키가 하나도 없음");
+            }
+
+            //filterChain.doFilter(request, response); //기존에는 여기였음
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "jwt 인증 실패");
+            //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "jwt 인증 실패");
+            //인증 실패해도 response 막지 말고 그냥 넘어감 + 인증 실패를 Spring Security에게 맡김
         }
+
+        filterChain.doFilter(request, response); //이곳에 위치시켜야함(25.05.08)
     }
 
 
@@ -122,6 +137,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7); //"Bearer "제거
         }
+
+        // 2. 쿠키에서 토큰 찾기 (Authorization 이름의 쿠키) - 프론트 화면 단에서 테스트를 위해 필요
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("Authorization".equals(cookie.getName())) {
+                    String value = cookie.getValue();
+                        return value; //Bearer는 기존에 없이 전달함.
+                }
+            }
+        }
+
         return null;
     }
 }
