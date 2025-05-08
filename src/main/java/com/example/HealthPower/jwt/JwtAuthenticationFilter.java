@@ -75,10 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 System.out.println("🟢 추출된 Authentication: " + authentication);
                 System.out.println("🟢 인증된 사용자 ID: " + authentication.getName());
                 System.out.println("🟢 권한: " + authentication.getAuthorities());
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.println("principal class : " + authentication.getClass());
 
                 log.info("✅ 인증 성공 → SecurityContextHolder.setAuthentication(): {}", authentication.getName());
+                log.info("✅ isAuthenticated: {}", authentication.isAuthenticated());
 
             }
 
