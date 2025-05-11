@@ -9,6 +9,7 @@ import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.ChatService;
 import com.example.HealthPower.service.MemberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,6 +32,7 @@ import java.util.Optional;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/chat")
+@Slf4j
 public class ChatController {
 
     private final ChatService chatService;
@@ -81,6 +84,15 @@ public class ChatController {
         model.addAttribute("chatrooms", chatRooms);
         model.addAttribute("currentUserId", user.getUserId());
         return "chatList";
+    }
+
+    //채팅방 나가기
+    @GetMapping("/chat/exit/{roomId}")
+    public String exitRoom(@AuthenticationPrincipal UserDetailsImpl user,
+                           @PathVariable String roomId) {
+        log.info("채팅방 나가기 요청: roomId={}, userId={}", roomId, user.getUserId());
+        chatService.markUserExited(roomId, user.getUserId());
+        return "redirect:/chat/list";
     }
 
 }

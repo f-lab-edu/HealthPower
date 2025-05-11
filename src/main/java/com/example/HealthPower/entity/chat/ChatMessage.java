@@ -23,6 +23,10 @@ public class ChatMessage {
     private String roomId;
     private LocalDateTime sentAt = LocalDateTime.now();
 
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    private ChatRoom chatRoom;
+
     public ChatMessage(String roomId, String senderId, String receiverId, String content) {
         this.roomId = roomId;
         this.senderId = senderId;

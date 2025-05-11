@@ -64,6 +64,9 @@ public class User implements UserDetails{
     @Column(name = "birth")
     private LocalDate birth;
 
+    @Column(name = "balance")
+    private double balance;
+
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 

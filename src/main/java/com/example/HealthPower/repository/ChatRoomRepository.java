@@ -9,6 +9,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, String> {
 
     Optional<ChatRoom> findByParticipantAAndParticipantB(String participantA, String participantB);
     Optional<ChatRoom> findByParticipantBAndParticipantA(String participantB, String participantA);
+    Optional<ChatRoom> findByRoomId(String roomId);
 
     default Optional<ChatRoom> findByParticipants(String user1, String user2) {
         if (user1.compareTo(user2) < 0) {

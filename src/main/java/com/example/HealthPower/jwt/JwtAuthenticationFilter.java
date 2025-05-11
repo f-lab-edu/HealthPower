@@ -55,13 +55,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             //1. Request Header 에서 토큰을 꺼냄
+
             String token = resolveToken((HttpServletRequest) request);
 
             // 2. validateToken 으로 토큰 유효성 검사
             // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
             if (token != null && jwtTokenProvider.validateToken(token)) {
-
-                log.info("🧪 추출된 토큰: " + token); // ✅ 찍히는지 확인
 
                 // 👉 블랙리스트(로그아웃된 토큰) 체크
                 Boolean isBlackListed = redisTemplate.hasKey("blackList : " + token);
@@ -73,21 +72,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
                 System.out.println("🟢 추출된 Authentication: " + authentication);
                 System.out.println("🟢 인증된 사용자 ID: " + authentication.getName());
                 System.out.println("🟢 권한: " + authentication.getAuthorities());
-                System.out.println("principal class : " + authentication.getClass());
 
-                log.info("✅ 인증 성공 → SecurityContextHolder.setAuthentication(): {}", authentication.getName());
-                log.info("✅ isAuthenticated: {}", authentication.isAuthenticated());
+                System.out.println("====================");
 
+                System.out.println("🟢 요청 URL: " + request.getRequestURI());
+                System.out.println("🟢 요청 메서드: " + request.getMethod());
+                System.out.println("impToken = Bearer " + token);
+
+                log.info("🟢 인증 성공 → SecurityContextHolder.setAuthentication(): {}", authentication.getName());
+                log.info("🟢 isAuthenticated: {}", authentication.isAuthenticated());
+                log.info("🟢 최종 Authentication : {}", auth);
+                log.info("🟢 Principal : {}", auth.getPrincipal());
+                log.info("🟢 Authorities : {}", auth.getAuthorities());
             }
 
             //쿠키 확인 - 프론트 화면 테스트를 위한 코드
+            String impToken = null;
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
-                System.out.println("📦 쿠키 개수: " + cookies.length);
                 for (Cookie cookie : cookies) {
+                    if ("Authorization".equals(cookie.getName())) {
+                        impToken = cookie.getValue(); //여기서 붙여줌
+                        System.out.println("impToken = " + impToken);
+                        break;
+                    }
                     System.out.println("🔍 쿠키 이름: " + cookie.getName() + ", 값: " + cookie.getValue());
                 }
             } else {
@@ -100,8 +113,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             //response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "jwt 인증 실패");
             //인증 실패해도 response 막지 말고 그냥 넘어감 + 인증 실패를 Spring Security에게 맡김
         }
-
-        filterChain.doFilter(request, response); //이곳에 위치시켜야함(25.05.08)
+            filterChain.doFilter(request, response); //이곳에 위치시켜야함(25.05.08)
     }
 
 
@@ -142,8 +154,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("Authorization".equals(cookie.getName())) {
-                    String value = cookie.getValue();
-                        return value; //Bearer는 기존에 없이 전달함.
+                        return cookie.getValue();
                 }
             }
         }

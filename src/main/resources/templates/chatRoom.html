@@ -42,10 +42,15 @@
     </div>
 </div>
 
-
 <!-- 메시지 입력 -->
 <input type="text" id="messageInput" placeholder="메시지 입력" style="width: 70%;">
 <button onclick="sendMessage()">보내기</button>
+
+<!--<form th:action="@{/chat/exit/{roomId}(roomId=${roomId})}" method="post">-->
+<!--    <button type="submit">채팅방 나가기</button>-->
+<!--</form>-->
+
+<button onclick="exitChatRoom()">채팅방 나가기</button>
 
 <script th:inline="javascript">
     const roomId = /*[[${roomId}]]*/ '';
@@ -114,6 +119,22 @@
 
         stompClient.send("/app/chat.send", {}, JSON.stringify(msg));
         document.getElementById("messageInput").value = '';
+    }
+
+    function exitChatRoom() {
+      fetch("/chat/exit/" + roomId, {
+        method: "POST",
+        credentials: "include"  // 👈 쿠키 포함해서 전송
+      }).then(res => {
+        if (res.ok) {
+          alert("채팅방을 나갔습니다.");
+          window.location.href = "/chat/list";
+        } else {
+          alert("나가기 실패: " + res.status);
+        }
+      }).catch(err => {
+        console.error("오류:", err);
+      });
     }
 </script>
 </body>

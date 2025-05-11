@@ -70,27 +70,35 @@ public class UserDetailsImpl implements UserDetails {
     //true : 만료
     @Override
     public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
+
+        //return UserDetails.super.isAccountNonExpired();
+        return true;
     }
 
     //계정의 잠김 여부 리턴
     //true : 잠김
     @Override
     public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+
+        //return UserDetails.super.isAccountNonLocked();
+        return true;
     }
 
     //비밀번호 만료 여부 리턴
     //true : 만료
     @Override
     public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
+
+        //return UserDetails.super.isCredentialsNonExpired();
+        return true;
     }
 
     //계정의 활성화 여부 리턴
     //true : 활성화
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+
+        //return UserDetails.super.isEnabled();
+        return true;
     }
 }
