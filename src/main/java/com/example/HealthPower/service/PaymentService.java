@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
@@ -30,12 +31,10 @@ public class PaymentService {
     @Value("${toss.secret}")
     private String secretKey;
 
+    private final PaymentLogService paymentLogService;
     private final RestClient restClient;
-
     private final PaymentRepository paymentRepository;
-
     private final UserRepository userRepository;
-
     private final TransactionHistoryRepository transactionHistoryRepository;
 
     //결제 성공 시 내역 저장
@@ -99,7 +98,13 @@ public class PaymentService {
 
         //사용자 잔액 차감
         User user = userRepository.findByUserId(userId).orElseThrow();
-        if (user.getBalance() < amount) throw new IllegalArgumentException("잔액 부족");
+        if (user.getBalance() < amount){
+            //결제 실패 로그 DB 저장
+            paymentLogService.logFailure(userId, amount, user.getBalance());
+            log.warn("결제 실패 - 잔액 부족. userId={}, balance={}, amount={}", userId, user.getBalance(), amount);
+            throw new IllegalArgumentException("잔액 부족");
+        }
+
 
         user.setBalance(user.getBalance() - amount);
         userRepository.save(user);
