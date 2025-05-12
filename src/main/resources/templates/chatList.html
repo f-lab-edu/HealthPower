@@ -10,14 +10,13 @@
 <ul>
   <li th:each="room, iter : ${chatrooms}">
     <span th:text="${iter.index + 1} + '. '"></span>
-    <a th:href="@{|/chat/${room.roomId}|}">
-      채팅방 →
-      <span>
-      <span th:if="${room.roomId.split('_')[0] != currentUserId}"
-            th:text="${room.roomId.split('_')[0]} + ' '"></span>
-      <span th:if="${room.roomId.split('_')[1] != currentUserId}"
-            th:text="${room.roomId.split('_')[1]}"></span>
+    <a th:href="@{|/chat/${room.chatRoom.roomId}|}">채팅방 →<span>
+      <span th:if="${room.chatRoom.roomId.split('_')[0] != currentUserId}"
+            th:text="${room.chatRoom.roomId.split('_')[0]} + ' '"></span>
+      <span th:if="${room.chatRoom.roomId.split('_')[1] != currentUserId}"
+            th:text="${room.chatRoom.roomId.split('_')[1]}"></span>
       </span>
+      <span th:if="${room.exited}" style="color: red;">(나간 방)</span>
     </a>
   </li>
 </ul>

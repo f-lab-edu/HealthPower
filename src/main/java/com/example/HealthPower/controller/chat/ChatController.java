@@ -1,6 +1,7 @@
 package com.example.HealthPower.controller.chat;
 
 import com.example.HealthPower.dto.chat.ChatMessageDTO;
+import com.example.HealthPower.dto.chat.ChatRoomListItemDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.entity.chat.ChatMessage;
 import com.example.HealthPower.entity.chat.ChatRoom;
@@ -11,6 +12,8 @@ import com.example.HealthPower.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -42,8 +46,13 @@ public class ChatController {
     public String enterChatRoom(@AuthenticationPrincipal UserDetailsImpl user,
                                 @PathVariable("targetUserId") String targetUserId,
                                 RedirectAttributes redirectAttributes) {
-        ChatRoom chatRoom = chatService.createRoomId(user.getUserId(), targetUserId);
-        return "redirect:/chat/" + chatRoom.getRoomId();
+        try {
+            ChatRoom chatRoom = chatService.createRoomId(user.getUserId(), targetUserId);
+            return "redirect:/chat/" + chatRoom.getRoomId();
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/chat/list"; // 에러 메시지와 함께 목록으로 리디렉션
+        }
     }
 
     @MessageMapping("/chat.send")
@@ -57,6 +66,12 @@ public class ChatController {
     public String enterChatRoom(@PathVariable String roomId,
                                 @AuthenticationPrincipal UserDetailsImpl user,
                                 Model model) {
+
+        boolean allowed = chatService.hasUserActiveInRoom(roomId, user.getUserId());
+
+        if (!allowed) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이미 나간 채팅방입니다.");
+        }
         List<ChatMessage> chatHistory = chatService.getMessages(roomId);
         model.addAttribute("roomId", roomId);
         model.addAttribute("currentUserId", user.getUserId());
@@ -80,14 +95,14 @@ public class ChatController {
     @GetMapping("/list")
     public String myChatRooms(@AuthenticationPrincipal UserDetailsImpl user,
                               Model model) {
-        List<ChatRoom> chatRooms = chatService.getRoomsByUser(user.getUserId());
+        List<ChatRoomListItemDTO> chatRooms = chatService.getRoomsByUser(user.getUserId());
         model.addAttribute("chatrooms", chatRooms);
         model.addAttribute("currentUserId", user.getUserId());
         return "chatList";
     }
 
     //채팅방 나가기
-    @GetMapping("/chat/exit/{roomId}")
+    @PostMapping("/exit/{roomId}")
     public String exitRoom(@AuthenticationPrincipal UserDetailsImpl user,
                            @PathVariable String roomId) {
         log.info("채팅방 나가기 요청: roomId={}, userId={}", roomId, user.getUserId());

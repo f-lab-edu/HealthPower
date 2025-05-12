@@ -19,6 +19,8 @@ public interface ChatRoomParticipantRepository extends JpaRepository<ChatRoomPar
     //나가지 않은 방만 목록에서 보여줄 때 사용
     List<ChatRoomParticipant> findByUser_UserIdAndExitedFalse(String userId);
 
+    List<ChatRoomParticipant> findByUser_UserId(String userId);
+
     //방 완전 삭제 시 관련 participant 정보 같이 삭제
     void deleteByChatRoom(ChatRoom chatRoom);
 }

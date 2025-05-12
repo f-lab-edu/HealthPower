@@ -43,12 +43,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Qualifier("redisTemplate")
     private final RedisTemplate<String, String> redisTemplate;
 
-    /*@Override
+    @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        // "/payment/success", "/payment/fail" 요청은 이 필터를 거치지 않게 설정
         String path = request.getRequestURI();
-        return path.startsWith("/payment/success") || path.startsWith("/payment/fail");
-    }*/
+        return path.equals("/favicon.ico") || path.startsWith("/ws/");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {

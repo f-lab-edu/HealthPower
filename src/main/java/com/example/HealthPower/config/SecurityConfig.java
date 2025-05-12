@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 //.cors(AbstractHttpConfigurer::disable) form-data 테스트를 위해서 주석처리
                 .cors(cors -> {})
-                //.formLogin(AbstractHttpConfigurer::disable) //form 로그인 테스트용
+                .formLogin(AbstractHttpConfigurer::disable) //form 로그인 테스트용
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptionHandling -> exceptionHandling
@@ -57,10 +57,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         // 지정한 경로는 인증 없이 접근 허용
                         .requestMatchers("/members/join-success").permitAll()
-                        //.requestMatchers("/members/login2").permitAll() //form login 테스트용
-                        //.requestMatchers("/chat/exit/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() //정적자원 허용
+                        .requestMatchers("/members/login2").permitAll() //form login 테스트용
                         .requestMatchers("/", "/members/login", "/members/join", "/test", "/payment/**").permitAll()
+                        .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**", "/static/**","/ws/**").permitAll() //정적자원 허용
                         //나머지 모든 경로는 인증 필요
                         .anyRequest().authenticated()
                 )

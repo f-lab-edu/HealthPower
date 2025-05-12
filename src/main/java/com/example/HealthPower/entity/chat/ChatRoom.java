@@ -5,6 +5,8 @@ import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -23,5 +25,17 @@ public class ChatRoom {
             this.participantB = participantA;
         }
         this.roomId = this.participantA + "_" + this.participantB;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ChatRoom chatRoom = (ChatRoom) o;
+        return Objects.equals(roomId, chatRoom.roomId) && Objects.equals(participantA, chatRoom.participantA) && Objects.equals(participantB, chatRoom.participantB);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(roomId, participantA, participantB);
     }
 }
