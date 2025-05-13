@@ -28,6 +28,8 @@ public class UserModifyDTO {
 
     private String photo;
 
+    private String address;
+
     private String email;
 
     private String password;
@@ -37,6 +39,8 @@ public class UserModifyDTO {
     private Gender gender;
 
     private Role role;
+
+    private Double balance;
 
     //SimpleGrantedAuthority는 기본적으로 생성자나 속성 기반의 역직렬화 방법을 제공하지 않아서 일단 String 형태로 지정
     //이 문자열을 나중에 SimpleGrantedAuthority로 변환

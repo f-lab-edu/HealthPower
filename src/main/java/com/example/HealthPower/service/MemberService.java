@@ -208,12 +208,15 @@ public class MemberService {
         // 엔티티에선 @Setter를 사용안하는 걸 권장하는데, 그럼 정보 수정을 다른 방식으로 하는 방법이 있나?
         user.setUsername(userModifyDTO.getUsername());
         user.setPassword(bCryptPasswordEncoder.encode(userModifyDTO.getPassword()));
+        user.setAddress(userModifyDTO.getAddress());
         user.setGender(userModifyDTO.getGender());
         user.setEmail(userModifyDTO.getEmail());
         user.setNickname(userModifyDTO.getNickname());
         user.setBirth(userModifyDTO.getBirth());
         user.setRole(userModifyDTO.getRole());
         user.setActivated(userModifyDTO.isActivated());
+        user.setPhotoPath(userModifyDTO.getPhoto());
+        user.setBalance(userModifyDTO.getBalance());
         //user.setAuthorities(authorities); // 권한 업데이트 에러(타입 불일치)
 
         return userRepository.save(user);
