@@ -57,7 +57,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         // 지정한 경로는 인증 없이 접근 허용
                         .requestMatchers("/favicon.ico").permitAll()
-                        .requestMatchers("/members/join-success").permitAll()
+                        .requestMatchers("/members/checkUserId", "/members/checkUserEmail", "/members/checkUserNickname").permitAll()
+                        .requestMatchers("/members/joinSuccess").permitAll()
                         .requestMatchers("/members/login2").permitAll() //form login 테스트용
                         .requestMatchers("/", "/members/login", "/members/join", "/test", "/payment/**").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**","/ws/**").permitAll() //정적자원 허용

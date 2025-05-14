@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -60,11 +62,16 @@ public class MyPageController {
 
     /* 마이페이지 수정 */
     @PutMapping("/myInfoUpdate")
-    public ResponseEntity<String> saveMyInfo(@RequestBody UserModifyDTO userModifyDTO) {
+    public ResponseEntity<String> saveMyInfo(@Validated @RequestBody UserModifyDTO userModifyDTO,
+                                             BindingResult bindingResult) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         UserDetailsImpl userDetails = (UserDetailsImpl) principal;
         String userId = userDetails.getUserId();
+
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors().toString());
+        }
 
         memberService.myInfoUpdate(userModifyDTO);
 

@@ -2,55 +2,60 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>회원가입</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
     <h1>회원가입</h1>
     <form th:action="@{/members/join}" th:object="${joinDTO}" method="post" enctype="multipart/form-data">
         <div>
             <label>아이디:</label>
-            <input type="text" th:field="*{userId}" />
-            <div th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
+            <input id="userId" type="text" th:field="*{userId}" />
+            <div id="userIdMsg" class="error-message"></div>
+            <div th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}" class="error-message"></div>
         </div>
         <div>
             <label>이메일:</label>
-            <input type="email" th:field="*{email}" />
-            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            <input id="email" type="email" th:field="*{email}" />
+            <div id="emailMsg" class="error-message"></div>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message"></div>
         </div>
         <div>
             <label>이름:</label>
             <input type="text" th:field="*{username}" />
-            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="error-message"></div>
         </div>
         <div>
             <label>비밀번호:</label>
-            <input type="password" th:field="*{password}" />
-            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+            <input id="password" type="password" th:field="*{password}" />
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-message"></div>
         </div>
         <div>
             <label>비밀번호 확인:</label>
-            <input type="password" th:field="*{passwordCheck}" />
-            <div th:if="${#fields.hasErrors('passwordCheck')}" th:errors="*{passwordCheck}"></div>
+            <input id="passwordCheck" type="password" th:field="*{passwordCheck}" />
+            <div id="passwordMatchMsg" class="error-message"></div>
+            <div th:if="${#fields.hasErrors('passwordCheck')}" th:errors="*{passwordCheck}" class="error-message"></div>
         </div>
         <div>
             <label>닉네임:</label>
-            <input type="text" th:field="*{nickname}" />
-            <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}"></div>
+            <input id="nickname" type="text" th:field="*{nickname}" />
+            <div id="nicknameMsg" class="error-message"></div>
+            <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}" class="error-message"></div>
         </div>
         <div>
             <label>휴대폰 번호:</label>
             <input type="text" th:field="*{phoneNumber}" />
-            <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+            <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" class="error-message"></div>
         </div>
         <div>
             <label>주소:</label>
             <input type="text" th:field="*{address}" />
-            <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+            <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="error-message"></div>
         </div>
         <div>
             <label>생년월일:</label>
-            <input type="date" th:field="*{birth}" />
-            <div th:if="${#fields.hasErrors('birth')}" th:errors="*{birth}"></div>
+            <input type="date" th:field="*{birth}" required />
+            <div th:if="${#fields.hasErrors('birth')}" th:errors="*{birth}" class="error-message"></div>
         </div>
         <div>
             <label>성별:</label><br/>
@@ -58,7 +63,7 @@
             <label for="MAN">남성</label>
             <input type="radio" th:field="*{gender}" value="WOMAN" id="WOMAN" />
             <label for="WOMAN">여성</label>
-            <div th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></div>
+            <div th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}" class="error-message"></div>
         </div>
 
         <div>
@@ -69,7 +74,7 @@
             <label for="roleTrainer">트레이너</label>
             <input type="radio" th:field="*{role}" value="GYM_ADMIN" id="roleGymAdmin" />
             <label for="roleGymAdmin">헬스장 관리자</label>
-            <div th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+            <div th:if="${#fields.hasErrors('role')}" th:errors="*{role}" class="error-message"></div>
         <div>
             <label>프로필 사진:</label>
             <input type="file" th:field="*{photo}" accept="image/*" />
@@ -77,4 +82,83 @@
         <button type="submit">가입하기</button>
     </form>
 </body>
+<script>
+    function checkDuplicate(inputId, messageId, apiUrl) {
+    const value = document.getElementById(inputId).value;
+    const msgDiv = document.getElementById(messageId);
+
+    if (!value) {
+        msgDiv.textContent = "";
+        return;
+    }
+
+    if (inputId === "email" && !isValidEmailFormat(value)) {
+        msgDiv.textContent = "이메일 형식이 올바르지 않습니다.";
+        msgDiv.style.color = "red";
+        return;
+    }
+
+    fetch(`${apiUrl}?${inputId}=${encodeURIComponent(value)}`)
+        .then(response => response.json())
+        .then(isDuplicate => {
+            if (isDuplicate) {
+                msgDiv.textContent = "이미 사용 중입니다.";
+                msgDiv.style.color = "red";
+            } else {
+                msgDiv.textContent = "사용 가능합니다.";
+                msgDiv.style.color = "green";
+            }
+        })
+        .catch(error => {
+            msgDiv.textContent = "확인 중 오류 발생";
+            msgDiv.style.color = "orange";
+            console.error(error);
+        });
+    }
+
+    document.getElementById("userId").addEventListener("blur", function () {
+        checkDuplicate("userId", "userIdMsg", "/members/checkUserId");
+    });
+
+    document.getElementById("nickname").addEventListener("blur", function () {
+        checkDuplicate("nickname", "nicknameMsg", "/members/checkUserNickname");
+    });
+
+    document.getElementById("email").addEventListener("blur", function () {
+        checkDuplicate("email", "emailMsg", "/members/checkUserEmail");
+    });
+
+    const passwordInput = document.getElementById("password");
+    const passwordCheckInput = document.getElementById("passwordCheck");
+    const passwordMsg = document.getElementById("passwordMatchMsg");
+
+    function checkPasswordMatch() {
+        const password = passwordInput.value;
+        const confirm = passwordCheckInput.value;
+
+        // 메시지 초기화
+        passwordMsg.textContent = "";
+
+        if (!confirm) return;
+
+        if (password !== confirm) {
+            passwordMsg.textContent = "비밀번호가 일치하지 않습니다.";
+            passwordMsg.style.color = "red";
+        } else if (password.length < 8) {
+            passwordMsg.textContent = "비밀번호는 최소 8자리 이상이어야 합니다.";
+            passwordMsg.style.color = "red";
+        } else {
+            passwordMsg.textContent = "비밀번호가 일치합니다.";
+            passwordMsg.style.color = "green";
+        }
+    }
+
+    passwordInput.addEventListener("input", checkPasswordMatch);
+    passwordCheckInput.addEventListener("input", checkPasswordMatch);
+
+    function isValidEmailFormat(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+</script>
 </html>
