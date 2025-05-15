@@ -53,6 +53,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         try {
+
+            String requestURI = request.getRequestURI();
+
+            if ("/favicon.ico".equals(requestURI)) {
+                //filterChain.doFilter(request, response);
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT); // 204 No Content
+                return;
+            }
+
             //1. Request Header 에서 토큰을 꺼냄
 
             String token = resolveToken((HttpServletRequest) request);
@@ -64,6 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 👉 블랙리스트(로그아웃된 토큰) 체크
                 Boolean isBlackListed = redisTemplate.hasKey("blackList : " + token);
                 if (isBlackListed) {
+                    System.out.println("블랙 리스트로 등록되어 있습니다.");
                     throw new RuntimeException("로그아웃 혹은 탈퇴한 사용자입니다.");
                 }
 

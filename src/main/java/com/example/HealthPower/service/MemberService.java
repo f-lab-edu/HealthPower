@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -30,6 +31,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -38,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +65,7 @@ public class MemberService {
     /* 회원가입 */
     @Transactional
     public JoinDTO join(JoinDTO joinDTO) {
+
         if (userRepository.findByUserId(joinDTO.getUserId()).orElse(null) != null) {
             log.info("이미 가입되어 있는 아이디");
             throw new DuplicateMemberException("이미 가입되어 있는 아이디입니다.");
@@ -88,7 +92,7 @@ public class MemberService {
                 .role(joinDTO.getRole())
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
-                .createdAt(joinDTO.getCreatedAt())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         User joinedUser = userRepository.save(user);
@@ -200,6 +204,14 @@ public class MemberService {
     public User myInfoUpdate(UserModifyDTO userModifyDTO) {
         //DTO를 Entity형태로 저장해야함.(JPA는 엔티티 객체를 DB에 저장하기 때문에)
 
+        String currentUserId = SecurityUtil.getCurrentUsername()
+                .orElseThrow(() -> new AccessDeniedException("인증되지 않은 사용자입니다."));
+
+        if (!userModifyDTO.getUserId().equals(currentUserId)) {
+            System.out.println("마이페이지 정보 수정은 본인만 가능합니다.");
+            throw new AccessDeniedException("마이페이지 정보 수정은 본인만 가능합니다.");
+        }
+
         //1.DTO에서 User 엔티티 객체로 변환
         User user = userRepository.findByUserId(userModifyDTO.getUserId())
                 .orElseThrow(() -> new RuntimeException("조회되는 회원 아이디가 없습니다."));
@@ -208,12 +220,16 @@ public class MemberService {
         // 엔티티에선 @Setter를 사용안하는 걸 권장하는데, 그럼 정보 수정을 다른 방식으로 하는 방법이 있나?
         user.setUsername(userModifyDTO.getUsername());
         user.setPassword(bCryptPasswordEncoder.encode(userModifyDTO.getPassword()));
+        user.setAddress(userModifyDTO.getAddress());
         user.setGender(userModifyDTO.getGender());
         user.setEmail(userModifyDTO.getEmail());
         user.setNickname(userModifyDTO.getNickname());
         user.setBirth(userModifyDTO.getBirth());
+        user.setPhoneNumber(userModifyDTO.getPhoneNumber());
         user.setRole(userModifyDTO.getRole());
         user.setActivated(userModifyDTO.isActivated());
+        user.setPhotoPath(userModifyDTO.getPhoto());
+        user.setBalance(userModifyDTO.getBalance());
         //user.setAuthorities(authorities); // 권한 업데이트 에러(타입 불일치)
 
         return userRepository.save(user);
@@ -250,34 +266,49 @@ public class MemberService {
 
     //프로필 이미지 저장
     public void storeProfileImage(User user, MultipartFile file) {
+
+        if (file == null || file.isEmpty()) return;
+
+        String originalFileName = file.getOriginalFilename();
+        String ext = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String baseName = originalFileName.substring(0, originalFileName.lastIndexOf("."));
+        String storedFileName = baseName + ext;
+
+        Path uploadPath = Paths.get(uploadDir);
+
+        if (!Files.exists(uploadPath)) {
+            try {
+                Files.createDirectories(uploadPath);
+            } catch (IOException e) {
+                log.warn("기존 프로필 사진 삭제 실패 : {} ", e.getMessage());
+            }
+        }
+
+        Path targetPath = uploadPath.resolve(storedFileName);
+
         try {
-            String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
-            String filename = UUID.randomUUID() + "." + ext;
-            Path target = Paths.get(uploadDir).resolve(filename);
-            Files.createDirectories(target.getParent());
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            if (!Files.exists(targetPath)) {
+                file.transferTo(targetPath.toFile());
+            }
 
-            log.info("[파일 저장 호출] 사용자 ID: " + user.getUserId());
-
-            user.setPhotoPath(filename);
+            user.setPhotoPath(storedFileName);
             userRepository.save(user);
-
         } catch (IOException e) {
-            throw new UncheckedIOException("이미지 저장 실패", e);
+            throw new RuntimeException("프로필 이미지 저장 실패", e);
         }
     }
 
-    //테스트용
-    public User authenticate(String userId, String password) {
-        User user = userRepository.findByUserId(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 유저 없음: " + userId));
+//테스트용
+public User authenticate(String userId, String password) {
+    User user = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new UsernameNotFoundException("해당 유저 없음: " + userId));
 
-        if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("비밀번호 불일치");
-        }
-
-        return user;
+    if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
+        throw new BadCredentialsException("비밀번호 불일치");
     }
+
+    return user;
+}
 
 }
 

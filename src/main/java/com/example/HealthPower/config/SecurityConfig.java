@@ -56,10 +56,13 @@ public class SecurityConfig {
                 // permit, authenticated 경로 설정
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
                         // 지정한 경로는 인증 없이 접근 허용
-                        .requestMatchers("/members/join-success").permitAll()
+                        .requestMatchers("/favicon.ico").permitAll()
+                        .requestMatchers("/members/checkUserId", "/members/checkUserEmail", "/members/checkUserNickname").permitAll()
+                        .requestMatchers("/members/joinSuccess").permitAll()
                         .requestMatchers("/members/login2").permitAll() //form login 테스트용
                         .requestMatchers("/", "/members/login", "/members/join", "/test", "/payment/**").permitAll()
-                        .requestMatchers("/favicon.ico", "/css/**", "/js/**", "/images/**", "/static/**","/ws/**").permitAll() //정적자원 허용
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**","/ws/**").permitAll() //정적자원 허용
+                        .requestMatchers("/error/**").permitAll()
                         //나머지 모든 경로는 인증 필요
                         .anyRequest().authenticated()
                 )
