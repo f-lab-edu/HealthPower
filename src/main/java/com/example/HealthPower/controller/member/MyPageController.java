@@ -18,6 +18,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Slf4j
@@ -63,7 +64,7 @@ public class MyPageController {
     /* 마이페이지 수정 */
     @PutMapping("/myInfoUpdate")
     public ResponseEntity<String> saveMyInfo(@Validated @RequestBody UserModifyDTO userModifyDTO,
-                                             BindingResult bindingResult) {
+                                             BindingResult bindingResult) throws IOException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         UserDetailsImpl userDetails = (UserDetailsImpl) principal;
@@ -73,7 +74,7 @@ public class MyPageController {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors().toString());
         }
 
-        memberService.myInfoUpdate(userModifyDTO);
+        memberService.myInfoUpdate(userId, userModifyDTO);
 
         return ResponseEntity.ok("회원 정보가 성공적으로 업데이트되었습니다.");
     }

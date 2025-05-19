@@ -99,4 +99,11 @@ public class User implements UserDetails{
         return Collections.emptyList(); // role이 null일 경우 빈 리스트 반환
     }
 
+    public void deductBalance(int amount) {
+        if (this.balance < amount) {
+            throw new IllegalStateException("잔액 부족");
+        }
+        this.balance -= amount;
+    }
+
 }

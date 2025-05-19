@@ -8,14 +8,12 @@
 <body>
 <h1>간단 결제하기</h1>
 
-<button id="payment-button">결제하기</button>
-
 <script>
     const tossPayments = TossPayments('test_ck_DpexMgkW36N5NAm2MW5M3GbR5ozO');
     const userId = 'healthpower1';
-    const orderName = '6개월 이용권';
+    const orderName = '테스트상품2';
     const orderId = `order-${Date.now()}`;
-    const amount = 500000;
+    const amount = 100000;
 
     tossPayments.requestPayment('카드', {
         amount: amount,
