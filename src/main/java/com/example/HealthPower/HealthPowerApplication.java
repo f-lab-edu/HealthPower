@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+@PropertySource("classpath:application-secret.properties")
 @EnableJpaAuditing //auditing 기능을 위해 추가
 @SpringBootApplication
 @EnableCaching // 레디스 캐싱을 위해 추가, @Cacheable 같은 어노테이션을 인식 하게 함
