@@ -1,6 +1,7 @@
 package com.example.HealthPower.controller.payment;
 
 import com.example.HealthPower.entity.User;
+import com.example.HealthPower.entity.payment.Payment;
 import com.example.HealthPower.entity.payment.TransactionHistory;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.TransactionHistoryRepository;
@@ -11,8 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 //@RestController
 @Controller
@@ -25,33 +29,71 @@ public class PaymentController {
     private final TransactionHistoryRepository transactionHistoryRepository;
 
     //결제 요청
+    @GetMapping("/productDetail")
+    public String productDetail() {
+        return "productDetail";
+    }
+
     @GetMapping
     public String paymentPage() {
         return "payment";
+    }
+
+    @PostMapping("/request")
+    public ResponseEntity<?> createOrder(@AuthenticationPrincipal UserDetailsImpl user,
+                                         @RequestBody Payment payment) {
+        String orderId = "order_" + UUID.randomUUID(); // or Toss 요구 포맷
+
+        paymentService.savePaymentInfoRedis(orderId, user.getUserId(), payment.getQuantity(), payment.getOrderName(), payment.getProductId());
+
+        // Toss 결제 페이지로 redirect URL 생성
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getUserId(),
+                "orderId", orderId,
+                "orderName", payment.getOrderName(),
+                "amount", payment.getAmount(),
+                "redirectUrl", "http://localhost:8080/payment/success" // Toss SDK URL
+        ));
     }
 
     @GetMapping("/success")
     public String paymentSuccess(@RequestParam("paymentKey") String paymentKey,
                                  @RequestParam("orderId") String orderId,
                                  @RequestParam("amount") Long amount,
-                                 @RequestParam("userId") String userId,
-                                 @RequestParam("orderName") String orderName) {
+                                 @AuthenticationPrincipal UserDetailsImpl user,
+                                 RedirectAttributes redirectAttributes) {
         // 이 값을 바탕으로 토스에 최종 결제 승인 요청하고
         // DB에 결제 내역 저장하면 됨
-        paymentService.approvePayment(paymentKey, orderId, amount, orderName, userId);
+        try {
+            paymentService.approvePayment(paymentKey, orderId, amount, user.getUserId());
+            return "paymentSuccess";
+        } catch (IllegalArgumentException e) {
+            // Redis에서 주문 정보 꺼냄
+            Map<String, Object> orderInfo = paymentService.getOrderInfoRedis(orderId);
+            String productId = orderInfo.get("productId").toString();
 
-        return "paymentSuccess";
+            // 실패 메시지 전달
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+
+            return "redirect:/board/product/" + productId;
+        }
+
     }
 
     @GetMapping("/fail")
-    public String paymentFail(@RequestParam("code") String code,
-                              @RequestParam("message") String message,
-                              @RequestParam("orderId") String orderId,
-                              @RequestParam(value = "userId", required = false) String userId,
-                              @RequestParam(value = "orderName", required = false) String orderName) {
+    public String paymentFail(@RequestParam("orderId") String orderId,
+                              @RequestParam(value = "message", required = false) String message,
+                              @RequestParam(value = "fail", required = false) String fail,
+                              RedirectAttributes redirectAttributes) {
 
-        paymentService.saveFailedPayment(code, message, orderId, orderName, userId);
-        return "paymentFail";
+        // Redis에 있는 주문 정보에서 상품 ID를 가져온다
+        Map<String, Object> orderInfo = paymentService.getOrderInfoRedis(orderId);
+        String productId = orderInfo.get("productId").toString(); // 미리 Redis에 저장해둬야 함
+
+        // 메시지를 전달 (잔액 부족 등)
+        redirectAttributes.addFlashAttribute("errorMessage", message);
+
+        return "redirect:/board/product/" + productId;  // 상세 페이지로 복귀
     }
 
     @PostMapping("/charge")

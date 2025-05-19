@@ -81,6 +81,13 @@ public class LoginController {
         cookie.setMaxAge(60 * 60); // 1시간 유지
         response.addCookie(cookie);
 
-        return "redirect:/chat/list";
+        return "redirect:/members/menu";
+
+        //return "redirect:/chat/list";
+    }
+
+    @GetMapping("/menu")
+    public String menu() {
+        return "menu";
     }
 }

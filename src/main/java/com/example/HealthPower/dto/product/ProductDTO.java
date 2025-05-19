@@ -20,10 +20,11 @@ public class ProductDTO {
 
     private String category;
 
+    private int stock;
+
     @NotBlank(message = "등록할 게시판을 선택해야 합니다.")
     private String boardName;
 
     private String content;
-
 
 }
