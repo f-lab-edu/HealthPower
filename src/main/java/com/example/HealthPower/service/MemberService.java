@@ -54,6 +54,7 @@ public class MemberService {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
+    private final S3Uploader s3Uploader;
 
     @Value("${app.upload.dir}")
     private String uploadDir;
@@ -64,12 +65,14 @@ public class MemberService {
 
     /* 회원가입 */
     @Transactional
-    public JoinDTO join(JoinDTO joinDTO) {
+    public JoinDTO join(JoinDTO joinDTO) throws IOException {
 
         if (userRepository.findByUserId(joinDTO.getUserId()).orElse(null) != null) {
             log.info("이미 가입되어 있는 아이디");
             throw new DuplicateMemberException("이미 가입되어 있는 아이디입니다.");
         }
+
+        String uploadedUrl = s3Uploader.uploadFile(joinDTO.getPhoto(), "userPhoto");
 
         // Role 값에 따라 authorities 지정
         List<GrantedAuthority> authorities = new ArrayList<>();
@@ -92,6 +95,7 @@ public class MemberService {
                 .role(joinDTO.getRole())
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
+                .photoUrl(uploadedUrl)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -201,7 +205,7 @@ public class MemberService {
     }
 
     /* 마이페이지 정보 업데이트 */
-    public User myInfoUpdate(UserModifyDTO userModifyDTO) {
+    public User myInfoUpdate(String userId, UserModifyDTO userModifyDTO) throws IOException {
         //DTO를 Entity형태로 저장해야함.(JPA는 엔티티 객체를 DB에 저장하기 때문에)
 
         String currentUserId = SecurityUtil.getCurrentUsername()
@@ -228,9 +232,14 @@ public class MemberService {
         user.setPhoneNumber(userModifyDTO.getPhoneNumber());
         user.setRole(userModifyDTO.getRole());
         user.setActivated(userModifyDTO.isActivated());
-        user.setPhotoPath(userModifyDTO.getPhoto());
         user.setBalance(userModifyDTO.getBalance());
         //user.setAuthorities(authorities); // 권한 업데이트 에러(타입 불일치)
+
+        MultipartFile file = userModifyDTO.getPhoto();
+        if (file != null || !file.isEmpty()) {
+            String uploadedUrl = s3Uploader.uploadFile(file, "userPhoto");
+            user.setPhotoUrl(uploadedUrl);
+        }
 
         return userRepository.save(user);
 

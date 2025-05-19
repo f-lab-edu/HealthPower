@@ -13,6 +13,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 //@Controller
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class JoinController {
     //@RequestBody를 통해 joinDTO에 바인딩
     //프로필 이미지 업로드를 위해 @RequestBody에서 @ModelAttribute로 변경
     public ResponseEntity join(@ModelAttribute @Valid JoinDTO joinDTO,
-                               BindingResult bindingResult) {
+                               BindingResult bindingResult) throws IOException {
 
         /*if (bindingResult.hasErrors()) {
             return new ResponseEntity(HttpStatus.BAD_REQUEST);

@@ -19,6 +19,7 @@ public class Payment {
 
     private String userId; //결제한 아이디
     private String paymentKey; // Toss에서 발급한 결제 키
+    private Long productId;
 
     @Column(unique = true)
     private String orderId; // 주문 ID
@@ -29,4 +30,6 @@ public class Payment {
     private String method;  // 카드 / 가상계좌 / 간편결제 등
     private LocalDateTime paidAt; // 결제 완료 시각
     private String failReason; //실패 사유
+
+    private int quantity; //Redis용 수량 필드
 }

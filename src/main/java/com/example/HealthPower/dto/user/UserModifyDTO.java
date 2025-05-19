@@ -7,7 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -29,7 +31,7 @@ public class UserModifyDTO {
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")
     private String nickname;
 
-    private String photo;
+    private MultipartFile photo;
 
     private String address;
 
@@ -41,6 +43,7 @@ public class UserModifyDTO {
     @Size(min = 8, message = "비밀번호는 최소 8자 이상이어야 합니다.")
     private String password;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @NotNull(message = "생년월일은 필수 입력 항목입니다.")
     private LocalDate birth;
 

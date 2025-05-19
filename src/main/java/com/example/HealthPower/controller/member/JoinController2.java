@@ -14,6 +14,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 //이미지 업로드를 위한 form-data 형식으로 회원가입 controller
 @Controller
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class JoinController2 {
     public String join(
             @Validated @ModelAttribute JoinDTO joinDTO,
             BindingResult bindingResult
-    ) {
+    ) throws IOException {
 
         if (userRepository.existsByUserId(joinDTO.getUserId())) {
             bindingResult.rejectValue("userId", "duplicate", "이미 사용 중인 아이디입니다.");

@@ -50,9 +50,8 @@ public class User implements UserDetails{
     @Column(name = "address")
     private String address;
 
-/*    @Transient
-    @Column(name = "photo")
-    private MultipartFile photo;*/
+    @Column(name = "photo_url")
+    private String photoUrl;
 
     @Column(name = "photo_path")
     private String photoPath;
@@ -97,6 +96,13 @@ public class User implements UserDetails{
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
         }
         return Collections.emptyList(); // role이 null일 경우 빈 리스트 반환
+    }
+
+    public void deductBalance(int amount) {
+        if (this.balance < amount) {
+            throw new IllegalStateException("잔액 부족");
+        }
+        this.balance -= amount;
     }
 
 }
