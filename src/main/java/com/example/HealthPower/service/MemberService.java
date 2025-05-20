@@ -235,8 +235,10 @@ public class MemberService {
         user.setBalance(userModifyDTO.getBalance());
         //user.setAuthorities(authorities); // 권한 업데이트 에러(타입 불일치)
 
+        System.out.println("🔑 accessKey: " + System.getenv("AWS_ACCESS_KEY"));
+
         MultipartFile file = userModifyDTO.getPhoto();
-        if (file != null || !file.isEmpty()) {
+        if (file != null && !file.isEmpty()) {
             String uploadedUrl = s3Uploader.uploadFile(file, "userPhoto");
             user.setPhotoUrl(uploadedUrl);
         }

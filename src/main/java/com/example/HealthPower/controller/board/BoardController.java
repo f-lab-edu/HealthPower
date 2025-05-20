@@ -1,5 +1,6 @@
 package com.example.HealthPower.controller.board;
 
+import com.example.HealthPower.dto.comment.CommentResponseDTO;
 import com.example.HealthPower.dto.product.ProductDTO;
 import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.entity.board.Post;
@@ -7,6 +8,7 @@ import com.example.HealthPower.entity.board.Product;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.loginUser.LoginUser;
 import com.example.HealthPower.repository.ProductRepository;
+import com.example.HealthPower.service.CommentService;
 import com.example.HealthPower.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,7 @@ import java.util.List;
 public class BoardController {
 
     private final ProductRepository productRepository;
+    private final CommentService commentService;
 
     @Autowired
     private PostService postService;
@@ -89,7 +92,12 @@ public class BoardController {
     public String productDetail(@PathVariable("id") Long id, Model model) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("상품이 존재하지 않습니다."));
+
+        List<CommentResponseDTO> comments = commentService.getCommentByProduct(id);
+
         model.addAttribute("product", product);
+        model.addAttribute("comments", comments);
+
         return "productDetail";
     }
 

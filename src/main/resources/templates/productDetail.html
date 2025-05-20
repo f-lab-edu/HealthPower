@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -27,6 +27,43 @@
 </div>
 
 <button onclick="startPayment()">결제하기</button>
+
+<!-- 댓글 리스트 -->
+<h3>댓글</h3>
+<div th:if="${#lists.isEmpty(comments)}">
+    <p>아직 댓글이 없습니다.</p>
+</div>
+
+<div th:each="comment : ${comments}" class="comment-box" style="display: flex; align-items: center; margin-bottom: 12px;">
+    <img th:src="${comment.photoUrl != null ? comment.photoUrl : 'https://via.placeholder.com/42'}"
+         style="width: 42px; height: 42px; border-radius: 50%; margin-right: 12px;" alt="프로필">
+    <div>
+        <strong th:text="${comment.nickname}">닉네임</strong>:
+        <span th:text="${comment.content}">댓글 내용</span>
+        <!-- 본인만 삭제 버튼 보이기 -->
+        <form th:if="${comment.userId == #authentication.principal.userId}"
+              th:action="@{'/comment/' + ${comment.commentId} + '/delete'}"
+              method="post" style="display:inline;">
+            <button type="submit">삭제</button>
+        </form>
+    </div>
+</div>
+
+<!-- 댓글 작성 폼 -->
+<!-- 로그인 사용자에게만 보여지는 영역 -->
+<div sec:authorize="isAuthenticated()">
+    <form th:action="@{/comment}" method="post">
+        <input type="hidden" name="productId" th:value="${product.id}" />
+        <textarea name="content" rows="3" cols="50" placeholder="댓글을 입력하세요" required></textarea>
+        <br>
+        <button type="submit">댓글 등록</button>
+    </form>
+</div>
+
+<!-- 비로그인 사용자에게 안내 -->
+<div sec:authorize="isAnonymous()">
+    <p>댓글을 작성하려면 <a th:href="@{/login}">로그인</a>이 필요합니다.</p>
+</div>
 
 <div th:if="${errorMessage}">
     <p style="color: red" th:text="${errorMessage}"></p>

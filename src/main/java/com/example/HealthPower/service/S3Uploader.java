@@ -38,6 +38,7 @@ public class S3Uploader {
 
     @PostConstruct
     public void initialize() {
+
         this.s3Client = S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(
@@ -47,7 +48,8 @@ public class S3Uploader {
 
     public String uploadFile(MultipartFile file, String dirName) throws IOException {
         String originalFileName = file.getOriginalFilename();
-        String fileName = dirName + "/" + UUID.randomUUID() + "_" + originalFileName;
+        String safeFileName = UUID.randomUUID() + "_" + originalFileName.replaceAll("[^a-zA-Z0-9.\\-]", "_");
+        String fileName = dirName + "/" + safeFileName;
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)

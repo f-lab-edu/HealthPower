@@ -35,6 +35,4 @@ public class Post {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Getters, Setters, Constructors
-
 }

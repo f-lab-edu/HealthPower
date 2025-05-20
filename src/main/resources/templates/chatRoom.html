@@ -11,7 +11,7 @@
 
 <!-- 채팅방 상단 정보 -->
 <div style="display: flex; align-items: center; margin-bottom: 12px;">
-    <img th:src="@{'/images/' + ${partnerProfile}}" width="40" height="40"
+    <img th:src="@{${partnerPhoto}}" width="300" height="300"
          style="border-radius: 50%; margin-right: 10px;" alt="상대방 프로필">
     <strong th:text="${partnerName}"></strong>
 </div>
@@ -52,6 +52,9 @@
 
 <button onclick="exitChatRoom()">채팅방 나가기</button>
 
+</body>
+</html>
+
 <script th:inline="javascript">
     const roomId = /*[[${roomId}]]*/ '';
     const currentUserId = /*[[${currentUserId}]]*/ '';
@@ -74,12 +77,26 @@
     div.style.marginBottom = "8px";
 
     if (msg.senderId === currentUserId) {
-        div.style.textAlign = "right";
-        div.innerHTML = `<span style="background-color: #dcf8c6; padding: 6px; border-radius: 8px;">${msg.content}</span>`;
+            div.style.textAlign = "right";
+    div.innerHTML = `
+        <div>
+            <span style="background-color: #dcf8c6; padding: 6px; border-radius: 8px;">${msg.content}</span>
+            <br>
+            <small>${msg.senderNickname}</small>
+        </div>
+    `;
     } else {
-        div.style.textAlign = "left";
-        div.innerHTML = `<b>${msg.senderId}</b><br>
-                         <span style="background-color: #eee; padding: 6px; border-radius: 8px;">${msg.content}</span>`;
+            div.style.textAlign = "left";
+    div.innerHTML = `
+        <div style="display: flex; align-items: center;">
+            <img src="${msg.photoUrl || 'https://via.placeholder.com/40'}"
+                 style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;" />
+            <div>
+                <strong>${msg.senderNickname}</strong><br>
+                <span style="background-color: #eee; padding: 6px; border-radius: 8px;">${msg.content}</span>
+            </div>
+        </div>
+    `;
     }
 
     box.appendChild(div);
@@ -104,7 +121,6 @@
         const box = document.getElementById("chat-box");
         box.scrollTop = box.scrollHeight;
     }
-
 
     function sendMessage() {
         const content = document.getElementById("messageInput").value;
@@ -137,5 +153,3 @@
       });
     }
 </script>
-</body>
-</html>

@@ -6,21 +6,14 @@ import com.example.HealthPower.entity.User;
 import com.example.HealthPower.entity.chat.ChatMessage;
 import com.example.HealthPower.entity.chat.ChatRoom;
 import com.example.HealthPower.entity.chat.ChatRoomParticipant;
-import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.ChatMessageRepository;
 import com.example.HealthPower.repository.ChatRoomParticipantRepository;
 import com.example.HealthPower.repository.ChatRoomRepository;
 import com.example.HealthPower.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,31 +81,6 @@ public class ChatService {
         chatRoomParticipantRepository.save(participantB);
 
         return savedRoom;
-
-        //기존 소스
-        /*return chatRoomRepository.findByParticipants(userA, userB)
-                .orElseGet(() -> {
-                    ChatRoom room = new ChatRoom(userA, userB);
-                    ChatRoom savedRoom = chatRoomRepository.save(room);
-
-                    //사용자 A 참여자 정보 저장
-                    User userEntityA = userRepository.findByUserId(userA).orElseThrow();
-                    ChatRoomParticipant participantA = new ChatRoomParticipant();
-                    participantA.setUser(userEntityA);
-                    participantA.setChatRoom(savedRoom);
-                    participantA.setExited(false);
-                    chatRoomParticipantRepository.save(participantA);
-
-                    //사용자 B 참여자 정보 저장
-                    User userEntityB = userRepository.findByUserId(userB).orElseThrow();
-                    ChatRoomParticipant participantB = new ChatRoomParticipant();
-                    participantB.setUser(userEntityB);
-                    participantB.setChatRoom(savedRoom);
-                    participantB.setExited(false);
-                    chatRoomParticipantRepository.save(participantB);
-
-                    return savedRoom;
-                });*/
     }
 
     public void save(ChatMessageDTO chatMessageDTO) {
@@ -135,7 +103,7 @@ public class ChatService {
 
         List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUser_UserId(userId);
 
-        // 🔍 디버깅 로그 추가
+        // 디버깅 로그 추가
         System.out.println("🧪 참여자 수: " + participants.size());
         participants.forEach(p -> {
             try {
