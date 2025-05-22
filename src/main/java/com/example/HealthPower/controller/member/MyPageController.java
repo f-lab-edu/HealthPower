@@ -2,6 +2,7 @@ package com.example.HealthPower.controller.member;
 
 import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.dto.user.UserModifyDTO;
+import com.example.HealthPower.dto.user.UserModifyTestDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
@@ -12,6 +13,7 @@ import com.example.HealthPower.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,10 +31,10 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 @Slf4j
-@RestController
+//@RestController
 @RequestMapping("/members")
 @RequiredArgsConstructor
-//@Controller
+@Controller
 public class MyPageController {
 
     private final MemberService memberService;
@@ -70,29 +72,21 @@ public class MyPageController {
     }
 
     /* 마이페이지 수정 */
-    /*@PutMapping("/myInfoUpdate")
-    public ResponseEntity<String> saveMyInfo(@Validated @ModelAttribute UserModifyDTO userModifyDTO,
-                                             BindingResult bindingResult,
-                                             @AuthenticationPrincipal UserDetailsImpl userDetails) throws IOException {
-        *//*Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @PutMapping(value = "/myInfoUpdate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> saveMyInfo(@ModelAttribute UserModifyTestDTO userModifyDTO,
+                                             @RequestPart(required = false) MultipartFile photo) throws IOException {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) principal;*//*
+        UserDetailsImpl userDetails = (UserDetailsImpl) principal;
 
         String userId = userDetails.getUserId();
 
-        System.out.println("userModifyDTO.getUserId() = " + userModifyDTO.getUserId());
-        System.out.println("userModifyDTO.nickname = " + userModifyDTO.getNickname());
-
-        if (bindingResult.hasErrors()) {
-            return ResponseEntity.badRequest().body(bindingResult.getAllErrors().toString());
-        }
-
         memberService.myInfoUpdate(userId, userModifyDTO);
         return ResponseEntity.ok("회원 정보가 성공적으로 업데이트되었습니다.");
-    }*/
+    }
 
     /* 마이페이지 수정 */
-    @PutMapping("/myInfoUpdate")
+    /*@PutMapping("/myInfoUpdate")
     public ResponseEntity<String> saveMyInfo(@RequestParam String username,
                                              @RequestParam String nickname,
                                              @RequestParam String password,
@@ -135,6 +129,6 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("회원 정보 수정 중 오류가 발생했습니다.");
         }
-    }
+    }*/
 }
 

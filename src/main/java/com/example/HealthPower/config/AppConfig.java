@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
-@PropertySource("classpath:application-secret.properties")
 public class AppConfig {
 
     @Bean
@@ -22,7 +21,7 @@ public class AppConfig {
         RestTemplate restTemplate = new RestTemplate();
 
         List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
-        messageConverters.add(new StringHttpMessageConverter(StandardCharsets.UTF_8)); // 🔥 핵심!
+        messageConverters.add(new StringHttpMessageConverter(StandardCharsets.UTF_8));
         messageConverters.add(new MappingJackson2HttpMessageConverter());
 
         restTemplate.setMessageConverters(messageConverters);

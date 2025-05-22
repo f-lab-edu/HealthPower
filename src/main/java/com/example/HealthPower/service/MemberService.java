@@ -3,6 +3,7 @@ package com.example.HealthPower.service;
 import com.example.HealthPower.dto.login.JoinDTO;
 import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.dto.user.UserModifyDTO;
+import com.example.HealthPower.dto.user.UserModifyTestDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.DuplicateMemberException;
 import com.example.HealthPower.jwt.JwtAuthenticationFilter;
@@ -205,7 +206,7 @@ public class MemberService {
     }
 
     /* 마이페이지 정보 업데이트 */
-    public User myInfoUpdate(String userId, UserModifyDTO userModifyDTO) throws IOException {
+    /*public User myInfoUpdate(String userId, UserModifyDTO userModifyDTO) throws IOException {
         //DTO를 Entity형태로 저장해야함.(JPA는 엔티티 객체를 DB에 저장하기 때문에)
 
         String currentUserId = SecurityUtil.getCurrentUsername()
@@ -218,6 +219,52 @@ public class MemberService {
 
         //1.DTO에서 User 엔티티 객체로 변환
         User user = userRepository.findByUserId(userModifyDTO.getUserId())
+                .orElseThrow(() -> new RuntimeException("조회되는 회원 아이디가 없습니다."));
+
+        // 2. 변환된 User 엔티티에 DTO 값 업데이트
+        // 엔티티에선 @Setter를 사용안하는 걸 권장하는데, 그럼 정보 수정을 다른 방식으로 하는 방법이 있나?
+        user.setUsername(userModifyDTO.getUsername());
+        user.setPassword(bCryptPasswordEncoder.encode(userModifyDTO.getPassword()));
+        user.setAddress(userModifyDTO.getAddress());
+        user.setGender(userModifyDTO.getGender());
+        user.setEmail(userModifyDTO.getEmail());
+        user.setNickname(userModifyDTO.getNickname());
+        user.setBirth(userModifyDTO.getBirth());
+        user.setPhoneNumber(userModifyDTO.getPhoneNumber());
+        user.setRole(userModifyDTO.getRole());
+        user.setActivated(userModifyDTO.isActivated());
+        user.setBalance(userModifyDTO.getBalance());
+        //user.setAuthorities(authorities); // 권한 업데이트 에러(타입 불일치)
+
+        System.out.println("🔑 accessKey: " + System.getenv("AWS_ACCESS_KEY"));
+
+        MultipartFile file = userModifyDTO.getPhoto();
+        if (file != null && !file.isEmpty()) {
+            String uploadedUrl = s3Uploader.uploadFile(file, "userPhoto");
+            user.setPhotoUrl(uploadedUrl);
+        }
+
+        return userRepository.save(user);
+
+    }*/
+
+    /* 마이페이지 수정 */
+    public User myInfoUpdate(String userId, UserModifyTestDTO userModifyDTO) throws IOException {
+        //DTO를 Entity형태로 저장해야함.(JPA는 엔티티 객체를 DB에 저장하기 때문에)
+
+        String currentUserId = SecurityUtil.getCurrentUsername()
+                .orElseThrow(() -> new AccessDeniedException("인증되지 않은 사용자입니다."));
+
+        //수정전
+        // if (!userModifyDTO.getUserId().equals(currentUserId)) {
+        if (!userId.equals(currentUserId)) {
+            System.out.println("마이페이지 정보 수정은 본인만 가능합니다.");
+            throw new AccessDeniedException("마이페이지 정보 수정은 본인만 가능합니다.");
+        }
+
+        //1.DTO에서 User 엔티티 객체로 변환
+        //User user = userRepository.findByUserId(userModifyDTO.getUserId())
+        User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("조회되는 회원 아이디가 없습니다."));
 
         // 2. 변환된 User 엔티티에 DTO 값 업데이트
