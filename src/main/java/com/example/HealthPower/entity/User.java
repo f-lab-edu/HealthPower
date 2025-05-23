@@ -50,9 +50,8 @@ public class User implements UserDetails{
     @Column(name = "address")
     private String address;
 
-/*    @Transient
-    @Column(name = "photo")
-    private MultipartFile photo;*/
+    @Column(name = "photo_url")
+    private String photoUrl;
 
     @Column(name = "photo_path")
     private String photoPath;

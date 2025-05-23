@@ -37,7 +37,6 @@ public class LoginController {
 
     @GetMapping("/login")
     public String login() {
-        System.out.println("test = ");
         return "login";
     }
 
@@ -82,7 +81,6 @@ public class LoginController {
         response.addCookie(cookie);
 
         return "redirect:/members/menu";
-
         //return "redirect:/chat/list";
     }
 

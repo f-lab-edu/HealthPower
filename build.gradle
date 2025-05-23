@@ -23,8 +23,13 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	awsSdkVersion = '2.25.4' // ✅ 2024년 기준 안정 최신 버전
+}
+
 dependencies {
 	implementation 'software.amazon.awssdk:auth'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -48,6 +53,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.session:spring-session-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+	// AWS SDK 사용 시 자주 같이 쓰이는 필수 의존성
+	implementation "software.amazon.awssdk:s3:$awsSdkVersion"
+	implementation "software.amazon.awssdk:auth:$awsSdkVersion"
+	implementation "software.amazon.awssdk:regions:$awsSdkVersion"
 }
 
 tasks.named('test') {

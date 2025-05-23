@@ -6,6 +6,7 @@ import com.example.HealthPower.entity.User;
 import com.example.HealthPower.entity.chat.ChatMessage;
 import com.example.HealthPower.entity.chat.ChatRoom;
 import com.example.HealthPower.impl.UserDetailsImpl;
+import com.example.HealthPower.jwt.JwtTokenProvider;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.ChatService;
 import com.example.HealthPower.service.MemberService;
@@ -14,10 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Component;
@@ -31,6 +29,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -41,6 +40,7 @@ public class ChatController {
 
     private final ChatService chatService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/enter/{targetUserId}")
     public String enterChatRoom(@AuthenticationPrincipal UserDetailsImpl user,
@@ -56,9 +56,25 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.send")
-    public void sendMessage(@Payload ChatMessageDTO chatMessageDTO) {
-        chatService.save(chatMessageDTO);
-        messagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(), chatMessageDTO);
+    public void sendMessage(@Payload ChatMessageDTO chatMessageDTO,
+                            @Header("simpSessionAttributes") Map<String, Object> sessionAttributes) {
+
+        String userId = (String) sessionAttributes.get("userId");
+
+        User sender = chatService.getByUserId(userId);
+
+        ChatMessageDTO enrichedMessage = ChatMessageDTO.builder()
+                .roomId(chatMessageDTO.getRoomId())
+                .senderId(sender.getUserId())
+                .senderNickname(sender.getNickname())
+                .photoUrl(sender.getPhotoUrl())
+                .receiverId(chatMessageDTO.getReceiverId())
+                .content(chatMessageDTO.getContent())
+                .timeStamp(java.time.LocalDateTime.now())
+                .build();
+
+        chatService.save(enrichedMessage);
+        messagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(), enrichedMessage);
     }
 
     //메세지 내역 불러오기
@@ -84,7 +100,7 @@ public class ChatController {
         //상대방 정보 가져오기
         User partner = chatService.getByUserId(receiverId);
         model.addAttribute("partnerName", partner.getUsername());
-        model.addAttribute("partnerPhoto", partner.getPhotoPath()); //파일명이 저장되어 있다고 가정
+        model.addAttribute("partnerPhoto", partner.getPhotoUrl());
 
         model.addAttribute("messages", chatHistory);
 

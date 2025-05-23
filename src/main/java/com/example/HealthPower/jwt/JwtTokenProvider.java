@@ -131,6 +131,7 @@ public class JwtTokenProvider {
 
         Object authClaim = claims.get("auth");
         String userId = (String)claims.get("userId");
+        String id = getIdFromToken(accessToken);
 
         if (claims.get("auth") == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
@@ -238,6 +239,17 @@ public class JwtTokenProvider {
                 .getBody();
         Date expiration = claims.getExpiration();
         return expiration.getTime();
+    }
+
+    public String getIdFromToken(String token) {
+        return getClaims(token).get("id", String.class);
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(secretKey) // 서명 키 (Base64로 인코딩된 키)
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public String getUserIdFromToken(String token) {

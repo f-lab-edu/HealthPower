@@ -3,10 +3,7 @@ package com.example.HealthPower.dto.user;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,13 +12,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
-/* 회원정보 수정 */
-public class UserModifyDTO {
-
+@Data
+public class UserModifyTestDTO {
     private String userId;
 
     @NotBlank(message = "이름은 필수 입력 값입니다.")
@@ -69,5 +61,4 @@ public class UserModifyDTO {
                 .map(SimpleGrantedAuthority::new) // String을 SimpleGrantedAuthority로 변환
                 .collect(Collectors.toList());
     }
-
 }
