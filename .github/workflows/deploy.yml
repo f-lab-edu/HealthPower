@@ -29,6 +29,7 @@ jobs:
         run: |
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ec2_key.pem
           chmod 600 ec2_key.pem
+          ls -l ec2_key.pem
 
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.3
