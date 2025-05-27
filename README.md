@@ -44,13 +44,6 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 
 ---
 
-## 🗂 프로젝트 아키텍처
-
-![Architecture](./docs/healthpower-architecture.png)
-
----
-
-
 # DB ERD
 
 <img src="https://github.com/user-attachments/assets/6350c2b3-99b7-4633-a6b0-a6135c0f5e7b" width="700"/>
