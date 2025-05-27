@@ -6,7 +6,7 @@
 
 ---
 # 프로젝트 전체 구조
-![image](https://github.com/user-attachments/assets/65480160-7042-4742-865f-f78aaf6baafc)
+<img src="https://github.com/user-attachments/assets/65480160-7042-4742-865f-f78aaf6baafc" width="650"/>
 
 ---
 
