@@ -53,43 +53,43 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 
 # 이슈 해결 과정
  
-✅ JWT 쿠키 인증과 WebSocket 인증 문제
+### ✅ JWT 쿠키 인증과 WebSocket 인증 문제
 
 **문제:** WebSocket 연결 시 쿠키에 저장된 JWT를 서버 측에서 인식하지 못해 401 Unauthorized 발생
 
 **해결:** HandshakeInterceptor를 구현하여 쿠키에서 JWT 추출 + JwtTokenProvider로 토큰 검증 후 SecurityContextHolder에 수동 인증 정보 세팅
 
-✅ Toss Payments 결제 정보 저장 문제
+### ✅ Toss Payments 결제 정보 저장 문제
    
 **문제:** Toss 결제 성공/실패 시 주문 정보 누락 또는 중복 처리 이슈
 
 **해결:** Redis에 orderId, userId, itemId, quantity 임시 저장 + 결제 성공 시 Redis에서 꺼내어 DB에 트랜잭션으로 저장 및 검증 + 실패 시에도 별도 로그(TransactionHistory)로 기록
 
-✅ 회원가입 시 프로필 이미지 중복 저장 & 401 오류
+### ✅ 회원가입 시 프로필 이미지 중복 저장 & 401 오류
 
 **문제:** 회원가입 직후 이미지가 중복 저장되거나 Unauthorized(401) 발생
 
 **해결:** MultipartFile을 DTO에서만 사용하고, 실제 DB에는 photoPath만 저장 + storeProfileImage()를 통해 이미지 업로드 후 URL만 DB 저장
 
-✅ S3 접근 오류 및 키 노출 위험
+### ✅ S3 접근 오류 및 키 노출 위험
 
 **문제:** S3 업로드 시 URL 접근 불가, 또는 application.yml에 키가 노출됨
 
 **해결:** application.properties에 ${ENV_VAR} 방식 적용 + EC2 환경변수 및 .gitignore를 통한 키 보안 관리
 
-✅ RDS 연결 오류 (telnet 시도 시 멈춤)
+### ✅ RDS 연결 오류 (telnet 시도 시 멈춤)
 
 **문제:** EC2에서 RDS에 접속 불가 (telnet 시도시 Trying...에서 멈춤)
 
 **해결:** VPC, Subnet, 보안 그룹 전면 재구성 + RDS 인스턴스를 새로 만들고 엔드포인트 충돌 방지
 
-✅ 마스터 브랜치 merge 시 Git 충돌 및 push 오류
+### ✅ 마스터 브랜치 merge 시 Git 충돌 및 push 오류
 
 **문제:** git push origin master 시 non-fast-forward 오류 발생
 
 **해결:** git pull --rebase로 로컬 커밋 정렬 후 push + 충돌 발생 시 reflog로 커밋 복구, git mergetool로 충돌 해결
 
-✅ Spring MVC 흐름 이해 부족 → DispatcherServlet 구조 학습
+### ✅ Spring MVC 흐름 이해 부족 → DispatcherServlet 구조 학습
 
 **문제:** FrontController V5 구조와 핸들러 어댑터 개념 이해 부족
 
