@@ -5,6 +5,10 @@
 헬스인들을 위한 SNS, 헬스기구 구매 그리고 주변 헬스장 리뷰와 트레이너 상담까지 가능한 웹사이트입니다.
 
 ---
+# 프로젝트 전체 구조
+![image](https://github.com/user-attachments/assets/65480160-7042-4742-865f-f78aaf6baafc)
+
+---
 
 # 주요 기능
 
