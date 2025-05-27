@@ -20,13 +20,12 @@
 
 # 사용기술
 
-* | 분류 | 기술 |
-|------|------|
-| Language | Java 21 |
-| Framework | Spring Boot, Spring Security |
-| DB | MySQL, Spring Data JPA |
-| Infra | AWS EC2, RDS, S3, GitHub Actions |
-| Others | JWT, WebSocket, STOMP, MultipartFile |
+* Language : Java 21
+* Framework : Spring Boot, Spring Security
+* DB : MySQL, Spring Data JPA
+* Infra : AWS EC2, RDS, S3, GitHub Actions
+* Others : JWT, WebSocket, STOMP, MultipartFile
+
 ---
 
 # 프로젝트 중점 사항
@@ -38,8 +37,6 @@
 토스 SDK API를 통하여 결제 기능
 
 사용자가 기존의 충전금액에서 물건을 구매하면 차감되는 방식 도입
-
-
 
 ---
 
