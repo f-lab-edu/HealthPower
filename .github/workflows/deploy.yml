@@ -27,9 +27,10 @@ jobs:
 
       - name: Decode EC2 private key
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ec2_key.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | tr -d '\n' | base64 -d > ec2_key.pem
           chmod 600 ec2_key.pem
           ls -l ec2_key.pem
+          head -n 5 ec2_key.pem
 
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.3
