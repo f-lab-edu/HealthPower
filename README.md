@@ -46,7 +46,8 @@
 
 # DB ERD
 
-![image](https://github.com/user-attachments/assets/033d7e87-2c84-472d-9c44-f2963f70623b)
+<img src="https://github.com/user-attachments/assets/6350c2b3-99b7-4633-a6b0-a6135c0f5e7b" width="650"/>
+
 
 ---
 
