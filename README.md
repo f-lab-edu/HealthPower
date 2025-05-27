@@ -44,9 +44,16 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 
 ---
 
+## 🗂 프로젝트 아키텍처
+
+![Architecture](./docs/healthpower-architecture.png)
+
+---
+
+
 # DB ERD
 
-<img src="https://github.com/user-attachments/assets/6350c2b3-99b7-4633-a6b0-a6135c0f5e7b" width="650"/>
+<img src="https://github.com/user-attachments/assets/6350c2b3-99b7-4633-a6b0-a6135c0f5e7b" width="700"/>
 
 
 ---
@@ -54,6 +61,6 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 
 # 이슈 해결 과정
 
-adsfasd
-
+- **문제:** JWT 토큰 만료 시 자동 로그아웃이 되지 않는 이슈 발생
+  - **해결:** Spring Security의 필터 체인을 재구성하여 토큰 만료 시 예외를 처리하고, 클라이언트에 적절한 응답을 반환하도록 수정
 
