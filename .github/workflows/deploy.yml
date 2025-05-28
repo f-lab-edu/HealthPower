@@ -37,8 +37,8 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-#          key: ${{ secrets.EC2_KEY }}
-          key_path: ./ec2_key.pem
+          key: ${{ secrets.EC2_KEY }}
+#          key_path: ./ec2_key.pem
           source: build/libs/${{ secrets.JAR_NAME }}
           target: ${{ secrets.EC2_DIR }}
 
@@ -47,8 +47,8 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-#          key: ${{ secrets.EC2_KEY }}
-          key_path: ./ec2_key.pem
+          key: ${{ secrets.EC2_KEY }}
+#          key_path: ./ec2_key.pem
           script: |
             pkill -f 'java -jar' || true
             nohup java -jar ${{ secrets.EC2_DIR }}/${{ secrets.JAR_NAME }} > nohup.out 2>&1 &
