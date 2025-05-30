@@ -32,6 +32,10 @@ jobs:
           ls -l ec2_key.pem
           head -n 5 ec2_key.pem
 
+      - name: test key
+        run: |
+          echo "${{ secrets.EC2_KEY }}"
+
       - name: Copy JAR to EC2
         uses: appleboy/scp-action@v0.1.3
         with:
