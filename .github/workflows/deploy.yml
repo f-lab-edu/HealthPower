@@ -20,7 +20,9 @@ jobs:
           java-version: '21'
 
       - name: Build with Gradle
-        run: ./gradlew clean build
+        run:
+          chmod +x ./gradlew
+          ./gradlew clean build
 
       - name: Decode EC2 private key
         run: |
