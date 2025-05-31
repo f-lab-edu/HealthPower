@@ -53,7 +53,7 @@ jobs:
 
       - name: Upload prod properties to EC2
         run: |
-          scp -i ec2_key.pem application-prod.properties ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application-prod.properties
+          scp -i homepem.pem application-prod.properties ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application-prod.properties
 
       - name: Build Spring Boot application (fat JAR)
         run: ./gradlew clean bootJar
@@ -62,10 +62,10 @@ jobs:
         run: |
           JAR_FILE=$(ls build/libs/*.jar | head -n 1)
           echo "Uploading $JAR_FILE to EC2..."
-          scp -o StrictHostKeyChecking=no -i ec2_key.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+          scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
       - name: Run JAR on EC2 via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             echo "Stopping existing Spring Boot application..."
             pkill -f 'java' || true
             echo "Starting new Spring Boot application..."
