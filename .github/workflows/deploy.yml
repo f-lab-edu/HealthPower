@@ -33,10 +33,14 @@ jobs:
 
       - name: Send prod DB config to EC2
         run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             echo "spring.datasource.url=${{ secrets.DB_URL }}" > ~/application-prod.properties
             echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> ~/application-prod.properties
             echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> ~/application-prod.properties
             echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> ~/application-prod.properties
+            echo "spring.jpa.hibernate.ddl-auto=update" >> ~/application-prod.properties
+            echo "spring.profiles.active=prod" >> ~/application-prod.properties
+          EOF
 
       - name: Build Spring Boot application (fat JAR)
         run: ./gradlew clean bootJar
