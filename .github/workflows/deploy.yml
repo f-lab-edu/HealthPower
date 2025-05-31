@@ -24,7 +24,23 @@ jobs:
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
 
-#      - name: Set up production DB properties
+      - name: Set up prod DB properties
+        run: |
+          echo "spring.datasource.url=${{ secrets.DB_URL }}" >> application-prod.properties
+          echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> application-prod.properties
+          echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> application-prod.properties
+          echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> application-prod.properties
+          echo "spring.jpa.hibernate.ddl-auto=update" >> application-prod.properties
+          echo "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect" >> application-prod.properties
+          echo "jwt.secret=${{ secrets.JWT_SECRET }}" >> application-prod.properties
+          echo "cloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }}" >> application-prod.properties
+          echo "cloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }}" >> application-prod.properties
+          echo "cloud.aws.region.static=ap-northeast-2" >> application-prod.properties
+          echo "cloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> application-prod.properties
+          echo "server.port=8080" >> application-prod.properties
+  
+
+      #      - name: Set up production DB properties
 #        run: |
 #          echo "spring.datasource.url=${{ secrets.DB_URL }}" >> src/main/resources/application-prod.properties
 #          echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> src/main/resources/application-prod.properties
@@ -35,24 +51,12 @@ jobs:
             echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
             chmod 600 homepem.pem
 
-      - name: Send prod DB config to EC2
+      - name: Upload prod properties to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            echo "spring.datasource.url=${{ secrets.DB_URL }}" > ~/application-prod.properties
-            echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> ~/application-prod.properties
-            echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> ~/application-prod.properties
-            echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> ~/application-prod.properties
-            echo "spring.jpa.hibernate.ddl-auto=update" >> ~/application-prod.properties
-            echo "spring.profiles.active=prod" >> ~/application-prod.properties
-          EOF
+          scp -i ec2_key.pem application-prod.properties ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application-prod.properties
 
       - name: Build Spring Boot application (fat JAR)
         run: ./gradlew clean bootJar
-
-      - name: Decode PEM key for EC2
-        run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ec2_key.pem
-          chmod 600 ec2_key.pem
 
       - name: Upload JAR to EC2 via SCP
         run: |
