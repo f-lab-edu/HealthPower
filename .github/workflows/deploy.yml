@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+
 
 jobs:
   build-and-deploy:
@@ -30,21 +32,18 @@ jobs:
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ec2_key.pem
           chmod 600 ec2_key.pem
 
-      - name: Copy JAR to EC2
-        uses: appleboy/scp-action@v0.1.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ec2_key.pem
-          source: "build/libs/*.jar"
-          target: "~/app.jar"
+      - name: Copy JAR to EC2 via SCP
+        run: |
+          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
+          echo "Uploading $JAR_FILE to EC2..."
+          scp -o StrictHostKeyChecking=no -i ec2_key.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
 
-      - name: Run JAR on EC2
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ec2_key.pem
-          script: |
+      - name: Run JAR on EC2 via SSH
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            echo "Stopping old application..."
             pkill -f 'java' || true
+
+            echo "Starting new application..."
             nohup java -jar ~/app.jar > ~/app.log 2>&1 &
+          EOF
