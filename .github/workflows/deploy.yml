@@ -24,6 +24,14 @@ jobs:
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
 
+      - name: Set up production DB properties
+        run: |
+          echo "spring.datasource.url=${{ secrets.DB_URL }}" >> src/main/resources/application-prod.properties
+          echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> src/main/resources/application-prod.properties
+          echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> src/main/resources/application-prod.properties
+          echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> src/main/resources/application-prod.properties
+
+
       - name: Build Spring Boot application (fat JAR)
         run: ./gradlew clean bootJar
 
