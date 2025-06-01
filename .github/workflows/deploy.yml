@@ -43,6 +43,12 @@ jobs:
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
           chmod 600 homepem.pem
 
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          source: "./build/libs/HealthPower-0.0.1-SNAPSHOT.jar"
+          target: "/home/ubuntu/healthpower.jar"
+
       - name: Upload prod properties to EC2
         run: |
           scp -o StrictHostKeyChecking=no -i homepem.pem application-prod.properties ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application-prod.properties
