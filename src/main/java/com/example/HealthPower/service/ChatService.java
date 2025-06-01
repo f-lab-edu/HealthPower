@@ -83,19 +83,25 @@ public class ChatService {
         return savedRoom;
     }
 
-    public void save(ChatMessageDTO chatMessageDTO) {
+    /*public List<ChatMessage> getMessages(String roomId) {
+        return chatMessageRepository.findByRoomId(roomId);
+    }*/
+
+    public List<ChatMessage> getMessages(ChatRoom chatRoom) {
+        return chatMessageRepository.findByChatRoom(chatRoom);
+    }
+
+    public void save(ChatRoom chatRoom, ChatMessageDTO chatMessageDTO) {
+
         ChatMessage message = new ChatMessage(
-                chatMessageDTO.getRoomId(),
+//                chatMessageDTO.getRoomId(),
                 chatMessageDTO.getSenderId(),
                 chatMessageDTO.getReceiverId(),
-                chatMessageDTO.getContent()
+                chatMessageDTO.getContent(),
+                chatRoom
         );
 
         chatMessageRepository.save(message);
-    }
-
-    public List<ChatMessage> getMessages(String roomId) {
-        return chatMessageRepository.findByRoomId(roomId);
     }
 
     // 사용자가 속한 모든 채팅방 조회
@@ -125,23 +131,23 @@ public class ChatService {
     }
 
     @Transactional
-    public void markUserExited(String roomId, String userId) {
+    public void markUserExited(ChatRoom chatRoom, String userId) {
 
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("유저 없음"));
 
-        ChatRoom room = chatRoomRepository.findByRoomId(roomId).orElseThrow();
-        ChatRoomParticipant participant = chatRoomParticipantRepository.findByChatRoomAndUser(room, user).orElseThrow();
+        /*ChatRoom room = chatRoomRepository.findByRoomId(roomId).orElseThrow();*/
+        ChatRoomParticipant participant = chatRoomParticipantRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
         participant.setExited(true);
         chatRoomParticipantRepository.save(participant);
 
-        boolean allExited = chatRoomParticipantRepository.findByChatRoom(room).stream()
+        boolean allExited = chatRoomParticipantRepository.findByChatRoom(chatRoom).stream()
                 .allMatch(ChatRoomParticipant::isExited);
 
         if (allExited) {
-            chatMessageRepository.deleteByChatRoom(room);
-            chatRoomParticipantRepository.deleteByChatRoom(room);
-            chatRoomRepository.delete(room);
+            chatMessageRepository.deleteByChatRoom(chatRoom);
+            chatRoomParticipantRepository.deleteByChatRoom(chatRoom);
+            chatRoomRepository.delete(chatRoom);
         }
     }
 
@@ -157,4 +163,8 @@ public class ChatService {
                 .isPresent();
     }
 
+    public ChatRoom getChatRoomByRoomId(String roomId) {
+        return chatRoomRepository.findByRoomId(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 채팅방이 존재하지 않습니다: " + roomId));
+    }
 }

@@ -7,10 +7,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
-    List<ChatMessage> findByRoomId(String roomId);
-
-    void deleteByChatRoom(ChatRoom chatRoom);
+    /*List<ChatMessage> findByRoomId(String roomId);*/
 
     List<ChatMessage> findByChatRoom(ChatRoom chatRoom);
+
+    void deleteByChatRoom(ChatRoom chatRoom);
 
 }

@@ -20,18 +20,20 @@ public class ChatMessage {
     @Lob //대형 객체 데이터를 저장하기 위한 가변 길이 데이터 유형
     private String content;
 
-    private String roomId;
+    /*private String roomId;*/
     private LocalDateTime sentAt = LocalDateTime.now();
 
     @ManyToOne
     @JoinColumn(name = "room_id")
     private ChatRoom chatRoom;
 
-    public ChatMessage(String roomId, String senderId, String receiverId, String content) {
-        this.roomId = roomId;
+    //public ChatMessage(String roomId, String senderId, String receiverId, String content) {
+    public ChatMessage(String senderId, String receiverId, String content, ChatRoom chatRoom) {
+        /*this.roomId = roomId;*/
         this.senderId = senderId;
         this.receiverId = receiverId;
         this.content = content;
+        this.chatRoom = chatRoom;
     }
 }
 

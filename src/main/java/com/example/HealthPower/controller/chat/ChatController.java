@@ -63,6 +63,8 @@ public class ChatController {
 
         User sender = chatService.getByUserId(userId);
 
+        ChatRoom chatRoom = chatService.getChatRoomByRoomId(chatMessageDTO.getRoomId());
+
         ChatMessageDTO enrichedMessage = ChatMessageDTO.builder()
                 .roomId(chatMessageDTO.getRoomId())
                 .senderId(sender.getUserId())
@@ -73,7 +75,7 @@ public class ChatController {
                 .timeStamp(java.time.LocalDateTime.now())
                 .build();
 
-        chatService.save(enrichedMessage);
+        chatService.save(chatRoom, enrichedMessage);
         messagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(), enrichedMessage);
     }
 
@@ -88,7 +90,11 @@ public class ChatController {
         if (!allowed) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "이미 나간 채팅방입니다.");
         }
-        List<ChatMessage> chatHistory = chatService.getMessages(roomId);
+
+        ChatRoom chatRoom = chatService.getChatRoomByRoomId(roomId);
+
+        /*List<ChatMessage> chatHistory = chatService.getMessages(roomId);*/
+        List<ChatMessage> chatHistory = chatService.getMessages(chatRoom);
         model.addAttribute("roomId", roomId);
         model.addAttribute("currentUserId", user.getUserId());
 
@@ -122,7 +128,10 @@ public class ChatController {
     public String exitRoom(@AuthenticationPrincipal UserDetailsImpl user,
                            @PathVariable String roomId) {
         log.info("채팅방 나가기 요청: roomId={}, userId={}", roomId, user.getUserId());
-        chatService.markUserExited(roomId, user.getUserId());
+
+        ChatRoom chatRoom = chatService.getChatRoomByRoomId(roomId);
+        chatService.markUserExited(chatRoom, user.getUserId());
+
         return "redirect:/chat/list";
     }
 
