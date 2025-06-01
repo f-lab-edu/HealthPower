@@ -69,3 +69,8 @@ jobs:
           nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties -Dspring.profiles.active=prod -jar ~/app.jar > ~/app.log 2>&1 &
           echo "Application started."
           EOF
+
+      - name: Run Spring Boot app
+        run: |
+          pkill -f 'java -jar' || true
+          nohup java -jar /home/ubuntu/healthpower.jar > app.log 2>&1 &
