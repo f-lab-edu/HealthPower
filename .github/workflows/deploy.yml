@@ -64,6 +64,5 @@ jobs:
             pkill -f 'java' || true
             echo "Starting new Spring Boot application..."
             nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties -Dspring.profiles.active=prod -jar ~/app.jar > ~/app.log 2>&1 &
-#            nohup java -jar ~/app.jar > ~/app.log 2>&1 &
             echo "Application started."
           EOF
