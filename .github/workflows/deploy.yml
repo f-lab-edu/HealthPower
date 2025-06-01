@@ -39,13 +39,6 @@ jobs:
           echo "cloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> application-prod.properties
           echo "server.port=8080" >> application-prod.properties
   
-
-      #      - name: Set up production DB properties
-#        run: |
-#          echo "spring.datasource.url=${{ secrets.DB_URL }}" >> src/main/resources/application-prod.properties
-#          echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> src/main/resources/application-prod.properties
-#          echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> src/main/resources/application-prod.properties
-#          echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> src/main/resources/application-prod.properties
       - name: Decode PEM key for EC2
         run: |
             echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
@@ -69,6 +62,7 @@ jobs:
             echo "Stopping existing Spring Boot application..."
             pkill -f 'java' || true
             echo "Starting new Spring Boot application..."
-            nohup java -jar ~/app.jar > ~/app.log 2>&1 &
+            nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties -Dspring.profiles.active=prod -jar ~/app.jar > ~/app.log 2>&1 &
+#            nohup java -jar ~/app.jar > ~/app.log 2>&1 &
             echo "Application started."
           EOF
