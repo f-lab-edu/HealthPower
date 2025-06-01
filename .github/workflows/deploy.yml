@@ -53,12 +53,12 @@ jobs:
 
       - name: Upload JAR to EC2 via SCP
         run: |
-          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
-          echo "Uploading $JAR_FILE to EC2..."
-          scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+            JAR_FILE=$(ls build/libs/*.jar | head -n 1)
+            echo "Uploading $JAR_FILE to EC2..."
+            scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
       - name: Run JAR on EC2 via SSH
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             echo "Stopping existing Spring Boot application..."
             pkill -f 'java' || true
             echo "Starting new Spring Boot application..."
