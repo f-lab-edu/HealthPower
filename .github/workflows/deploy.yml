@@ -37,6 +37,7 @@ jobs:
           echo "cloud.aws.region.static=ap-northeast-2" >> application-prod.properties
           echo "cloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> application-prod.properties
           echo "server.port=8080" >> application-prod.properties
+          echo "app.upload.dir=/home/ubuntu/uploads" >> application-prod.properties
 
       - name: Decode PEM key for EC2
         run: |
