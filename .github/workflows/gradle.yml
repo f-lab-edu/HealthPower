@@ -32,6 +32,7 @@ jobs:
           echo "spring.jpa.hibernate.ddl-auto=update" >> application-prod.properties
           echo "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect" >> application-prod.properties
           echo "jwt.secret=${{ secrets.JWT_SECRET }}" >> application-prod.properties
+          echo "toss.secret=${{ secrets.TOSS_SECRET }}" >> application-prod.properties
           echo "cloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }}" >> application-prod.properties
           echo "cloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }}" >> application-prod.properties
           echo "cloud.aws.region.static=ap-northeast-2" >> application-prod.properties
