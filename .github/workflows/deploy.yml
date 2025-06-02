@@ -69,3 +69,9 @@ jobs:
           echo "Waiting for server to start..."
           sleep 20
           curl --fail http://${{ secrets.EC2_HOST }}:8080/actuator/health || (echo "❌ Health check failed" && exit 1)
+
+      - name: Print app log if failed
+        if: failure()
+        run: |
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+          'tail -n 100 /home/ubuntu/app.log'
