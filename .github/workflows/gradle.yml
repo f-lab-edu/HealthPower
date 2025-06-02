@@ -56,14 +56,23 @@ jobs:
           echo "Uploading $JAR_FILE to EC2..."
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
 
-      - name: Run Spring Boot app on EC2
+      - name: Run Spring Boot App on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-          "pkill -f 'java' || true && nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties -Dspring.profiles.active=prod -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &"
-
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
           echo "Creating upload directory..."
           mkdir -p /home/ubuntu/uploads
-
+      
+          echo "Stopping existing Java process..."
+          pkill -f 'java' || true
+      
           echo "Starting Spring Boot application..."
-          nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties -Dspring.profiles.active=prod -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
+          nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties \
+          -Dspring.profiles.active=prod -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
           EOF
+
+      - name: Print server log after failure
+        if: failure()
+        run: |
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+          'tail -n 100 /home/ubuntu/app.log'
+
