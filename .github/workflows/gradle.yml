@@ -58,9 +58,8 @@ jobs:
 
       - name: Run Spring Boot app on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          echo "Stopping any running Spring Boot process..."
-          pkill -f 'java' || true
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+          "pkill -f 'java' || true && nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties -Dspring.profiles.active=prod -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &"
 
           echo "Creating upload directory..."
           mkdir -p /home/ubuntu/uploads
