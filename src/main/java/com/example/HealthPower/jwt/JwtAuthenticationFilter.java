@@ -52,15 +52,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+
+        if ("/favicon.ico".equals(requestURI)) {
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT); // 204 No Content
+            return;
+        }
+
+        if (requestURI.startsWith("/actuator")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
-
-            String requestURI = request.getRequestURI();
-
-            if ("/favicon.ico".equals(requestURI)) {
-                //filterChain.doFilter(request, response);
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT); // 204 No Content
-                return;
-            }
 
             //1. Request Header 에서 토큰을 꺼냄
 
