@@ -35,6 +35,7 @@ jobs:
           echo "toss.secret=${{ secrets.TOSS_SECRET }}" >> application-prod.properties
           echo "cloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }}" >> application-prod.properties
           echo "cloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }}" >> application-prod.properties
+          echo "slack.webhook.url=${{ secrets.SLACK_WEBHOOK_URL }}" >> application-prod.properties
           echo "cloud.aws.region.static=ap-northeast-2" >> application-prod.properties
           echo "cloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> application-prod.properties
           echo "server.port=8080" >> application-prod.properties
