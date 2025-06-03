@@ -78,3 +78,25 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
           'tail -n 100 /home/ubuntu/app.log'
 
+      - name: Health check
+        run: |
+          sleep 15  # 서버 부팅 대기
+          curl -f http://${{ secrets.EC2_HOST }}:8080/actuator/health
+
+      - name: Slack Notify - 성공
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"✅ HealthPower 서버 배포 성공! 🎉"}' \
+            ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Slack Notify - 실패
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🚨 *HealthPower* 서버 배포 *실패* ❌\n확인 필요!"}' \
+            ${{ secrets.SLACK_WEBHOOK }}
+
+
+
+
