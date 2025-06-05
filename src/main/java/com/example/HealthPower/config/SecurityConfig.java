@@ -58,6 +58,8 @@ public class SecurityConfig {
                         // 지정한 경로는 인증 없이 접근 허용
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/hello").permitAll()
+                        .requestMatchers("/health").permitAll()
                         .requestMatchers("/members/checkUserId", "/members/checkUserEmail", "/members/checkUserNickname").permitAll()
                         .requestMatchers("/members/joinSuccess").permitAll()
                         .requestMatchers("/members/login2").permitAll() //form login 테스트용

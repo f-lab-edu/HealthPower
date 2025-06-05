@@ -59,19 +59,47 @@ jobs:
           echo "Uploading $JAR_FILE to EC2..."
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
 
-      - name: Run Spring Boot App on EC2
+#      - name: Run Spring Boot App on EC2
+#        run: |
+#          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+#          echo "Creating upload directory..."
+#          mkdir -p /home/ubuntu/uploads
+#
+#          echo "Stopping existing Java process..."
+#          pkill -f 'java' || true
+#
+#          echo "Starting Spring Boot application..."
+#          nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties \
+#          -Dspring.profiles.active=prod -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
+#          EOF
+
+      - name: Run Blue-Green Deployment on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-          echo "Creating upload directory..."
-          mkdir -p /home/ubuntu/uploads
-          
-          echo "Stopping existing Java process..."
-          pkill -f 'java' || true
-          
-          echo "Starting Spring Boot application..."
-          nohup java -Dspring.config.location=/home/ubuntu/application-prod.properties \
-          -Dspring.profiles.active=prod -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          echo "[1] 현재 실행 중인 버전 확인 중..."
+          CURRENT=\$(docker ps | grep spring-blue && echo blue || echo green)
+
+          if [ "\$CURRENT" = "blue" ]; then
+            NEXT="green"
+            PORT="8082"
+          else
+            NEXT="blue"
+            PORT="8081"
+          fi
+
+          echo "[2] 이전 컨테이너 정리..."
+          docker rm -f spring-\$NEXT || true
+
+          echo "[3] 새 버전 컨테이너 실행 중..."
+          docker run -d -p \$PORT:8080 --name spring-\$NEXT \
+            -v /home/ubuntu/application-prod.properties:/app/application-prod.properties \
+            openjdk:21 java -Dspring.config.location=/app/application-prod.properties -jar /home/ubuntu/app.jar
+
+          echo "[4] nginx 포트 스위칭 중..."
+          sudo sed -i "s/8081/8082/g;s/8082/8081/g;" /etc/nginx/nginx.conf
+          sudo nginx -s reload
           EOF
+
 
       - name: Print server log after failure
         if: failure()
@@ -82,7 +110,7 @@ jobs:
       - name: Health check
         run: |
           sleep 45  # 서버 부팅 대기
-          curl -f http://${{ secrets.EC2_HOST }}:8080/actuator/health
+          curl -f http://${{ secrets.EC2_HOST }}:8080
 
       - name: Slack Notify - 성공
         if: success()
