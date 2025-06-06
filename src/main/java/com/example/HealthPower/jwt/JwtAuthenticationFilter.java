@@ -59,7 +59,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (requestURI.startsWith("/actuator")) {
+        if (requestURI.startsWith("/actuator") || requestURI.equals("/health")) {
             filterChain.doFilter(request, response);
             return;
         }
