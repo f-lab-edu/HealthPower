@@ -59,7 +59,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        System.out.println("[JWT 필터] 요청 URI: " + requestURI);
+
         if (requestURI.startsWith("/actuator") || requestURI.equals("/health")) {
+            System.out.println("[JWT 필터] 예외 처리: " + requestURI);
             filterChain.doFilter(request, response);
             return;
         }
