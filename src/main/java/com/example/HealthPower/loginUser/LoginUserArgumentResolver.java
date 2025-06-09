@@ -6,6 +6,7 @@ import com.example.HealthPower.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -36,6 +37,10 @@ public class LoginUserArgumentResolver implements HandlerMethodArgumentResolver 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             return jwtTokenProvider.getUserById(jwtTokenProvider.getUserIdFromToken(token));
         }
-        return null;
+
+        // ✅ Spring 6 이상에서 ModelAndViewDefiningException 제거됨 → 아래처럼 대체
+        throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."
+        );
     }
 }
