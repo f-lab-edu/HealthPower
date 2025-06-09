@@ -40,6 +40,7 @@ dependencies {
 
 	// WebClient 비동기용
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
