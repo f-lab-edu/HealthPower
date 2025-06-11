@@ -40,6 +40,8 @@ jobs:
           echo "cloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> application-prod.properties
           echo "server.port=8080" >> application-prod.properties
           echo "app.upload.dir=/home/ubuntu/uploads" >> application-prod.properties
+          echo "management.endpoint.prometheus.enabled=true" >> application-prod.properties
+          echo "management.endpoints.web.exposure.include=health,info,prometheus" >> application-prod.properties
 
       - name: Decode PEM key for EC2
         run: |
