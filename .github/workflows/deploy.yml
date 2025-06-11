@@ -62,6 +62,10 @@ jobs:
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
           scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
+      - name: Upload prometheus.yml to EC2
+        run: |
+          scp -i homepem.pem prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prometheus.yml
+
       - name: Create log directory on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
@@ -105,6 +109,15 @@ jobs:
           docker rm -f healthpower-app || true
           docker build -t healthpower-image .
           docker run -d -p 8080:8080 --name healthpower-app healthpower-image
+          EOF
+
+      - name: Run Prometheus container
+        run: |
+          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          docker rm -f prometheus || true
+          docker run -d --name prometheus -p 9090:9090 \
+            -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml \
+            prom/prometheus
           EOF
 
       - name: Slack Notify - 성공
