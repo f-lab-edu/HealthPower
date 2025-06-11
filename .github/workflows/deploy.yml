@@ -102,20 +102,34 @@ jobs:
 #          sleep 45  # 서버 부팅 대기
 #          curl -f http://${{ secrets.EC2_HOST }}:8080
 
+      - name: Create Docker network if not exists
+        run: |
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            docker network inspect monitoring-net >/dev/null 2>&1 || docker network create monitoring-net
+          "
+
       - name: Run Docker container on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
           cd ~
           docker rm -f healthpower-app || true
           docker build -t healthpower-image .
-          docker run -d -p 8080:8080 --name healthpower-app healthpower-image
+          
+          docker run -d \
+          --name healthpower-app \
+          --network monitoring-net \
+          -p 8080:8080 \
+          healthpower-image
           EOF
-
+          
       - name: Run Prometheus container
         run: |
           ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
           docker rm -f prometheus || true
-          docker run -d --name prometheus -p 9090:9090 \
+          docker run -d \
+            --name prometheus \
+            --network monitoring-net \
+            -p 9090:9090 \
             -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml \
             prom/prometheus
           EOF

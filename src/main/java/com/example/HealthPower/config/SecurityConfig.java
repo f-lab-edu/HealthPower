@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/hello").permitAll()
                         .requestMatchers("/health").permitAll()
+                        .requestMatchers("/members/menu").permitAll()
                         .requestMatchers("/members/checkUserId", "/members/checkUserEmail", "/members/checkUserNickname").permitAll()
                         .requestMatchers("/members/joinSuccess").permitAll()
                         .requestMatchers("/members/login2").permitAll() //form login 테스트용
