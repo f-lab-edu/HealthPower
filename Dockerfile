@@ -1,10 +1,9 @@
-# 1단계: JDK 이미지 사용
 FROM openjdk:21-jdk-slim
-
-# 2단계: JAR 파일 복사
 WORKDIR /app
 
+# JAR과 프로퍼티 파일을 컨테이너에 복사
 COPY app.jar /app.jar
+COPY application-prod.properties /application-prod.properties
 
-# 3단계: 애플리케이션 실행
-ENTRYPOINT ["java","-jar","/app.jar"]
+# Spring Boot 실행 시 외부 프로퍼티 경로 지정
+ENTRYPOINT ["java", "-Dspring.config.location=/application-prod.properties", "-Dspring.profiles.active=prod", "-jar", "/app.jar"]
