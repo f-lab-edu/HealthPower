@@ -1,0 +1,24 @@
+# IDE 설정
+.idea/
+*.iml
+
+# 로그 및 출력물
+logs/
+*.log
+
+# OS/Editor 임시 파일
+.DS_Store
+.vscode/
+
+# Git 관련
+.git
+.gitignore
+
+# 빌드 산출물 제외 (단, jar는 예외로 허용)
+build/
+!build/libs/HealthPower-0.0.1-SNAPSHOT.jar
+
+# 보안 키/설정 제외
+*.pem
+*.b64
+application-*.properties

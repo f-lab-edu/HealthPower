@@ -53,11 +53,12 @@ jobs:
       - name: Build Spring Boot application (fat JAR)
         run: ./gradlew clean bootJar
 
-      - name: Upload JAR to EC2 via SCP
+      - name: Upload JAR and Dockerfile to EC2 via SCP
         run: |
           JAR_FILE=$(ls build/libs/*.jar | head -n 1)
           echo "Uploading $JAR_FILE to EC2..."
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+          scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
       - name: Create log directory on EC2
         run: |
@@ -95,10 +96,14 @@ jobs:
 #          sleep 45  # 서버 부팅 대기
 #          curl -f http://${{ secrets.EC2_HOST }}:8080
 
-      - name: Run Docker container
+      - name: Run Docker container on EC2
         run: |
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          cd ~
+          docker rm -f healthpower-app || true
           docker build -t healthpower-image .
           docker run -d -p 8080:8080 --name healthpower-app healthpower-image
+          EOF
 
       - name: Slack Notify - 성공
         if: success()
