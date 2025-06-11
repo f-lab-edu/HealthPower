@@ -70,6 +70,12 @@ jobs:
         run: |
           scp -i homepem.pem -r grafana ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/grafana
 
+      - name: Upload Prometheus & AlertManager config
+        run: |
+          scp -i homepem.pem prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prometheus.yml
+          scp -i homepem.pem prometheus/alert.rules.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alert.rules.yml
+          scp -i homepem.pem prometheus/alertmanager.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alertmanager.yml
+
       - name: Create log directory on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
@@ -150,6 +156,18 @@ jobs:
             grafana/grafana
           EOF
 
+      - name: Run AlertManager container
+        run: |
+          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          docker rm -f alertmanager || true
+          docker run -d \
+            --name alertmanager \
+            --network monitoring-net \
+            -p 9093:9093 \
+            -v /home/ubuntu/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
+            prom/alertmanager
+          EOF
+
       - name: Slack Notify - 성공
         if: success()
         run: |
@@ -161,7 +179,7 @@ jobs:
         if: failure()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":" *HealthPower* 서버 배포 *실패* ❌\n확인 필요!"}' \
+            --data '{"text":" *HealthPower* 서버 배포 *실패* \n확인 필요!"}' \
             ${{ secrets.SLACK_WEBHOOK }}
 
 
