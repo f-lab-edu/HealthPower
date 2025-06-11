@@ -7,8 +7,6 @@ import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,7 +14,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Entity
-@Table(name = "user")
+/*@Table(name = "user")*/
+@Table(name = "\"user\"")  // ← 여기만 바꿔주면 끝
 @Getter
 @Setter
 @Builder
@@ -81,6 +80,8 @@ public class User implements UserDetails{
     @Column(name = "activated")
     private boolean activated;
 
+    private Collection<? extends GrantedAuthority> authorities;
+
    /* @ManyToMany
     @JoinTable(
             name = "user_authority",
@@ -91,7 +92,8 @@ public class User implements UserDetails{
     @Override
     //public Collection<? extends GrantedAuthority> getAuthorities() {
     //JoinDTO getAuthorities() 오류로 타입 변경??
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public Collection<GrantedAuthority> getAuthorities() {
+    /*public Collection<? extends GrantedAuthority> getAuthorities() {*/
         if (role != null) {
             return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
         }

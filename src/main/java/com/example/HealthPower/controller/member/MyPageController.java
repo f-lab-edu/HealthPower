@@ -1,14 +1,13 @@
 package com.example.HealthPower.controller.member;
 
+import com.example.HealthPower.controller.api.SuccessResponse;
 import com.example.HealthPower.dto.user.UserDTO;
-import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.dto.user.UserModifyTestDTO;
 import com.example.HealthPower.entity.User;
+import com.example.HealthPower.exception.user.UserNotFoundException;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.MemberService;
-import com.example.HealthPower.userType.Gender;
-import com.example.HealthPower.userType.Role;
 import com.example.HealthPower.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,30 +17,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Optional;
 
 @Slf4j
-//@RestController
+@RestController
 @RequestMapping("/members")
 @RequiredArgsConstructor
-@Controller
+/*@Controller*/
 public class MyPageController {
 
     private final MemberService memberService;
     private final UserRepository userRepository;
 
     /* 마이페이지 보기 */
-    @GetMapping("/myInfo")
+    /*@GetMapping("/myInfo")
     public Optional<User> searchMyInfo(UserDTO userDTO) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -51,24 +43,30 @@ public class MyPageController {
         Optional<User> infoResult = memberService.myInfo(userId);
 
         return infoResult;
+    }*/
+
+    /* 리팩토링 후 */
+    @GetMapping("/myInfo")
+    public ResponseEntity<SuccessResponse<UserDTO>> getMyInfo(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        User user = userRepository.findByUserId(userDetails.getUserId())
+                .orElseThrow(() -> new UserNotFoundException(userDetails.getUserId()));
+
+        UserDTO userDTO = UserDTO.of(user);
+        return ResponseEntity.ok(SuccessResponse.of(userDTO, "회원 정보 조회 성공", HttpStatus.OK.value()));
     }
 
     //마이페이지 사진 제대로 들어오는지 뷰로 확인
     @GetMapping("/mypage")
     public ResponseEntity<Object> myPage(Authentication authentication) {
-
-        try {
             String userId = SecurityUtil.getCurrentUsername()
                     .orElseThrow(() -> new RuntimeException("로그인 정보 없음"));
 
-            User user = memberService.myInfo(userId)
-                    .orElseThrow(() -> new RuntimeException("회원 정보가 없습니다."));
+        UserDTO user = memberService.myinfo(userId);
 
+            if (user == null) {
+                throw new UserNotFoundException(userId);
+            }
             return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            log.error("마이페이지 오류 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
     }
 
     /* 마이페이지 수정 */

@@ -120,7 +120,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     System.out.println("🔍 쿠키 이름: " + cookie.getName() + ", 값: " + cookie.getValue());
                 }
             } else {
-                System.out.println("❌ 요청에 쿠키가 하나도 없음");
+                System.out.println("요청에 쿠키가 하나도 없음");
             }
 
             //filterChain.doFilter(request, response); //기존에는 여기였음

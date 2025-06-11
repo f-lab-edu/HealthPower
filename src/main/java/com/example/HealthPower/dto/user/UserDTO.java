@@ -1,6 +1,7 @@
 package com.example.HealthPower.dto.user;
 
 import com.example.HealthPower.dto.AuthorityDTO;
+import com.example.HealthPower.entity.User;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import lombok.*;
@@ -42,5 +43,16 @@ public class UserDTO {
     private List<AuthorityDTO> securityAuthList;
 
     public UserDTO(Long id, String userId, Role role) {
+    }
+
+    public static UserDTO of(User user) {
+        return UserDTO.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .gender(user.getGender())
+                .birth(user.getBirth())
+                .authorities(user.getAuthorities())
+                .activated(user.isActivated())
+                .build();
     }
 }

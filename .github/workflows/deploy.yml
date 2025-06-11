@@ -59,6 +59,12 @@ jobs:
           echo "Uploading $JAR_FILE to EC2..."
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
 
+      - name: Create log directory on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+          mkdir -p /home/ubuntu/logs && chmod 755 /home/ubuntu/logs
+          "
+
       - name: Run Spring Boot App on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
@@ -88,6 +94,11 @@ jobs:
 #        run: |
 #          sleep 45  # 서버 부팅 대기
 #          curl -f http://${{ secrets.EC2_HOST }}:8080
+
+      - name: Run Docker container
+        run: |
+          docker build -t healthpower-image .
+          docker run -d -p 8080:8080 --name healthpower-app healthpower-image
 
       - name: Slack Notify - 성공
         if: success()

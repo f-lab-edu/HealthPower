@@ -2,10 +2,10 @@ package com.example.HealthPower.service;
 
 import com.example.HealthPower.dto.login.JoinDTO;
 import com.example.HealthPower.dto.user.UserDTO;
-import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.dto.user.UserModifyTestDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.DuplicateMemberException;
+import com.example.HealthPower.exception.user.UserNotFoundException;
 import com.example.HealthPower.jwt.JwtAuthenticationFilter;
 import com.example.HealthPower.jwt.JwtToken;
 import com.example.HealthPower.jwt.JwtTokenProvider;
@@ -31,16 +31,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -165,7 +161,7 @@ public class MemberService {
 
         if (findUserId.isEmpty()) {
             System.out.println("존재하지 않는 사용자입니다.");
-            findUserId.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+            findUserId.orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 사용자입니다."));
         }
 
         //기존의 userDTO에서 비밀번호와 현재 입력한 비밀번호가 일치하는지 비교
@@ -195,7 +191,7 @@ public class MemberService {
     }
 
     /* 마이페이지 (회원 상세 조회) */
-    public Optional<User> myInfo(String userId) {
+    /*public Optional<User> myInfo(String userId) {
         try {
             return userRepository.findByUserId(userId);
         } catch (Exception e) {
@@ -203,6 +199,13 @@ public class MemberService {
             e.getMessage();
             return null;
         }
+    }*/
+
+    /* 리팩토링 후 */
+    public UserDTO myinfo(String userId) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+        return UserDTO.of(user);
     }
 
     /* 마이페이지 정보 업데이트 */
