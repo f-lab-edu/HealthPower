@@ -19,8 +19,10 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 - 실시간 채팅 (WebSocket + STOMP)
 - Toss Payments 결제 및 거래 로그 저장
 - AWS S3 이미지 업로드
-- EC2 + RDS 기반 배포
+- CPU/메모리 실시간 데이시보드, 잠재 감지 경고
+- GitHub Actions → EC2 자동 JAR 빌드 & Docker 재구매
 
+  
 ---
 
 # 사용기술
@@ -30,6 +32,10 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 * DB : MySQL, Spring Data JPA
 * Infra : AWS EC2, RDS, S3, GitHub Actions
 * Others : JWT, WebSocket, STOMP, MultipartFile
+* CI/CD : GitHub Actions → EC2 자동 배포
+* Containerization: Docker
+* Monitoring : Prometheus + Grafana
+* Alerting: AlertManager + Slack
 
 ---
 
