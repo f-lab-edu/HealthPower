@@ -1,11 +1,32 @@
 groups:
-  - name: healthpower_alert_rules
+  - name: service-alerts
     rules:
-      - alert: InstanceDown
-        expr: up == 0
-        for: 1m
+      - alert: AppDown
+        expr: up{job="spring-boot-app"} == 0
+        for: 30s
         labels:
           severity: critical
         annotations:
-          summary: "Instance is down"
-          description: "{{ $labels.instance }} is down"
+          summary: "❌ 애플리케이션 다운"
+          description: "Spring Boot 애플리케이션 인스턴스가 꺼져 있습니다. (instance={{ $labels.instance }})"
+
+      - alert: HighJvmHeapUsage
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.8
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ JVM Heap 사용률 80% 초과"
+          description: "현재 Heap 사용량이 80%를 초과했습니다. (instance={{ $labels.instance }})"
+
+      - alert: HighHttp5xxRate
+        expr: |
+          rate(http_server_requests_seconds_count{status=~"5.."}[1m])
+          /
+          rate(http_server_requests_seconds_count[1m]) > 0.2
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "🚨 5xx 오류 비율 증가"
+          description: "최근 1분 동안 5xx 오류가 전체 요청의 20%를 초과했습니다. (instance={{ $labels.instance }})"
