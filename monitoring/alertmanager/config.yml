@@ -8,5 +8,5 @@ receivers:
   - name: 'slack-notifications'
     slack_configs:
       - api_url: 'https://hooks.slack.com/services/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'
-        channel: '#알림-채널명'
+        channel: '#healthpower'
         send_resolved: true
