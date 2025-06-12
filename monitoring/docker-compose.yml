@@ -1,22 +1,28 @@
 services:
   prometheus:
     image: prom/prometheus
+    container_name: prometheus
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus:/etc/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./alertmanager/alert.rules.yml:/etc/prometheus/alert.rules.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - monitoring-net
 
   alertmanager:
     image: prom/alertmanager
+    container_name: alertmanager
     ports:
       - "9093:9093"
     volumes:
       - ./alertmanager/config.yml:/etc/alertmanager/config.yml
     command:
       - '--config.file=/etc/alertmanager/config.yml'
+    networks:
+      - monitoring-net
 
   grafana:
     image: grafana/grafana
@@ -24,5 +30,11 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana/data:/var/lib/grafana
+      - ./grafana:/var/lib/grafana
     restart: always
+    networks:
+      - monitoring-net
+
+networks:
+  monitoring-net:
+    driver: bridge

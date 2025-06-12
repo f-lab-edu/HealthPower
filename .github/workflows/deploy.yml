@@ -62,19 +62,15 @@ jobs:
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
           scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
-      - name: Upload prometheus.yml to EC2
-        run: |
-          scp -i homepem.pem prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prometheus.yml
-
       - name: Upload Grafana provisioning files
         run: |
           scp -i homepem.pem -r grafana ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/grafana
 
       - name: Upload Prometheus & AlertManager config
         run: |
-          scp -i homepem.pem prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prometheus.yml
-          scp -i homepem.pem prometheus/alert.rules.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alert.rules.yml
-          scp -i homepem.pem prometheus/alertmanager.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alertmanager.yml
+          scp -i homepem.pem monitoring/prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prometheus.yml
+          scp -i homepem.pem monitoring/alertmanager/alert.rules.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alert.rules.yml
+          scp -i homepem.pem monitoring/alertmanager/config.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alertmanager.yml
 
       - name: Create log directory on EC2
         run: |
@@ -107,11 +103,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
           'tail -n 100 /home/ubuntu/app.log'
 
-      #      - name: Health check
-      #        run: |
-      #          sleep 45  # 서버 부팅 대기
-      #          curl -f http://${{ secrets.EC2_HOST }}:8080
-
       - name: Create Docker network if not exists
         run: |
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
@@ -141,6 +132,7 @@ jobs:
             --network monitoring-net \
             -p 9090:9090 \
             -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml \
+            -v /home/ubuntu/alert.rules.yml:/etc/prometheus/alert.rules.yml \
             prom/prometheus
           EOF
 
