@@ -7,7 +7,7 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 ---
 
 # 프로젝트 전체 구조
-<img src="https://github.com/user-attachments/assets/2cda7156-46b2-4e88-b3f8-99f99a9b2461" width="200"/>
+<img src="https://github.com/user-attachments/assets/2cda7156-46b2-4e88-b3f8-99f99a9b2461" width="400"/>
 
 ---
 
