@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>결제 실패</title>
 </head>
 <body>
 <h2>결제 실패!</h2>
+<a href="javascript:void(0);" onclick="secureNavigate('/board/product')">상품게시판</a><br>
 </body>
+<script th:src="@{/js/common.js}"></script>
 </html>

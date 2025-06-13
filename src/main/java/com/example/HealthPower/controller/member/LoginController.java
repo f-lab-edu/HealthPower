@@ -13,8 +13,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -36,7 +41,8 @@ public class LoginController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @GetMapping("/login")
-    public String login() {
+    public String login(Model model) {
+        model.addAttribute("loginDTO", new LoginDTO());
         return "login";
     }
 
@@ -63,25 +69,44 @@ public class LoginController {
     }
 
     //테스트용
+    @GetMapping("/login2")
+    public String showLoginForm(Model model) {
+        model.addAttribute("loginDTO", new LoginDTO());
+        return "login";
+    }
+
     @PostMapping("/login2")
-    public String loginTest(@RequestParam("userId") String userId,
-                            @RequestParam("password") String password,
-                            HttpServletResponse response) {
+    public String loginTest(@ModelAttribute("loginDTO") LoginDTO loginDTO,
+                            HttpServletResponse response,
+                            Model model) {
+        try {
+            User user = memberService.authenticate(loginDTO.getUserId(), loginDTO.getPassword());
 
-        User user = memberService.authenticate(userId, password);
+            String token = jwtTokenProvider.generateToken2(user.getUserId(), user.getRole());
 
-        // JWT 생성
-        String token = jwtTokenProvider.generateToken2(user.getUserId(), user.getRole());
+            Authentication authentication = jwtTokenProvider.getAuthentication(token);
 
-        // JWT를 쿠키로 설정
-        Cookie cookie = new Cookie("Authorization", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(60 * 60); // 1시간 유지
-        response.addCookie(cookie);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return "redirect:/members/menu";
-        //return "redirect:/chat/list";
+            Cookie cookie = new Cookie("Authorization", token);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60); // 1시간 유지
+
+            response.addCookie(cookie);
+
+            return "redirect:/members/menu";
+
+        } catch (UsernameNotFoundException e) {
+            model.addAttribute("loginError", "존재하지 않는 아이디");
+            return "login";
+        } catch (BadCredentialsException e) {
+            model.addAttribute("loginError", "비밀번호가 올바르지 않습니다.");
+            return "login";
+        } catch (Exception e) {
+            model.addAttribute("loginError", "서버 오류 발생");
+            return "login";
+        }
     }
 
     @GetMapping("/menu")

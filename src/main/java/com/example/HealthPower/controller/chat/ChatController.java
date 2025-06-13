@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -115,6 +116,7 @@ public class ChatController {
 
     //채팅방 목록
     @GetMapping("/list")
+    @PreAuthorize("isAuthenticated()")
     public String myChatRooms(@AuthenticationPrincipal UserDetailsImpl user,
                               Model model) {
         List<ChatRoomListItemDTO> chatRooms = chatService.getRoomsByUser(user.getUserId());

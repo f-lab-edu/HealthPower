@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ErrorCode.BIND_ERROR, errorMessage, request.getRequestURI());
     }
 
+    @ResponseBody
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
         return buildErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR, ex.getMessage(), request.getRequestURI());

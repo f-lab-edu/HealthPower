@@ -5,16 +5,17 @@
     <title>Title</title>
 </head>
 <body>
-    <ul>
-        <li th:each="product : ${products}">
-            <div>
-                <label>상품명 : </label>
-                <strong th:text="${product.productName}">상품명</strong>
-            </div>
-            <div>
-                <a th:href="@{/board/product/{id}(id=${product.id})}">상세보기</a>
-            </div>
-        </li>
-    </ul>
+<div th:replace="fragments/header :: user-status"></div>
+<ul>
+    <li th:each="product : ${products}">
+        <div>
+            <label>상품명 : </label>
+            <strong th:text="${product.productName}">상품명</strong>
+        </div>
+        <div>
+            <a th:href="@{/board/product/{id}(id=${product.id})}">상세보기</a>
+        </div>
+    </li>
+</ul>
 </body>
 </html>

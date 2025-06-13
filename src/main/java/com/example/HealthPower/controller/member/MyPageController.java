@@ -17,33 +17,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 @Slf4j
-@RestController
+/*@RestController*/
 @RequestMapping("/members")
 @RequiredArgsConstructor
-/*@Controller*/
+@Controller
 public class MyPageController {
 
     private final MemberService memberService;
     private final UserRepository userRepository;
-
-    /* 마이페이지 보기 */
-    /*@GetMapping("/myInfo")
-    public Optional<User> searchMyInfo(UserDTO userDTO) {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) principal;
-        String userId = userDetails.getUserId();
-
-        Optional<User> infoResult = memberService.myInfo(userId);
-
-        return infoResult;
-    }*/
 
     /* 리팩토링 후 */
     @GetMapping("/myInfo")
@@ -55,8 +44,8 @@ public class MyPageController {
         return ResponseEntity.ok(SuccessResponse.of(userDTO, "회원 정보 조회 성공", HttpStatus.OK.value()));
     }
 
-    //마이페이지 사진 제대로 들어오는지 뷰로 확인
-    @GetMapping("/mypage")
+    //마이페이지 사진경로 json 응답
+/*    @GetMapping("/mypage")
     public ResponseEntity<Object> myPage(Authentication authentication) {
             String userId = SecurityUtil.getCurrentUsername()
                     .orElseThrow(() -> new RuntimeException("로그인 정보 없음"));
@@ -67,6 +56,22 @@ public class MyPageController {
                 throw new UserNotFoundException(userId);
             }
             return ResponseEntity.ok(user);
+    }*/
+
+    //마이페이지 사진 제대로 들어오는지 뷰로 확인
+    @GetMapping("/mypage")
+    public String myPage(Authentication authentication, Model model) {
+            String userId = SecurityUtil.getCurrentUsername()
+                    .orElseThrow(() -> new RuntimeException("로그인 정보 없음"));
+
+        UserDTO user = memberService.myinfo(userId);
+
+            if (user == null) {
+                throw new UserNotFoundException(userId);
+            }
+
+        model.addAttribute("member", user);
+            return "myPage";
     }
 
     /* 마이페이지 수정 */

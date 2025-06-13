@@ -52,6 +52,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        System.out.println("250613 JwtAuthFilter 실행됨 → 요청 URI: " + request.getRequestURI());
+
         String requestURI = request.getRequestURI();
 
         if ("/favicon.ico".equals(requestURI)) {
@@ -170,7 +172,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("Authorization".equals(cookie.getName())) {
-                        return cookie.getValue();
+
+                    String cookieValue = cookie.getValue();
+
+                    if (cookieValue.startsWith("Bearer ")) {
+                        return cookieValue.substring(7);
+                    }
+
+                    return cookie.getValue();
                 }
             }
         }

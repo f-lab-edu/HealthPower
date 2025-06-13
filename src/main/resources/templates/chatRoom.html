@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body onload="scrollToBottom()">
+<div th:replace="fragments/header :: user-status"></div>
 <h2>채팅방: <span th:text="${roomId}"></span></h2>
 
 <!-- 채팅방 상단 정보 -->

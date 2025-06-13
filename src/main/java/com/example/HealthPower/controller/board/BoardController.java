@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -60,6 +61,7 @@ public class BoardController {
 
     /* 상품 게시판 */
     @GetMapping("/product")
+    @PreAuthorize("isAuthenticated()")
     public String productList(Model model) {
         List<Product> products = productRepository.findAll();
         model.addAttribute("products", products);

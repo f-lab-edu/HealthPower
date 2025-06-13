@@ -5,12 +5,18 @@
     <title>로그인</title>
 </head>
 <body>
-<form action="/members/login2" method="post">
-    <input type="text" id="userId" name="userId" autofocus="autofocus">
-    <br/>
-    <input type="password" id="password" name="password"/>
-    <br/>
-    <input type="submit" value="로그인" />
-</form>
+
+    <form action="/members/login2" method="post" th:object="${loginDTO}">
+        <input type="text" th:field="*{userId}" id="userId" name="userId" autofocus="autofocus" placeholder="아이디" required>
+        <br/>
+        <input type="password" th:field="*{password}" id="password" name="password" placeholder="비밀번호" required/>
+        <br/>
+        <input type="submit" value="로그인" />
+    </form>
+
+    <div th:if="${loginError}" style="color:red; margin-top:10px">
+        <p th:text="${loginError}"></p>
+    </div>
+
 </body>
 </html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>공통 헤더</title>
+    <div th:fragment="user-status">
+        <div style="position: absolute; top: 20px; right: 30px;">
+            <div sec:authorize="isAuthenticated()">
+                <span sec:authentication="name"></span>(<span sec:authentication="authorities"></span>)
+                <a th:href="@{/members/mypage}">마이페이지</a>
+                <!--<button onclick="mypage()" style="margin-left: auto; margin-right:auto">마이페이지</button>-->
+                <form id="logoutForm" action="/members/logout2" method="post">
+                    <button type="submit" style="margin-left: auto;">로그아웃</button>
+                </form>
+            </div>
+            <div sec:authorize="isAnonymous()">
+                <button onclick="login()" style="margin-left: auto;">로그인</button>
+            </div>
+            <div sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/members/admin}">관리자 페이지</a>
+            </div>
+        </div>
+    </div>
+</head>
+<body>
+
+</body>
+</html>
