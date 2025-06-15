@@ -41,30 +41,30 @@ jobs:
 
       - name: Create log & upload directories on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-          mkdir -p /home/ubuntu/uploads /home/ubuntu/logs && chmod 755 /home/ubuntu/logs
-          "
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            mkdir -p /home/ubuntu/uploads /home/ubuntu/logs && chmod 755 /home/ubuntu/logs
+          EOF
 
       - name: Run Spring Boot App on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 echo "Stopping existing Java process..."
 pkill -f 'java' || true
 
 echo "Starting Spring Boot application..."
 nohup java \
--Dspring.profiles.active=prod \
--Dspring.datasource.url=${{ secrets.DB_URL }} \
--Dspring.datasource.username=${{ secrets.DB_USERNAME }} \
--Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
--Djwt.secret=${{ secrets.JWT_SECRET }} \
--Dtoss.secret=${{ secrets.TOSS_SECRET }} \
--Dcloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }} \
--Dcloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }} \
--Dcloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }} \
--Dslack.webhook.url=${{ secrets.SLACK_WEBHOOK_URL }} \
--Dapp.upload.dir=/home/ubuntu/uploads \
--jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
+  -Dspring.profiles.active=prod \
+  -Dspring.datasource.url=${{ secrets.DB_URL }} \
+  -Dspring.datasource.username=${{ secrets.DB_USERNAME }} \
+  -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
+  -Djwt.secret=${{ secrets.JWT_SECRET }} \
+  -Dtoss.secret=${{ secrets.TOSS_SECRET }} \
+  -Dcloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }} \
+  -Dcloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }} \
+  -Dcloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }} \
+  -Dslack.webhook.url=${{ secrets.SLACK_WEBHOOK_URL }} \
+  -Dapp.upload.dir=/home/ubuntu/uploads \
+  -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
 EOF
 
       - name: Slack Notify - 성공
