@@ -13,28 +13,28 @@ jobs:
 
       - name: Decode PEM key
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > monitoring.pem
-          chmod 600 monitoring.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
+          chmod 600 homepem.pem
 
       - name: Upload Grafana provisioning files
         run: |
-          scp -o StrictHostKeyChecking=no -i monitoring.pem -r grafana ${{ secrets.EC2_USER_MON }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/grafana
+          scp -o StrictHostKeyChecking=no -i homepem.pem -r grafana ${{ secrets.EC2_USER_MON }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/grafana
 
       - name: Upload Prometheus & AlertManager config
         run: |
-          scp -i monitoring.pem monitoring/prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/prometheus.yml
-          scp -i monitoring.pem monitoring/alertmanager/alert.rules.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/alert.rules.yml
-          scp -i monitoring.pem monitoring/alertmanager/config.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/alertmanager.yml
+          scp -i homepem.pem monitoring/prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/prometheus.yml
+          scp -i homepem.pem monitoring/alertmanager/alert.rules.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/alert.rules.yml
+          scp -i homepem.pem monitoring/alertmanager/config.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }}:/home/ubuntu/alertmanager.yml
 
       - name: Create Docker network
         run: |
-          ssh -i monitoring.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} "
+          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} "
             docker network inspect monitoring-net >/dev/null 2>&1 || docker network create monitoring-net
           "
 
       - name: Run Prometheus
         run: |
-          ssh -i monitoring.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} << EOF
+          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} << EOF
           docker rm -f prometheus || true
           docker run -d \
             --name prometheus \
@@ -47,7 +47,7 @@ jobs:
 
       - name: Run Grafana
         run: |
-          ssh -i monitoring.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} << EOF
+          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} << EOF
           docker rm -f grafana || true
           docker run -d \
             --name grafana \
@@ -59,7 +59,7 @@ jobs:
 
       - name: Run AlertManager
         run: |
-          ssh -i monitoring.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} << EOF
+          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST_MON }} << EOF
           docker rm -f alertmanager || true
           docker run -d \
             --name alertmanager \
