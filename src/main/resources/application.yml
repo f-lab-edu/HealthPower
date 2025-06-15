@@ -1,0 +1,147 @@
+spring:
+  profiles:
+    active: prod # 실행 시 필요에 따라 prod, dev, local 변경
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  application:
+    name: HealthPower
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+  datasource:
+    url: ${DB_LOCAL_URL}
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  redis:
+    host: localhost
+    port: 6379
+  session:
+    store-type: redis
+  jwt:
+    secret: ${JWT_SECRET}
+  toss:
+    secret: ${TOSS_SECRET}
+  app:
+    upload:
+      dir: C:/Users/JJS/Downloads
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  mvc:
+    locale: ko_KR
+    locale-resolver: fixed
+  http:
+    encoding:
+      force: true
+      charset: UTF-8
+      enabled: true
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${DB_LOCAL_URL}
+    username: root
+    password: 1234
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY:}
+        secret-key: ${AWS_SECRET_KEY:}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: ${AWS_S3_BUCKET:dev-default-bucket}
+      stack:
+        auto: false
+  jwt:
+    secret: ${JWT_SECRET}
+  toss:
+    secret: ${TOSS_SECRET}
+  app:
+    upload:
+      dir: /home/ubuntu/uploads
+  server:
+    port: 8080
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+        base-path: /actuator
+    endpoint:
+      health:
+        show-details: always
+  slack:
+    webhook:
+      url: ${SLACK_WEBHOOK_URL}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
+  jwt:
+    secret: ${JWT_SECRET}
+  toss:
+    secret: ${TOSS_SECRET}
+  app:
+    upload:
+      dir: /home/ubuntu/uploads
+  server:
+    port: 8080
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus
+        base-path: /actuator
+    endpoint:
+      health:
+        show-details: always
+      prometheus:
+        enabled: true
+  slack:
+    webhook:
+      url: ${SLACK_WEBHOOK_URL}
