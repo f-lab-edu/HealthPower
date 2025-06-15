@@ -23,26 +23,6 @@ jobs:
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
 
-      - name: Set up prod DB properties
-        run: |
-          echo "spring.datasource.url=${{ secrets.DB_URL }}" >> application-prod.properties
-          echo "spring.datasource.username=${{ secrets.DB_USERNAME }}" >> application-prod.properties
-          echo "spring.datasource.password=${{ secrets.DB_PASSWORD }}" >> application-prod.properties
-          echo "spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver" >> application-prod.properties
-          echo "spring.jpa.hibernate.ddl-auto=update" >> application-prod.properties
-          echo "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect" >> application-prod.properties
-          echo "jwt.secret=${{ secrets.JWT_SECRET }}" >> application-prod.properties
-          echo "toss.secret=${{ secrets.TOSS_SECRET }}" >> application-prod.properties
-          echo "cloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }}" >> application-prod.properties
-          echo "cloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }}" >> application-prod.properties
-          echo "slack.webhook.url=${{ secrets.SLACK_WEBHOOK_URL }}" >> application-prod.properties
-          echo "cloud.aws.region.static=ap-northeast-2" >> application-prod.properties
-          echo "cloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }}" >> application-prod.properties
-          echo "server.port=8080" >> application-prod.properties
-          echo "app.upload.dir=/home/ubuntu/uploads" >> application-prod.properties
-          echo "management.endpoint.prometheus.enabled=true" >> application-prod.properties
-          echo "management.endpoints.web.exposure.include=health,info,prometheus" >> application-prod.properties
-
       - name: Decode PEM key for EC2
         run: |
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
@@ -62,15 +42,6 @@ jobs:
           scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
           scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
-      - name: Upload Grafana provisioning files
-        run: |
-          scp -i homepem.pem -r grafana ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/grafana
-
-      - name: Upload Prometheus & AlertManager config
-        run: |
-          scp -i homepem.pem monitoring/prometheus/prometheus.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/prometheus.yml
-          scp -i homepem.pem monitoring/alertmanager/alert.rules.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alert.rules.yml
-          scp -i homepem.pem monitoring/alertmanager/config.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/alertmanager.yml
 
       - name: Create log directory on EC2
         run: |
@@ -102,63 +73,6 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
           'tail -n 100 /home/ubuntu/app.log'
-
-      - name: Create Docker network if not exists
-        run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            docker network inspect monitoring-net >/dev/null 2>&1 || docker network create monitoring-net
-          "
-
-      - name: Run Docker container on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-          cd ~
-          docker rm -f healthpower-app || true
-          docker build -t healthpower-image .
-          
-          docker run -d \
-          --name healthpower-app \
-          --network monitoring-net \
-          -p 8080:8080 \
-          healthpower-image
-          EOF
-
-      - name: Run Prometheus container
-        run: |
-          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-          docker rm -f prometheus || true
-          docker run -d \
-            --name prometheus \
-            --network monitoring-net \
-            -p 9090:9090 \
-            -v /home/ubuntu/prometheus.yml:/etc/prometheus/prometheus.yml \
-            -v /home/ubuntu/alert.rules.yml:/etc/prometheus/alert.rules.yml \
-            prom/prometheus
-          EOF
-
-      - name: Run Grafana container
-        run: |
-          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-          docker rm -f grafana || true
-          docker run -d \
-            --name grafana \
-            --network monitoring-net \
-            -p 3000:3000 \
-            -v /home/ubuntu/grafana/provisioning:/etc/grafana/provisioning \
-            grafana/grafana
-          EOF
-
-      - name: Run AlertManager container
-        run: |
-          ssh -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-          docker rm -f alertmanager || true
-          docker run -d \
-            --name alertmanager \
-            --network monitoring-net \
-            -p 9093:9093 \
-            -v /home/ubuntu/alertmanager.yml:/etc/alertmanager/alertmanager.yml \
-            prom/alertmanager
-          EOF
 
       - name: Slack Notify - 성공
         if: success()
