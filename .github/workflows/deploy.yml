@@ -33,10 +33,11 @@ jobs:
 
       - name: Upload JAR and Dockerfile to EC2 via SCP
         run: |
+          set -e
           JAR_FILE=$(ls build/libs/*.jar | head -n 1)
           echo "Uploading $JAR_FILE to EC2..."
-          scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
-          scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
+          scp -v -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+          scp -v -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
       - name: Create log & upload directories on EC2
         run: |
