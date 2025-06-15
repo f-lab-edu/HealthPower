@@ -29,6 +29,13 @@
 
 <button onclick="startPayment()">결제하기</button>
 
+<div th:if="${product.userId == #authentication.principal.userId}">
+    <a th:href="@{/board/product/edit/{id}(id=${product.id})}">수정</a>
+    <form th:action="@{/board/product/delete/{id}(id=${product.id})}" method="post">
+        <button type="submit">삭제</button>
+    </form>
+</div>
+
 <!-- 댓글 리스트 -->
 <h3>댓글</h3>
 <div th:if="${#lists.isEmpty(comments)}">

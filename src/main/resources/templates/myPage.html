@@ -72,10 +72,12 @@
 
     <hr>
     <div>
-        <h3>보유 잔액: <span th:text="${member.balance}"></span> 원</h3>
-        <form th:action="@{/payment/charge}" method="post">
+        <h3>보유 잔액:
+            <span th:text="${#numbers.formatDecimal(member.balance, 1, 'COMMA', 0, 'POINT')}"></span> 원
+        </h3>
+        <form id="chargeForm" th:action="@{/payment/charge2}" method="post" onsubmit="return validateAmount()">
             <label>충전 금액</label>
-            <input type="number" name="amount" min="1" step="1000" required>
+            <input type="number" id="amount" name="amount" min="1" required>
             <button type="submit">충전하기</button>
         </form>
     </div>

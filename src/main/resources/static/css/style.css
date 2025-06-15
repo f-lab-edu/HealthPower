@@ -3,3 +3,30 @@
     font-size: 0.9em;
     margin-top: 5px;
 }
+
+.active {
+    font-weight: bold;
+    color: red;
+}
+
+.pagination a {
+    margin: 0 4px;
+    padding: 5px 10px;
+    border: 1px solid #ccc;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination a.active {
+    font-weight: bold;
+    background-color: #007BFF;
+    color: white;
+    border-color: #007BFF;
+}
+
+a.active-page {
+    font-weight: bold;
+    color: black;
+    text-decoration: underline;
+}
+

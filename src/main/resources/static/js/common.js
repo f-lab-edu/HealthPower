@@ -55,3 +55,12 @@ function secureNavigate(url) {
     alert('서버와의 통신에 실패했습니다.');
   });
 }
+
+  function validateAmount() {
+    const amount = parseFloat(document.getElementById("amount").value);
+    if (isNaN(amount) || amount <= 0) {
+      alert("올바른 충전 금액을 입력하세요.");
+      return false;
+    }
+    return true;
+  }

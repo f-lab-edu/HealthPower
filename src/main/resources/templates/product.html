@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>상품등록</title>
+</head>
+<body>
+  <form th:action="@{/board/product/post2}" method="post" th:object="${productDTO}" enctype="multipart/form-data">
+    <div>
+      <label>상품명:</label>
+      <input type="text" th:field="*{productName}" />
+      <div th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}" class="error-message"></div>
+    </div>
+    <div>
+      <label>가격:</label>
+      <input type="text" th:field="*{price}" />
+      <div th:if="${#fields.hasErrors('price')}" th:errors="*{price}" class="error-message"></div>
+    </div>
+    <div>
+      <label>분류:</label>
+      <select type="text" th:field="*{category}">
+        <option value="">--선택--</option>
+        <option value="대형">대형</option>
+        <option value="중형">중형</option>
+        <option value="소형">소형</option>
+        <option value="기타">기타</option>
+      </select>
+      <div th:if="${#fields.hasErrors('category')}" th:errors="*{category}" class="error-message"></div>
+    </div>
+    <div>
+      <label>내용:</label>
+      <textarea th:field="*{content}" />
+      <div th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="error-message"></div>
+    </div>
+    <div>
+      <label>수량:</label>
+      <input type="number" th:field="*{stock}" min="1"/>
+      <div th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}" class="error-message"></div>
+    </div>
+    <div>
+      <label>상품 사진:</label>
+      <input type="file" th:field="*{photo}" accept="image/*" />
+    </div>
+    <button type="submit">상품 등록</button>
+  </form>
+</body>
+</html>
