@@ -27,6 +27,11 @@ jobs:
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
           chmod 600 ${{ github.workspace }}/homepem.pem
 
+      - name: 🔍 Verify PEM file existence
+        run: |
+          echo "Checking if PEM file exists..."
+          ls -alh ${{ github.workspace }}/homepem.pem
+
       - name: Build Spring Boot application
         run: ./gradlew clean bootJar
 
