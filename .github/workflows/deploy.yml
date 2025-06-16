@@ -25,8 +25,8 @@ jobs:
 
       - name: Decode PEM key for EC2
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > $GITHUB_WORKSPACE/homepem.pem
-          chmod 600 $GITHUB_WORKSPACE/homepem.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
+          chmod 600 homepem.pem
 
       - name: Build Spring Boot application (fat JAR)
         run: ./gradlew clean bootJar
@@ -35,12 +35,12 @@ jobs:
         run: |
           JAR_FILE=$(find build/libs -name "*.jar" | sort | tail -n1)
           echo "Uploading $JAR_FILE to EC2..."
-          scp -o StrictHostKeyChecking=no -i $GITHUB_WORKSPACE/homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
-          scp -o StrictHostKeyChecking=no -i $GITHUB_WORKSPACE/homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
+          scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+          scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
       - name: Create log & upload directories on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i $GITHUB_WORKSPACE/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             mkdir -p /home/ubuntu/uploads /home/ubuntu/logs
             chmod 755 /home/ubuntu/logs
           EOF
@@ -57,7 +57,7 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i $GITHUB_WORKSPACE/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             echo 'Stopping existing Java process...'
             pkill -f 'java' || true
 
