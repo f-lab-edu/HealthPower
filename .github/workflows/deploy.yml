@@ -32,6 +32,9 @@ jobs:
           echo "Checking if PEM file exists..."
           ls -alh ${{ github.workspace }}/homepem.pem
 
+      - name: Clean old JARs
+        run: rm -f build/libs/*.jar
+
       - name: Build Spring Boot application
         run: ./gradlew clean bootJar
 
