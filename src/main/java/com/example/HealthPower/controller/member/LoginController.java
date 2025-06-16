@@ -91,7 +91,7 @@ public class LoginController {
 
             ResponseCookie cookie = ResponseCookie.from("Authorization", token)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)
                     .sameSite("None")
                     .path("/")
                     .maxAge(60 * 60)
