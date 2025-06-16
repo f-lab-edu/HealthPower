@@ -22,15 +22,23 @@ public class UserDTO {
 
     private Long id;
 
-    /*private String photo;*/
-
     private MultipartFile photo;
 
+    private String photoUrl;
+
     private String userId;
+
+    private String username;
+
+    private String nickname;
 
     private String email;
 
     private String password;
+
+    private String address;
+
+    private String phoneNumber;
 
     private Gender gender;
 
@@ -40,6 +48,8 @@ public class UserDTO {
 
     private boolean activated;
 
+    private double balance;
+
     private List<AuthorityDTO> securityAuthList;
 
     public UserDTO(Long id, String userId, Role role) {
@@ -48,6 +58,12 @@ public class UserDTO {
     public static UserDTO of(User user) {
         return UserDTO.builder()
                 .userId(user.getUserId())
+                .photoUrl(user.getPhotoUrl())
+                .nickname(user.getNickname())
+                .address(user.getAddress())
+                .balance(user.getBalance())
+                .username(user.getUsername())
+                .phoneNumber(user.getPhoneNumber())
                 .email(user.getEmail())
                 .gender(user.getGender())
                 .birth(user.getBirth())

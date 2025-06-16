@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -13,7 +15,7 @@ import lombok.Setter;
 public class Product extends Board {
 
     private String productName;  // 상품 게시판에서 상품 이름
-    private Double price;  // 상품 가격
+    private Integer price;  // 상품 가격
     private String category; //상품 카테고리 (enum 형태로 만들어야할까?)
     private int stock; //상품 수량
     private String content; //상품 설명

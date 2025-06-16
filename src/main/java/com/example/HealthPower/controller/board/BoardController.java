@@ -10,10 +10,13 @@ import com.example.HealthPower.loginUser.LoginUser;
 import com.example.HealthPower.repository.ProductRepository;
 import com.example.HealthPower.service.CommentService;
 import com.example.HealthPower.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -60,10 +63,22 @@ public class BoardController {
 
     /* 상품 게시판 */
     @GetMapping("/product")
-    public String productList(Model model) {
-        List<Product> products = productRepository.findAll();
-        model.addAttribute("products", products);
+    @PreAuthorize("isAuthenticated()")
+    public String productList(@RequestParam(defaultValue = "0") int page, Model model) {
+
+        int pageSize = 5;
+
+        Page<Product> productPage = postService.getProductList("상품게시판", page, pageSize);
+
+        model.addAttribute("productPage", productPage);
         return "productList";
+    }
+
+    @GetMapping("/productCreate")
+    @PreAuthorize("isAuthenticated()")
+    public String productCreate(ProductDTO productDTO, Model model) {
+        model.addAttribute("productDTO", productDTO);
+        return "product";
     }
 
     @PostMapping("/product/post")
@@ -85,6 +100,30 @@ public class BoardController {
         postService.createProduct(productDTO, currentUser);
 
         return ResponseEntity.ok("상품등록 성공");
+    }
+
+    @PostMapping("/product/post2")
+    @PreAuthorize("isAuthenticated()")
+    public String createProduct2(@Valid @ModelAttribute("productDTO") ProductDTO productDTO,
+                                 @LoginUser UserDTO loginUser,
+                                 Model model,
+                                 BindingResult bindingResult) {
+        // 현재 로그인된 사용자 정보를 가져옴
+        UserDetailsImpl currentUser = getCurrentUser();
+
+        if (loginUser == null) {
+            model.addAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/members/login";
+        }
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("errorMessage", "입력값에 오류가 있습니다.");
+            return "/board/product";
+        }
+
+        postService.createProduct(productDTO, currentUser);
+
+        return "redirect:/board/productList";
     }
 
     //상품 상세정보 조회

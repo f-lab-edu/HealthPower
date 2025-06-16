@@ -9,6 +9,10 @@ import com.example.HealthPower.repository.ProductRepository;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,14 +50,15 @@ public class PostService {
         // Board 엔티티의 공통 필드 설정
         product.setUserId(currentUser.getUserId());
         product.setContent(productDTO.getContent()); //board 필드
-        product.setBoardName(productDTO.getBoardName()); //board 필드
+        product.setBoardName("상품게시판"); //board 필드
         product.setCreatedAt(LocalDateTime.now()); //테스트로 현재시각 세팅
+        product.setStock(productDTO.getStock());
 
         return product;
     }
 
     // 상품 등록 메서드
-    //public void createProduct(ProductDTO productDTO, UserDetailsImpl currentUser) {
+    @Transactional
     public void createProduct(ProductDTO productDTO, UserDetailsImpl currentUser) {
         // 로그인된 사용자 정보가 있을 경우
         if (currentUser != null) {
@@ -75,5 +80,10 @@ public class PostService {
         }
 
         product.update(productDTO);
+    }
+
+    public Page<Product> getProductList(String boardName, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return productRepository.findAllByBoardName(boardName, pageable);
     }
 }

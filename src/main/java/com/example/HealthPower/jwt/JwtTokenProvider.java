@@ -102,7 +102,6 @@ public class JwtTokenProvider {
                 .build();
     }
 
-    //현재 이 메서드를 안쓰는 듯
     public String createToken(Authentication authentication) {
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

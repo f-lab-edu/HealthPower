@@ -8,6 +8,7 @@
 <body>
 <!-- 상품 상세 페이지 예시 -->
 <input type="hidden" id="productId" th:value="${product.id}">
+<div th:replace="fragments/header :: user-status"></div>
 <div>
     <label>상품명 : </label>
     <strong id="productName" th:text="${product.productName}">상품명</strong>
@@ -28,13 +29,21 @@
 
 <button onclick="startPayment()">결제하기</button>
 
+<div th:if="${product.userId == #authentication.principal.userId}">
+    <a th:href="@{/board/product/edit/{id}(id=${product.id})}">수정</a>
+    <form th:action="@{/board/product/delete/{id}(id=${product.id})}" method="post">
+        <button type="submit">삭제</button>
+    </form>
+</div>
+
 <!-- 댓글 리스트 -->
 <h3>댓글</h3>
 <div th:if="${#lists.isEmpty(comments)}">
     <p>아직 댓글이 없습니다.</p>
 </div>
 
-<div th:each="comment : ${comments}" class="comment-box" style="display: flex; align-items: center; margin-bottom: 12px;">
+<div th:each="comment : ${comments}" class="comment-box"
+     style="display: flex; align-items: center; margin-bottom: 12px;">
     <img th:src="${comment.photoUrl != null ? comment.photoUrl : 'https://via.placeholder.com/42'}"
          style="width: 42px; height: 42px; border-radius: 50%; margin-right: 12px;" alt="프로필">
     <div>
@@ -53,7 +62,7 @@
 <!-- 로그인 사용자에게만 보여지는 영역 -->
 <div sec:authorize="isAuthenticated()">
     <form th:action="@{/comment}" method="post">
-        <input type="hidden" name="productId" th:value="${product.id}" />
+        <input type="hidden" name="productId" th:value="${product.id}"/>
         <textarea name="content" rows="3" cols="50" placeholder="댓글을 입력하세요" required></textarea>
         <br>
         <button type="submit">댓글 등록</button>
@@ -62,7 +71,7 @@
 
 <!-- 비로그인 사용자에게 안내 -->
 <div sec:authorize="isAnonymous()">
-    <p>댓글을 작성하려면 <a th:href="@{/login}">로그인</a>이 필요합니다.</p>
+    <p>댓글을 작성하려면 <a th:href="@{/members/login}">로그인</a>이 필요합니다.</p>
 </div>
 
 <div th:if="${errorMessage}">
@@ -70,44 +79,44 @@
 </div>
 
 <script>
-  async function startPayment() {
-      const orderName = document.getElementById("productName").innerText;
-      const productId = document.getElementById("productId").value;
-      const price = parseInt(document.getElementById("price").innerText);
-      const quantity = parseInt(document.getElementById("quantity").value);
-      const amount = price * quantity;
-      const stock = document.getElementById("stock").innerText;
+    async function startPayment() {
+        const orderName = document.getElementById("productName").innerText;
+        const productId = document.getElementById("productId").value;
+        const price = parseInt(document.getElementById("price").innerText);
+        const quantity = parseInt(document.getElementById("quantity").value);
+        const amount = price * quantity;
+        const stock = document.getElementById("stock").innerText;
 
-      if(isNaN(amount) || amount <= 0) {
-        alert("올바른 금액이 아닙니다.");
-        return;
-      }
+        if(isNaN(amount) || amount <= 0) {
+          alert("올바른 금액이 아닙니다.");
+          return;
+        }
 
-      if(quantity > stock){
-        alert("재고보다 구매수량이 많습니다.")
-        return;
-      }
+        if(quantity > stock){
+          alert("재고보다 구매수량이 많습니다.")
+          return;
+        }
 
-      // 1. 서버에 결제 요청 정보 저장 (orderId 생성, Redis 저장 등)
-      const res = await fetch("/payment/request", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({ productId, orderName, productId, amount, quantity })
-      });
+        // 1. 서버에 결제 요청 정보 저장 (orderId 생성, Redis 저장 등)
+        const res = await fetch("/payment/request", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ productId, orderName, productId, amount, quantity })
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      // 2. Toss SDK로 결제 창 띄우기
-      const tossPayments = TossPayments('test_ck_DpexMgkW36N5NAm2MW5M3GbR5ozO');
-      tossPayments.requestPayment('카드', {
-          productId: data.productId,
-          amount: data.amount,
-          orderId: data.orderId,
-          orderName: data.orderName,
-          successUrl: `${data.redirectUrl}`,
-          failUrl: `${data.redirectUrl}?orderId=${data.orderId}&fail=true`
-      });
-  }
+        // 2. Toss SDK로 결제 창 띄우기
+        const tossPayments = TossPayments('test_ck_DpexMgkW36N5NAm2MW5M3GbR5ozO');
+        tossPayments.requestPayment('카드', {
+            productId: data.productId,
+            amount: data.amount,
+            orderId: data.orderId,
+            orderName: data.orderName,
+            successUrl: `${data.redirectUrl}`,
+            failUrl: `${data.redirectUrl}?orderId=${data.orderId}&fail=true`
+        });
+    }
 </script>
 
 </body>

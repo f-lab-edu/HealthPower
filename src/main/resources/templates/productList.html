@@ -5,16 +5,46 @@
     <title>Title</title>
 </head>
 <body>
-    <ul>
-        <li th:each="product : ${products}">
-            <div>
-                <label>상품명 : </label>
-                <strong th:text="${product.productName}">상품명</strong>
-            </div>
-            <div>
-                <a th:href="@{/board/product/{id}(id=${product.id})}">상세보기</a>
-            </div>
-        </li>
-    </ul>
+<div th:replace="fragments/header :: user-status"></div>
+<ul>
+    <li th:each="product : ${productPage.content}">
+        <div>
+            <label>상품명 : </label>
+            <strong th:text="${product.productName}">상품명</strong>
+        </div>
+        <p th:text="'등록일자: ' + ${product.createdAt}">등록일자</p>
+        <div>
+            <a th:href="@{/board/product/{id}(id=${product.id})}">상세보기</a>
+        </div>
+    </li>
+</ul>
+<div class="pagination">
+    <!-- 첫 페이지로 이동 -->
+    <a th:if="${!productPage.first}" th:href="@{/board/product(page=0)}">« 처음</a>
+
+    <!-- 이전 페이지 -->
+    <a th:if="${productPage.hasPrevious()}"
+       th:href="@{/board/product(page=${productPage.number - 1})}">‹ 이전</a>
+
+    <!-- 번호 리스트 -->
+    <span th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}">
+        <a th:href="@{/board/product(page=${i})}"
+           th:text="${i + 1}"
+           th:classappend="${i == productPage.number} ? 'active-page' : ''">
+        </a>
+    </span>
+
+    <!-- 다음 페이지 -->
+    <a th:if="${productPage.hasNext()}"
+       th:href="@{/board/product(page=${productPage.number + 1})}">다음 ›</a>
+
+    <!-- 마지막 페이지로 이동 -->
+    <a th:if="${!productPage.last}"
+       th:href="@{/board/product(page=${productPage.totalPages - 1})}">마지막 »</a>
+</div>
+<div>
+    <a th:href="@{/board/productCreate}">상품등록</a>
+</div>
 </body>
+<link rel="stylesheet" th:href="@{/css/style.css}">
 </html>

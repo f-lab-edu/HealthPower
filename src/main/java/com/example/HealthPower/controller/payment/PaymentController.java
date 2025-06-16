@@ -56,6 +56,32 @@ public class PaymentController {
         ));
     }
 
+    @PostMapping("/charge")
+    public ResponseEntity<String> chargeBalance(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                @RequestParam int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("충전 금액은 0보다 커야 합니다.");
+        }
+
+        User user = userRepository.findByUserId(userDetails.getUserId()).orElseThrow();
+        user.setBalance(user.getBalance() + amount);
+        userRepository.save(user);
+        return ResponseEntity.ok("충전 완료. 현재 잔액: " + user.getBalance());
+    }
+
+    @PostMapping("/charge2")
+    public String chargeBalance2(@AuthenticationPrincipal UserDetailsImpl userDetails,
+                                                @RequestParam int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("충전 금액은 0보다 커야 합니다.");
+        }
+
+        User user = userRepository.findByUserId(userDetails.getUserId()).orElseThrow();
+        user.setBalance(user.getBalance() + amount);
+        userRepository.save(user);
+        return "redirect:/myPage";
+    }
+
     @GetMapping("/success")
     public String paymentSuccess(@RequestParam("paymentKey") String paymentKey,
                                  @RequestParam("orderId") String orderId,
@@ -94,15 +120,6 @@ public class PaymentController {
         redirectAttributes.addFlashAttribute("errorMessage", message);
 
         return "redirect:/board/product/" + productId;  // 상세 페이지로 복귀
-    }
-
-    @PostMapping("/charge")
-    public ResponseEntity<String> chargeBalance(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                @RequestParam int amount) {
-        User user = userRepository.findByUserId(userDetails.getUserId()).orElseThrow();
-        user.setBalance(user.getBalance() + amount);
-        userRepository.save(user);
-        return ResponseEntity.ok("충전 완료. 현재 잔액: " + user.getBalance());
     }
 
     @GetMapping("/balance")

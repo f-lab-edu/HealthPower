@@ -6,8 +6,81 @@
 </head>
 <body>
 <div>
-  <h3>프로필 사진</h3>
-  <img th:src="@{'/images/' + ${user.photoPath}}" alt="프로필 사진" width="150"/>
+    <div th:replace="fragments/header :: user-status"></div>
+
+    <form th:action="@{/members/update}" method="post" enctype="multipart/form-data">
+        <div>
+            <label>프로필 사진</label>
+            <img th:src="${member.photoUrl != null} ? ${member.photoUrl} : '@{/images/default-profile.png}'"
+                 alt="프로필 사진" width="150"/>
+        </div>
+            <span><label>프로필 사진 업로드</label>
+            <input type="file" name="photo">
+            </span>
+        <div>
+            <label>이메일</label>
+            <input type="email" name="email" th:value="${member.email}" readonly>
+        </div>
+
+        <div>
+            <label>이름</label>
+            <input type="text" name="username" th:value="${member.username}" required>
+        </div>
+
+        <div>
+            <label>닉네임</label>
+            <input type="text" name="nickname" th:value="${member.nickname}" required>
+        </div>
+
+        <div>
+            <label>휴대폰 번호</label>
+            <input type="text" name="phoneNumber" th:value="${member.phoneNumber}" required>
+        </div>
+
+        <div>
+            <label>생년월일</label>
+            <input type="date" name="birth" th:value="${member.birth}">
+        </div>
+
+        <div>
+            <label>성별</label>
+            <select name="gender">
+                <option value="MALE" th:selected="${member.gender == 'MALE'}">남성</option>
+                <option value="FEMALE" th:selected="${member.gender == 'FEMALE'}">여성</option>
+            </select>
+        </div>
+
+        <div>
+            <label>주소</label>
+            <input type="text" name="address" th:value="${member.address}">
+        </div>
+
+        <div>
+            <label>현재 비밀번호 확인</label>
+            <input type="password" name="currentPassword" required>
+        </div>
+
+        <div>
+            <label>새 비밀번호</label>
+            <input type="password" name="newPassword">
+        </div>
+
+        <div>
+            <button type="submit">정보 수정</button>
+        </div>
+    </form>
+
+    <hr>
+    <div>
+        <h3>보유 잔액:
+            <span th:text="${#numbers.formatDecimal(member.balance, 1, 'COMMA', 0, 'POINT')}"></span> 원
+        </h3>
+        <form id="chargeForm" th:action="@{/payment/charge2}" method="post" onsubmit="return validateAmount()">
+            <label>충전 금액</label>
+            <input type="number" id="amount" name="amount" min="1" required>
+            <button type="submit">충전하기</button>
+        </form>
+    </div>
 </div>
 </body>
 </html>
