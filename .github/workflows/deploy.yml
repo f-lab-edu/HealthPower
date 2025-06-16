@@ -43,34 +43,24 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
 
       - name: Run Spring Boot App on EC2
-        env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          TOSS_SECRET: ${{ secrets.TOSS_SECRET }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          echo "Connecting to EC2 and restarting app..."
+          chmod 600 ${{ github.workspace }}/homepem.pem
+
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
             echo "Stopping old app if running..."
             pkill -f java || true
-
-            echo "Starting new app..."
+            echo "Starting Spring Boot app..."
             nohup java \
               -Dspring.profiles.active=prod \
-              -Dspring.datasource.url="${DB_URL}" \
-              -Dspring.datasource.username="${DB_USERNAME}" \
-              -Dspring.datasource.password="${DB_PASSWORD}" \
-              -Djwt.secret="${JWT_SECRET}" \
-              -Dtoss.secret="${TOSS_SECRET}" \
-              -Dcloud.aws.credentials.access-key="${AWS_ACCESS_KEY}" \
-              -Dcloud.aws.credentials.secret-key="${AWS_SECRET_KEY}" \
-              -Dcloud.aws.s3.bucket="${AWS_S3_BUCKET}" \
-              -Dslack.webhook.url="${SLACK_WEBHOOK_URL}" \
+              -Dspring.datasource.url="${{ secrets.DB_URL }}" \
+              -Dspring.datasource.username="${{ secrets.DB_USERNAME }}" \
+              -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
+              -Djwt.secret="${{ secrets.JWT_SECRET }}" \
+              -Dtoss.secret="${{ secrets.TOSS_SECRET }}" \
+              -Dcloud.aws.credentials.access-key="${{ secrets.AWS_ACCESS_KEY }}" \
+              -Dcloud.aws.credentials.secret-key="${{ secrets.AWS_SECRET_KEY }}" \
+              -Dcloud.aws.s3.bucket="${{ secrets.AWS_S3_BUCKET }}" \
+              -Dslack.webhook.url="${{ secrets.SLACK_WEBHOOK_URL }}" \
               -Dapp.upload.dir=/home/ubuntu/uploads \
               -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
           '
