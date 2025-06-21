@@ -304,6 +304,8 @@ public class MemberService {
             user.setPhotoUrl(uploadedUrl);
         }
 
+        log.info("DTO 전체: {}", userModifyDTO); // toString() 자동 생성 시 사용 가능
+
         return userRepository.save(user);
 
     }
