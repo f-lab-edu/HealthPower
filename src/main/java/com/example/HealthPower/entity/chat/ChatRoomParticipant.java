@@ -30,6 +30,7 @@ public class ChatRoomParticipant {
     @Column(name = "exited")
     private boolean exited = false;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public static ChatRoomParticipant of(ChatRoom room, User user, boolean exited) {

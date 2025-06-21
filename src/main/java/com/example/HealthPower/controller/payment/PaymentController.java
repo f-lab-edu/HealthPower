@@ -8,9 +8,11 @@ import com.example.HealthPower.repository.TransactionHistoryRepository;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.PaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -23,6 +25,9 @@ import java.util.UUID;
 @RequestMapping("/payment")
 @RequiredArgsConstructor
 public class PaymentController {
+
+    @Value("${toss.client}")
+    private String tossKey;
 
     private final PaymentService paymentService;
     private final UserRepository userRepository;
@@ -39,7 +44,7 @@ public class PaymentController {
         return "payment";
     }
 
-    @PostMapping("/request")
+    /*@PostMapping("/request")
     public ResponseEntity<?> createOrder(@AuthenticationPrincipal UserDetailsImpl user,
                                          @RequestBody Payment payment) {
         String orderId = "order_" + UUID.randomUUID(); // or Toss 요구 포맷
@@ -54,6 +59,32 @@ public class PaymentController {
                 "amount", payment.getAmount(),
                 "redirectUrl", "http://localhost:8080/payment/success" // Toss SDK URL
         ));
+    }*/
+
+    @PostMapping("/request")
+    public String createOrder2(@AuthenticationPrincipal UserDetailsImpl user,
+                               Payment payment,
+                               Model model) {
+        String orderId = "order_" + UUID.randomUUID(); // or Toss 요구 포맷
+
+        paymentService.savePaymentInfoRedis(
+                orderId,
+                user.getUserId(),
+                payment.getQuantity(),
+                payment.getOrderName(),
+                payment.getProductId()
+        );
+
+        model.addAttribute("tossKey", tossKey);
+        model.addAttribute("userId", user.getUserId());
+        model.addAttribute("orderId", orderId);
+        model.addAttribute("orderName", payment.getOrderName());
+        model.addAttribute("amount", payment.getAmount());
+        model.addAttribute("successUrl", "http://3.38.179.21:8080/payment/success");
+        model.addAttribute("failUrl", "http://3.38.179.21:8080/payment/fail");
+
+        return "paymentRequest";
+
     }
 
     @PostMapping("/charge")
@@ -71,7 +102,7 @@ public class PaymentController {
 
     @PostMapping("/charge2")
     public String chargeBalance2(@AuthenticationPrincipal UserDetailsImpl userDetails,
-                                                @RequestParam int amount) {
+                                 @RequestParam int amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("충전 금액은 0보다 커야 합니다.");
         }

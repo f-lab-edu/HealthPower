@@ -154,6 +154,7 @@ spring:
     secret: ${JWT_SECRET}
   toss:
     secret: ${TOSS_SECRET}
+    client: ${TOSS_CLIENT}
   app:
     upload:
       dir: /home/ubuntu/uploads

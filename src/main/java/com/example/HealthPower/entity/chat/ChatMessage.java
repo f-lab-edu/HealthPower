@@ -20,6 +20,7 @@ public class ChatMessage {
     private Long id;
 
     private String senderId;
+
     private String receiverId;
 
     @Lob //대형 객체 데이터를 저장하기 위한 가변 길이 데이터 유형

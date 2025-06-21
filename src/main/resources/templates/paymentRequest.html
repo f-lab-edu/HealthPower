@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>결제 요청</title>
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+</head>
+<body>
+<script th:inline="javascript">
+  const clientKey =  /*[[${tossKey}]]*/ '';
+
+  const tossPayments = TossPayments(clientKey);
+
+  tossPayments.requestPayment("카드", {
+      amount: [[${amount}]],
+      orderId: /*[[${orderId}]]*/ '',
+      orderName: /*[[${orderName}]]*/ '',
+      customerName: /*[[${userId}]]*/ '',
+      successUrl: /*[[${successUrl}]]*/ '',
+      failUrl: /*[[${failUrl}]]*/ ''
+  }).catch(function (error) {
+      if (error.code === "USER_CANCEL") {
+          alert("결제가 취소되었습니다.");
+      } else {
+          alert("결제 실패: " + error.message);
+      }
+  });
+</script>
+</body>
+</html>

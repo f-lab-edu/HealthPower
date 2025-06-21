@@ -25,7 +25,7 @@ public class ChatRoom {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; //숫자 pk 유지
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "room_id", nullable = false, unique = true)
     private String roomId; // userA_userB 구조
 
     @Column(nullable = false)
@@ -35,10 +35,12 @@ public class ChatRoom {
     private String participantB;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @LastModifiedDate
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     public ChatRoom(String participantA, String participantB) {
