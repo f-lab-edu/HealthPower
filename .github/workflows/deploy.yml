@@ -60,6 +60,7 @@ jobs:
               -Dspring.datasource.password="${{ secrets.DB_PASSWORD }}" \
               -Djwt.secret="${{ secrets.JWT_SECRET }}" \
               -Dtoss.secret="${{ secrets.TOSS_SECRET }}" \
+              -Dtoss.client="${{ secrets.TOSS_CLIENT }}" \
               -Dcloud.aws.credentials.access-key="${{ secrets.AWS_ACCESS_KEY }}" \
               -Dcloud.aws.credentials.secret-key="${{ secrets.AWS_SECRET_KEY }}" \
               -Dcloud.aws.s3.bucket="${{ secrets.AWS_S3_BUCKET }}" \
