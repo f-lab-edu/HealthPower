@@ -80,7 +80,7 @@ public class PaymentController {
 
         res.put("productId", payment.getProductId());
         res.put("amount", payment.getAmount());
-        res.put("orderId", payment.getOrderId());
+        res.put("orderId", orderId);
         res.put("orderName", payment.getOrderName());
         res.put("redirectUrl", "http://3.38.179.21:8080/payment");
         res.put("successUrl", "http://3.38.179.21:8080/payment/success");
