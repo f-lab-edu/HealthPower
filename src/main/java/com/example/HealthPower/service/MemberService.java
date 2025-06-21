@@ -93,6 +93,7 @@ public class MemberService {
                 .role(joinDTO.getRole())
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
+                .balance(0L)
                 .photoUrl(uploadedUrl)
                 .createdAt(LocalDateTime.now())
                 .build();

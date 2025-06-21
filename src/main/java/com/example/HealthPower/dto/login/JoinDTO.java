@@ -66,6 +66,8 @@ public class JoinDTO {
 
     private boolean activated;
 
+    private Long balanace;
+
     @NotNull(message = "필수 입력 값입니다.")
     private Role role;
 
