@@ -103,7 +103,7 @@ public class MyPageController {
                               RedirectAttributes redirectAttributes) throws IOException {
 
         if (bindingResult.hasErrors()) {
-            return "redirect:/members/mypage";
+            return "myPage";
         }
 
         String userId = userDetails.getUserId();

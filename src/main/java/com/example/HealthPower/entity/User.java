@@ -62,7 +62,7 @@ public class User implements UserDetails{
     @Column(name = "birth")
     private LocalDate birth;
 
-    @Column(name = "balance", nullable = false)
+    @Column(name = "balance")
     private Long balance;
 
     @Column(name = "createdAt")
