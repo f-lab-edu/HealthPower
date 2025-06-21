@@ -146,7 +146,7 @@ public class PaymentService {
                 .orderId(orderId)
                 .orderName(orderName)
                 .userId(userId)
-                .amount(amount.intValue())
+                .amount(amount.longValue())
                 .status("DONE")
                 .method("카드") // Toss API 응답에서 method 추출하면 더 좋음
                 .paidAt(LocalDateTime.now())

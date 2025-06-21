@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -62,9 +63,9 @@ public class PaymentController {
     }*/
 
     @PostMapping("/request")
-    public String createOrder2(@AuthenticationPrincipal UserDetailsImpl user,
-                               Payment payment,
-                               Model model) {
+    @ResponseBody
+    public Map<String, Object> createOrder2(@AuthenticationPrincipal UserDetailsImpl user,
+                               @RequestBody Payment payment) {
         String orderId = "order_" + UUID.randomUUID(); // or Toss 요구 포맷
 
         paymentService.savePaymentInfoRedis(
@@ -75,15 +76,17 @@ public class PaymentController {
                 payment.getProductId()
         );
 
-        model.addAttribute("tossKey", tossKey);
-        model.addAttribute("userId", user.getUserId());
-        model.addAttribute("orderId", orderId);
-        model.addAttribute("orderName", payment.getOrderName());
-        model.addAttribute("amount", payment.getAmount());
-        model.addAttribute("successUrl", "http://3.38.179.21:8080/payment/success");
-        model.addAttribute("failUrl", "http://3.38.179.21:8080/payment/fail");
+        Map<String, Object> res = new HashMap<>();
 
-        return "paymentRequest";
+        res.put("productId", payment.getProductId());
+        res.put("amount", payment.getAmount());
+        res.put("orderId", payment.getOrderId());
+        res.put("orderName", payment.getOrderName());
+        res.put("redirectUrl", "http://3.38.179.21:8080/payment");
+        res.put("successUrl", "http://3.38.179.21:8080/payment/success");
+        res.put("failUrl", "http://3.38.179.21:8080/payment/fail");
+
+        return res;
 
     }
 

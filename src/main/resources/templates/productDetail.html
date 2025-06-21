@@ -114,7 +114,7 @@
         const res = await fetch("/payment/request", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ productId, orderName, productId, amount, quantity })
+            body: JSON.stringify({ productId, orderName, amount, quantity })
         });
 
         const data = await res.json();
@@ -126,8 +126,10 @@
             amount: data.amount,
             orderId: data.orderId,
             orderName: data.orderName,
-            successUrl: `${data.redirectUrl}`,
-            failUrl: `${data.redirectUrl}?orderId=${data.orderId}&fail=true`
+            <!--successUrl: `${data.redirectUrl}`,-->
+            <!--failUrl: `${data.redirectUrl}?orderId=${data.orderId}&fail=true`-->
+            successUrl: `${data.redirectUrl}/success`,
+            failUrl: `${data.redirectUrl}/fail?message=실패&orderId=${data.orderId}&fail=true`
         });
     }
 </script>

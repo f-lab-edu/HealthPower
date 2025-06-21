@@ -14,7 +14,7 @@ public class PaymentResultDTO {
     private String paymentKey;
     private String orderId;
     private String orderName;
-    private double amount;
+    private Long amount;
     private String status;
     private String method;
     private LocalDateTime paidAt;

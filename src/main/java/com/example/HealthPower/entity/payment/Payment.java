@@ -25,7 +25,7 @@ public class Payment {
     private String orderId; // 주문 ID
 
     private String orderName; // 주문 제품명
-    private double amount; // 결제 금액
+    private Long amount; // 결제 금액
     private String status; // READY / DONE / CANCELED 등
     private String method;  // 카드 / 가상계좌 / 간편결제 등
     private LocalDateTime paidAt; // 결제 완료 시각
