@@ -29,7 +29,7 @@
     </div>
     <div>
       <label>내용:</label>
-      <textarea th:field="*{content}" />
+      <textarea th:field="*{content}" rows="5"></textarea>
       <div th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="error-message"></div>
     </div>
     <div>

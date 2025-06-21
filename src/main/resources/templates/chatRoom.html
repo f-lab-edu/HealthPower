@@ -2,6 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <!-- ================= 1) 안전하게 값 주입 ================= -->
+    <!-- header 태그를 쓰면 따옴표 지옥에 빠지므로 data-* 가 가장 단순 -->
+    <div id="meta"
+         th:data-room="${roomId}"
+         th:data-user="${currentUserId}"
+         th:data-receiver="${receiverId}"
+         th:data-sender-nickname="${senderNickname}"
+         th:data-jwt="${jwt}">
+    </div>
+
     <title>채팅방</title>
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
@@ -51,26 +61,33 @@
 <!--    <button type="submit">채팅방 나가기</button>-->
 <!--</form>-->
 
+<button onclick="chatRoomList()">채팅방 목록</button>
+
 <button onclick="exitChatRoom()">채팅방 나가기</button>
 
-</body>
-</html>
-
 <script th:inline="javascript">
-    const roomId = /*[[${roomId}]]*/ '';
-    const currentUserId = /*[[${currentUserId}]]*/ '';
-    const receiverId = /*[[${receiverId}]]*/ '';
+  /* ---------- 2) 변수 읽기 ---------- */
+  const data = document.getElementById('meta').dataset;
+  const roomId        = data.room;
+  const currentUserId = data.user;
+  const receiverId    = data.receiver;
+  const senderNickname = "nickname";
+  const jwt    = meta.jwt;
 
-    const headers = {
-        Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiLquYDrr7zsiJgiLCJhdXRoIjoiUk9MRV9VU0VSIiwidXNlcklkIjoiaGVhbHRocG93ZXIxIiwiZXhwIjoxNzQ2NzYzMjA1fQ.gret2XR3WOIZGAarWaMa9UKe96Jb9D4M8-q0UcrKg4c"
-    }
+    console.log({roomId, currentUserId, receiverId, jwt, senderNickname});
 
     const socket = new SockJS("/ws");
     const stompClient = Stomp.over(socket);
 
-    stompClient.connect(headers, function (frame) {
+    stompClient.connect({Authorization: `Bearer ${jwt}`}, function (frame) {
         console.log("WebSocket 연결 성공", frame);
 
+     // 연결 후 딱 한 번만 입장 메시지 전송
+    stompClient.send("/app/chat.enter", {}, JSON.stringify({
+      roomId, senderId: currentUserId, senderNickname, chatType: "ENTER"
+    }));
+
+    // 메시지 구독 (이벤트 처리)
     stompClient.subscribe("/topic/" + roomId, function (message) {
     const msg = JSON.parse(message.body);
     const box = document.getElementById("chat-box");
@@ -90,8 +107,6 @@
             div.style.textAlign = "left";
     div.innerHTML = `
         <div style="display: flex; align-items: center;">
-            <img src="${msg.photoUrl || 'https://via.placeholder.com/40'}"
-                 style="width: 40px; height: 40px; border-radius: 50%; margin-right: 10px;" />
             <div>
                 <strong>${msg.senderNickname}</strong><br>
                 <span style="background-color: #eee; padding: 6px; border-radius: 8px;">${msg.content}</span>
@@ -105,6 +120,16 @@
     scrollToBottom();
     });
 });
+
+    // 일반 채팅
+    stompClient.send("/app/chat.send", {}, JSON.stringify({
+      roomId, senderId: currentUserId, receiverId, senderNickname, content, chatType: "TALK"
+    }));
+
+    // 나가기 버튼
+    stompClient.send("/app/chat.exit", {}, JSON.stringify({
+      roomId, senderId: currentUserId, chatType: "EXIT"
+    }));
 
     document.addEventListener("DOMContentLoaded", function () {
         const input = document.getElementById("messageInput");
@@ -138,6 +163,10 @@
         document.getElementById("messageInput").value = '';
     }
 
+    function chatRoomList(){
+        window.location.href = "/chat/list";
+    }
+
     function exitChatRoom() {
       fetch("/chat/exit/" + roomId, {
         method: "POST",
@@ -154,3 +183,5 @@
       });
     }
 </script>
+</body>
+</html>

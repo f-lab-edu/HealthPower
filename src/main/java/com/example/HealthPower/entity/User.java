@@ -62,15 +62,14 @@ public class User implements UserDetails{
     @Column(name = "birth")
     private LocalDate birth;
 
-    @Column(name = "balance")
-    private double balance;
+    @Column(name = "balance", nullable = false)
+    private Long balance;
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
 
-    /*@Column(name = "updatedAt")
+    @Column(name = "updatedAt")
     private LocalDateTime updatedAt;
-    */
 
     //Ordinal을 사용 X
     @Enumerated(EnumType.STRING)

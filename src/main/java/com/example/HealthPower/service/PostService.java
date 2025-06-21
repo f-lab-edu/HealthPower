@@ -6,8 +6,10 @@ import com.example.HealthPower.entity.board.Product;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.PostRepository;
 import com.example.HealthPower.repository.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,20 +17,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class PostService {
 
-    @Autowired
-    private PostRepository postRepository;
+    private final PostRepository postRepository;
 
-    @Autowired //하나하나 안해주면 Repository가 null이라고 인식.
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+
+    private final S3Uploader s3Uploader;
 
     public Post createPost(Post post) {
         return postRepository.save(post);
@@ -46,6 +50,7 @@ public class PostService {
         product.setProductName(productDTO.getProductName());
         product.setPrice(productDTO.getPrice());
         product.setCategory(productDTO.getCategory());
+        product.setPhotoUrl(productDTO.getPhotoUrl());
 
         // Board 엔티티의 공통 필드 설정
         product.setUserId(currentUser.getUserId());
@@ -71,7 +76,7 @@ public class PostService {
 
     // 상품 수정 메서드
     @Transactional // JPA가 변경된 엔티티를 감지하고 flush해서 DB에 반영.
-    public void updateProduct(Long productId, String userId, ProductDTO productDTO) {
+    public void updateProduct(Long productId, String userId, MultipartFile photo, ProductDTO productDTO) throws IOException {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다."));
 
@@ -79,11 +84,46 @@ public class PostService {
             throw new RuntimeException("작성자만 수정이 가능합니다.");
         }
 
-        product.update(productDTO);
+        product.setProductName(productDTO.getProductName());
+        product.setPrice(productDTO.getPrice());
+        product.setCategory(productDTO.getCategory());
+        product.setStock(productDTO.getStock());
+        product.setContent(productDTO.getContent());
+
+        if (photo != null && !photo.isEmpty()) {
+            String url = s3Uploader.uploadFile(photo, "product-image");
+            product.setPhotoUrl(url);
+        }
     }
 
     public Page<Product> getProductList(String boardName, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return productRepository.findAllByBoardName(boardName, pageable);
     }
+
+    @Transactional(readOnly = true)
+    public ProductDTO getEditableDTO(Long id, String requesterId) throws AccessDeniedException {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("상품이 존재하지 않습니다."));
+
+        /* 수정 권한 체크 */
+        if (!product.getUserId().equals(requesterId)) {
+            throw new AccessDeniedException("수정 권한이 없습니다.");
+        }
+
+        /* --- 엔티티 → DTO 수동 매핑 --- */
+        ProductDTO productDTO = new ProductDTO();
+        productDTO.setId(product.getId());
+        productDTO.setProductName(product.getProductName());
+        productDTO.setPrice(product.getPrice());
+        productDTO.setStock(product.getStock());
+        productDTO.setCategory(product.getCategory());
+        productDTO.setContent(product.getContent());
+        productDTO.setPhotoUrl(product.getPhotoUrl());   // 이미 저장된 이미지 URL
+        // dto.setPhoto(null);                    // 새 업로드용 MultipartFile 은 비워 둔다.
+
+        return productDTO;
+    }
 }
+

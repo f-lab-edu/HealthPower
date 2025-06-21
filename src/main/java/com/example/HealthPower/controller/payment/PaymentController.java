@@ -79,7 +79,7 @@ public class PaymentController {
         User user = userRepository.findByUserId(userDetails.getUserId()).orElseThrow();
         user.setBalance(user.getBalance() + amount);
         userRepository.save(user);
-        return "redirect:/myPage";
+        return "redirect:/members/mypage";
     }
 
     @GetMapping("/success")
@@ -123,7 +123,7 @@ public class PaymentController {
     }
 
     @GetMapping("/balance")
-    public ResponseEntity<Double> getBalance(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<Long> getBalance(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         User user = userRepository.findByUserId(userDetails.getUserId()).orElseThrow();
         return ResponseEntity.ok(user.getBalance());
     }

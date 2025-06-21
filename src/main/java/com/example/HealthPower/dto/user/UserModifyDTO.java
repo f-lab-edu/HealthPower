@@ -3,10 +3,7 @@ package com.example.HealthPower.dto.user;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Setter
 @Getter
 @Builder
 @AllArgsConstructor
@@ -33,6 +31,8 @@ public class UserModifyDTO {
 
     private MultipartFile photo;
 
+    private String photoUrl;
+
     private String address;
 
     @NotBlank(message = "이메일은 필수 입력 값입니다.")
@@ -43,7 +43,10 @@ public class UserModifyDTO {
     @Size(min = 8, message = "비밀번호는 최소 8자 이상이어야 합니다.")
     private String password;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Pattern(regexp = "^$|.{8,}", message = "새 비밀번호는 8자 이상이어야 합니다.")
+    private String newPassword;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @NotNull(message = "생년월일은 필수 입력 항목입니다.")
     private LocalDate birth;
 
@@ -56,7 +59,7 @@ public class UserModifyDTO {
     @NotNull(message = "필수 입력 값입니다.")
     private Role role;
 
-    private Double balance;
+    private Long balance;
 
     //SimpleGrantedAuthority는 기본적으로 생성자나 속성 기반의 역직렬화 방법을 제공하지 않아서 일단 String 형태로 지정
     //이 문자열을 나중에 SimpleGrantedAuthority로 변환
@@ -68,6 +71,11 @@ public class UserModifyDTO {
         return authorities.stream()
                 .map(SimpleGrantedAuthority::new) // String을 SimpleGrantedAuthority로 변환
                 .collect(Collectors.toList());
+    }
+
+    public record ChargeRequest(
+            @Positive(message = "충전 금액은 1원 이상이어야 합니다.")
+            Long amount) {
     }
 
 }

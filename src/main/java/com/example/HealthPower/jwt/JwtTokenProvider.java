@@ -14,10 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,9 +26,8 @@ import java.util.stream.Collectors;
 //JWT 토큰의 생성, 복호화(디코딩), 검증 기능을 구현
 public class JwtTokenProvider {
 
-    private final Key key;
-
     private final UserRepository userRepository;
+    private final Key key;
 
     // application.yml(properties)에서 secret 값 가져와서 key에 저장
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey, UserRepository userRepository) {

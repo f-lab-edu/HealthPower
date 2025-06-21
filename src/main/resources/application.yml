@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev # 실행 시 필요에 따라 prod, dev, local 변경
+    active: prod # 실행 시 필요에 따라 prod, dev, local 변경
 
 ---
 spring:
@@ -13,7 +13,7 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
   datasource:
-    url: ${DB_LOCAL_URL}
+    url: jdbc:mysql://localhost:3306/springJWT?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -27,31 +27,55 @@ spring:
     port: 6379
   session:
     store-type: redis
-  jwt:
-    secret: ${JWT_SECRET}
-  toss:
-    secret: ${TOSS_SECRET}
-  app:
-    upload:
-      dir: C:/Users/JJS/Downloads
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 10MB
-      max-request-size: 10MB
-  mvc:
-    locale: ko_KR
-    locale-resolver: fixed
-  http:
-    encoding:
-      force: true
-      charset: UTF-8
-      enabled: true
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health
+jwt:
+  secret: ""
+
+toss:
+  secret: ""
+
+app:
+  upload:
+    dir: C:/Users/JJS/Downloads
+servlet:
+  multipart:
+    enabled: true
+    max-file-size: 10MB
+    max-request-size: 10MB
+mvc:
+  locale: ko_KR
+  locale-resolver: fixed
+http:
+  encoding:
+    force: true
+    charset: UTF-8
+    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+cloud:
+  aws:
+    credentials:
+      access-key: ""
+      secret-key: ""
+    s3:
+      bucket: healthpowerbucket
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+slack:
+  webhook:
+    url: https://hooks.slack.com/services/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
+
+spring.jpa.show-sql: true
+spring.jpa.properties.hibernate.format_sql: true
+
+logging:
+  level:
+    org.springframework.web.socket: DEBUG
+    org.springframework.messaging.simp: DEBUG
 
 ---
 spring:

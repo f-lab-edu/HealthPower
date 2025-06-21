@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
@@ -36,7 +35,7 @@ public class RepositoryTest {
                 .photoPath("")
                 .gender(Gender.MAN)
                 .birth(LocalDate.of(1992, 12, 4))
-                .balance(100_000)
+                .balance(100000L)
                 .createdAt(LocalDateTime.now())
                 .role(Role.ADMIN)
                 .activated(true).

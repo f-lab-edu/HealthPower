@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>상품 수정</title>
+</head>
+<body>
+<h2>상품 수정 화면</h2>
+<form th:object="${productDTO}"
+      th:action="@{/board/product/update/{id}(id=${id})}"
+      method="post"
+      enctype="multipart/form-data">
+
+    <!-- PK -->
+    <input type="hidden" th:field="*{id}"/>
+
+    <!-- 상품명 -->
+    <div>
+        <label>상품명</label>
+        <input type="text" th:field="*{productName}" required/>
+        <div th:errors="*{productName}"></div>
+    </div>
+
+    <!-- 가격 -->
+    <div>
+        <label>가격</label>
+        <input type="number" th:field="*{price}" min="0" required/>
+        <div th:errors="*{price}"></div>
+    </div>
+
+    <!-- 재고 -->
+    <div>
+        <label>재고</label>
+        <input type="number" th:field="*{stock}" min="0" required/>
+    </div>
+
+    <!-- 카테고리 -->
+    <div>
+        <label>카테고리</label>
+        <select th:field="*{category}">
+            <option value="">--선택--</option>
+            <option value="대형">대형</option>
+            <option value="중형">중형</option>
+            <option value="소형">소형</option>
+            <option value="기타">기타</option>
+        </select>
+    </div>
+
+    <!-- 내용 -->
+    <div>
+        <label>내용</label><br/>
+        <textarea th:field="*{content}" rows="4" cols="50"></textarea>
+    </div>
+
+    <!-- 현재 사진 -->
+    <div>
+        <label>현재 사진</label><br/>
+        <!--<img th:src="${photoUrl == null or #strings.isEmpty(photoUrl) ? '/images/default.png' : photoUrl}"
+             width="180"  alt="상품 이미지"/>-->
+
+        <!-- photoUrl 이 있으면 S3 주소로 -->
+        <img th:if="*{photoUrl != null}"
+             th:src="*{photoUrl}" width="180" alt="상품 이미지"/>
+
+        <!-- 없으면 기본 이미지 -->
+        <img th:unless="*{photoUrl != null}"
+             th:src="@{/images/default.png}" width="180" alt="기본 이미지"/>
+    </div>
+
+    <!-- 새 사진 -->
+    <div>
+        <label>새 사진 (선택)</label>
+        <input type="file" name="photo" accept="image/*"/>
+    </div>
+
+    <button type="submit">저장</button>
+    <a th:href="@{/board/product/{id}(id=${id})}">취소</a>
+</form>
+
+</body>
+</html>

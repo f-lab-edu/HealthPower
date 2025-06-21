@@ -6,13 +6,17 @@
 </head>
 <body>
 <div th:replace="fragments/header :: user-status"></div>
-<ul>
+<ul th:if="${productPage != null}">
     <li th:each="product : ${productPage.content}">
         <div>
             <label>상품명 : </label>
             <strong th:text="${product.productName}">상품명</strong>
         </div>
-        <p th:text="'등록일자: ' + ${product.createdAt}">등록일자</p>
+        <p th:text="'등록일자 : ' + ${#temporals.format(product.createdAt, 'yyyy-MM-dd HH:mm:ss')}">등록일자</p>
+        <div>
+            <label>작성자 : </label>
+            <span th:text="${product.userId}">작성자</span>
+        </div>
         <div>
             <a th:href="@{/board/product/{id}(id=${product.id})}">상세보기</a>
         </div>

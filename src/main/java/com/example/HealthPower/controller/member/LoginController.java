@@ -91,8 +91,11 @@ public class LoginController {
 
             ResponseCookie cookie = ResponseCookie.from("Authorization", token)
                     .httpOnly(true)
-                    .secure(false)
-                    .sameSite("None")
+                    /*.sameSite("None")*/
+                    .secure(false)           // ✅ 로컬에서는 Secure=false
+                    .sameSite("Lax")         // ✅ 또는 "Strict" (Cross-site가 아닌 경우에만)
+                    /*.secure(true)            // ✅ 반드시 true (HTTPS 전용)
+                    .sameSite("None")        // ✅ Cross-site 전송 허용*/
                     .path("/")
                     .maxAge(60 * 60)
                     .build();

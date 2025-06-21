@@ -162,7 +162,7 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품 없음"));
 
         //총 금액 계산
-        double totalPrice = (double) product.getPrice() * quantity;
+        Long totalPrice = (Long) product.getPrice() * quantity;
 
         product.decreaseStock(quantity);
 

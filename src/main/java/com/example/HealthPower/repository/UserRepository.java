@@ -22,7 +22,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUserId(String username);
 
-
-
-
+    User getReferenceByUserId(String senderId);
 }

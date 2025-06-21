@@ -75,6 +75,8 @@
             <input type="radio" th:field="*{role}" value="GYM_ADMIN" id="roleGymAdmin" />
             <label for="roleGymAdmin">헬스장 관리자</label>
             <div th:if="${#fields.hasErrors('role')}" th:errors="*{role}" class="error-message"></div>
+        </div>
+
         <div>
             <label>프로필 사진:</label>
             <input type="file" th:field="*{photo}" accept="image/*" />

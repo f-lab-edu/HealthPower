@@ -8,62 +8,76 @@
 <div>
     <div th:replace="fragments/header :: user-status"></div>
 
-    <form th:action="@{/members/update}" method="post" enctype="multipart/form-data">
+    <form th:action="@{/members/myInfoUpdate2}" method="post" enctype="multipart/form-data" th:object="${userModifyDTO}">
+        <input type="hidden" name="_method" value="PUT"/>
         <div>
             <label>프로필 사진</label>
-            <img th:src="${member.photoUrl != null} ? ${member.photoUrl} : '@{/images/default-profile.png}'"
-                 alt="프로필 사진" width="150"/>
+            <img th:if="*{photoUrl}"
+                 th:src="*{photoUrl}" width="150" alt="프로필"/>
+
+            <img th:unless="*{photoUrl != null}"
+                 th:src="@{/images/default-profile.png}" width="150" alt="기본 프로필"/>
         </div>
             <span><label>프로필 사진 업로드</label>
             <input type="file" name="photo">
             </span>
         <div>
             <label>이메일</label>
-            <input type="email" name="email" th:value="${member.email}" readonly>
+            <input type="email" name="email" th:field="*{email}" readonly>
         </div>
 
         <div>
             <label>이름</label>
-            <input type="text" name="username" th:value="${member.username}" required>
+            <input type="text" name="username" th:field="*{username}" required>
         </div>
 
         <div>
             <label>닉네임</label>
-            <input type="text" name="nickname" th:value="${member.nickname}" required>
+            <input type="text" name="nickname" th:field="*{nickname}" required>
         </div>
 
         <div>
             <label>휴대폰 번호</label>
-            <input type="text" name="phoneNumber" th:value="${member.phoneNumber}" required>
+            <input type="text" name="phoneNumber" th:field="*{phoneNumber}" required>
         </div>
 
         <div>
             <label>생년월일</label>
-            <input type="date" name="birth" th:value="${member.birth}">
+            <input type="date" th:field="*{birth}">
         </div>
 
         <div>
             <label>성별</label>
-            <select name="gender">
-                <option value="MALE" th:selected="${member.gender == 'MALE'}">남성</option>
-                <option value="FEMALE" th:selected="${member.gender == 'FEMALE'}">여성</option>
-            </select>
+            <label><input type="radio" th:field="*{gender}" value="MAN">남성</label>
+            <label><input type="radio" th:field="*{gender}" value="WOMAN">여성</label>
+        </div>
+
+        <div>
+            <label>가입 유형:</label><br/>
+            <label><input type="radio" th:field="*{role}" value="USER"/> 일반사용자</label>
+            <label><input type="radio" th:field="*{role}" value="TRAINER"/> 트레이너</label>
+            <label><input type="radio" th:field="*{role}" value="GYM_ADMIN"/> 헬스장 관리자</label>
         </div>
 
         <div>
             <label>주소</label>
-            <input type="text" name="address" th:value="${member.address}">
+            <input type="text" name="address" th:field="*{address}">
         </div>
 
         <div>
             <label>현재 비밀번호 확인</label>
-            <input type="password" name="currentPassword" required>
+            <input type="password" name="password" required th:field="*{password}">
         </div>
 
         <div>
             <label>새 비밀번호</label>
-            <input type="password" name="newPassword">
+            <input type="password" name="newPassword" th:field="*{newPassword}" placeholder="8자리 이상 입력">
         </div>
+
+        <h3>보유 잔액:
+            <span th:text="${#numbers.formatDecimal(userModifyDTO.balance, 1, 'COMMA', 0, 'POINT')}"></span> 원
+            <input type="hidden" th:field="*{balance}" id="balanceHidden">
+        </h3>
 
         <div>
             <button type="submit">정보 수정</button>
@@ -72,9 +86,6 @@
 
     <hr>
     <div>
-        <h3>보유 잔액:
-            <span th:text="${#numbers.formatDecimal(member.balance, 1, 'COMMA', 0, 'POINT')}"></span> 원
-        </h3>
         <form id="chargeForm" th:action="@{/payment/charge2}" method="post" onsubmit="return validateAmount()">
             <label>충전 금액</label>
             <input type="number" id="amount" name="amount" min="1" required>

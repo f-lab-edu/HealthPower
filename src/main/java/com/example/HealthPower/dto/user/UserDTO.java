@@ -5,6 +5,7 @@ import com.example.HealthPower.entity.User;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,19 +37,24 @@ public class UserDTO {
 
     private String password;
 
+    private String newPassword;
+
     private String address;
 
     private String phoneNumber;
 
     private Gender gender;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate birth;
 
     private Collection<GrantedAuthority> authorities;
 
     private boolean activated;
 
-    private double balance;
+    private Long balance;
+
+    private Role role;
 
     private List<AuthorityDTO> securityAuthList;
 
@@ -69,6 +75,7 @@ public class UserDTO {
                 .birth(user.getBirth())
                 .authorities(user.getAuthorities())
                 .activated(user.isActivated())
+                .role(user.getRole())
                 .build();
     }
 }
