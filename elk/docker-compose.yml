@@ -13,20 +13,6 @@ services:
     networks:
       - elk
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.17.13
-    container_name: logstash
-    volumes:
-      - ./elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-
-    ports:
-      - "5044:5044"      # Beats input (필요시)
-      - "5000:5000"      # TCP input (우리는 이걸 씀)
-    depends_on:
-      - elasticsearch
-    networks:
-      - elk
-
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.13
     container_name: kibana
@@ -34,6 +20,19 @@ services:
       - "5601:5601"
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.13
+    container_name: logstash
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5044:5044"
+      - "5000:5000"
     depends_on:
       - elasticsearch
     networks:
