@@ -95,7 +95,7 @@ public class MyPageController {
     }*/
 
     /* 마이페이지 수정 */
-    @PostMapping(value = "/myInfoUpdate2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/myInfoUpdate2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
     public String saveMyInfo2(@Valid @ModelAttribute UserModifyDTO userModifyDTO,
                               BindingResult bindingResult,
@@ -110,12 +110,7 @@ public class MyPageController {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자가 존재하지 않습니다."));
 
-        try {
-            memberService.myInfoUpdate(userId, userModifyDTO);
-        } catch (IllegalArgumentException e) {
-            bindingResult.reject("비밀번호 불일치", e.getMessage());
-            return "redirect:/members/mypage";
-        }
+        memberService.myInfoUpdate(userId, userModifyDTO);
 
         redirectAttributes.addFlashAttribute("msg", "회원정보 수정이 완료되었습니다.");
 
