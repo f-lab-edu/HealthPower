@@ -16,20 +16,27 @@
         <file>${LOG_DIR}/${APP_NAME}.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- 하루마다 파일 분리 -->
             <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory> <!-- 30일간 보관 -->
+            <maxHistory>30</maxHistory>
         </rollingPolicy>
 
-        <!-- 포맷 -->
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
+    </appender>
+
+    <!-- 🟡 Logstash 연동 -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <!-- logstash 컨테이너 이름 기준 포트로 전송 -->
+        <destination>logstash:5000</destination>
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
     <!-- 루트 로거 설정 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
+        <appender-ref ref="LOGSTASH"/> <!-- logstash 연동 추가 -->
     </root>
 </configuration>
