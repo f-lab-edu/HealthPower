@@ -88,15 +88,3 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 
 **해결:** VPC, Subnet, 보안 그룹 전면 재구성 + RDS 인스턴스를 새로 만들고 엔드포인트 충돌 방지
 
-### ✅ 마스터 브랜치 merge 시 Git 충돌 및 push 오류
-
-**문제:** git push origin master 시 non-fast-forward 오류 발생
-
-**해결:** git pull --rebase로 로컬 커밋 정렬 후 push + 충돌 발생 시 reflog로 커밋 복구, git mergetool로 충돌 해결
-
-### ✅ Spring MVC 흐름 이해 부족 → DispatcherServlet 구조 학습
-
-**문제:** FrontController V5 구조와 핸들러 어댑터 개념 이해 부족
-
-**해결:** DispatcherServlet 흐름도, HandlerMapping-Adapter 구조 직접 정리 + 요청-응답 흐름을 코드로 따라가며 학습 완료
-
