@@ -85,6 +85,7 @@ jobs:
             echo "🌱 환경변수 설정"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
             export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
+            export TOSS_SECRET="${{ secrets.TOSS_CLIENT }}"
             export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
             export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
             export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
