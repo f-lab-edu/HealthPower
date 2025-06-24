@@ -150,27 +150,27 @@ spring:
         static: ap-northeast-2
       stack:
         auto: false
-  jwt:
-    secret: ${JWT_SECRET}
-  toss:
-    secret: ${TOSS_SECRET}
-    client: ${TOSS_CLIENT}
-  app:
-    upload:
-      dir: /home/ubuntu/uploads
-  server:
-    port: 8080
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info,prometheus
-        base-path: /actuator
-    endpoint:
-      health:
-        show-details: always
-      prometheus:
-        enabled: true
-  slack:
-    webhook:
-      url: ${SLACK_WEBHOOK_URL}
+jwt:
+  secret: ${JWT_SECRET}
+toss:
+  secret: ${TOSS_SECRET}
+  client: ${TOSS_CLIENT}
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+slack:
+  webhook:
+    url: ${SLACK_WEBHOOK_URL}
+app:
+  upload:
+    dir: /home/ubuntu/uploads
