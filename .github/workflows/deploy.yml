@@ -81,11 +81,17 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
             echo "🔁 기존 앱 종료"
             pkill -f java || true
+          
+            echo "⏳ logstash 포트 오픈 대기"
+            while ! nc -z localhost 5000; do
+              echo "logstash가 아직 준비되지 않았습니다. 대기 중..."
+              sleep 3
+            done
       
             echo "🌱 환경변수 설정"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
             export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
-            export TOSS_SECRET="${{ secrets.TOSS_CLIENT }}"
+            export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
             export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
             export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
             export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
@@ -100,6 +106,7 @@ jobs:
             -jar /home/ubuntu/app.jar \
             --spring.config.additional-location=file:/home/ubuntu/ \
             > /home/ubuntu/app.log 2>&1 &
+          EOF
 
       - name: Slack Notify - 성공
         if: success()
