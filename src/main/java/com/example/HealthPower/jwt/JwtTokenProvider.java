@@ -26,8 +26,10 @@ import java.util.stream.Collectors;
 //JWT 토큰의 생성, 복호화(디코딩), 검증 기능을 구현
 public class JwtTokenProvider {
 
-    private final UserRepository userRepository;
+    @Value("${jwt.secret}")
+    private String secretKey;
     private final Key key;
+    private final UserRepository userRepository;
 
     // application.yml(properties)에서 secret 값 가져와서 key에 저장
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey, UserRepository userRepository) {
@@ -267,9 +269,6 @@ public class JwtTokenProvider {
     }
 
     //테스트용
-    @Value("${jwt.secret}")
-    private String secretKey;
-
     public String generateToken2(String userId, Role role) {
 
         long expirationMs = 1000 * 60 * 60; // 1시간
