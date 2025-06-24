@@ -174,3 +174,7 @@ slack:
 app:
   upload:
     dir: /home/ubuntu/uploads
+logstash:
+  host: localhost
+  port: 5000
+
