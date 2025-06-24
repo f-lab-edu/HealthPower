@@ -95,10 +95,10 @@ jobs:
       
             echo "🚀 Spring Boot 애플리케이션 시작"
             nohup java \
-              --spring.config.additional-location=file:/home/ubuntu/ \
-              -Dspring.profiles.active=prod \
-              -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
-          EOF
+            -Dspring.profiles.active=prod \
+            -jar /home/ubuntu/app.jar \
+            --spring.config.additional-location=file:/home/ubuntu/ \
+            > /home/ubuntu/app.log 2>&1 &
 
       - name: Slack Notify - 성공
         if: success()
