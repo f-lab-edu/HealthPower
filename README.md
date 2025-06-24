@@ -14,15 +14,14 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 # 주요 기능
 
 - 회원가입 / 로그인 (JWT 기반 인증)
-- 마이페이지 (사진 업로드, 정보 수정)
+- 마이페이지 (사진 업로드, Toss api 연동을 통한 마일리지 충전) 업데이트 기능
 - 게시판 기능 (이미지 첨부 포함)
 - 실시간 채팅 (WebSocket + STOMP)
 - Toss Payments 결제 및 거래 로그 저장
 - AWS S3 이미지 업로드
 - CPU/메모리 실시간 데이시보드, 잠재 감지 경고
-- GitHub Actions → EC2 자동 JAR 빌드 & Docker 재구매
+- GitHub Actions → EC2 자동 JAR 빌드 & Docker
 
-  
 ---
 
 # 사용기술
@@ -88,16 +87,4 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 **문제:** EC2에서 RDS에 접속 불가 (telnet 시도시 Trying...에서 멈춤)
 
 **해결:** VPC, Subnet, 보안 그룹 전면 재구성 + RDS 인스턴스를 새로 만들고 엔드포인트 충돌 방지
-
-### ✅ 마스터 브랜치 merge 시 Git 충돌 및 push 오류
-
-**문제:** git push origin master 시 non-fast-forward 오류 발생
-
-**해결:** git pull --rebase로 로컬 커밋 정렬 후 push + 충돌 발생 시 reflog로 커밋 복구, git mergetool로 충돌 해결
-
-### ✅ Spring MVC 흐름 이해 부족 → DispatcherServlet 구조 학습
-
-**문제:** FrontController V5 구조와 핸들러 어댑터 개념 이해 부족
-
-**해결:** DispatcherServlet 흐름도, HandlerMapping-Adapter 구조 직접 정리 + 요청-응답 흐름을 코드로 따라가며 학습 완료
 
