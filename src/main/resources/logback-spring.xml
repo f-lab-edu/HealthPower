@@ -28,7 +28,7 @@
     <!-- 🟡 Logstash 연동 -->
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <!-- logstash 컨테이너 이름 기준 포트로 전송 -->
-        <destination>localhost:5000</destination>
+        <destination>logstash:5000</destination>
 
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
         <!-- JSON 포맷 로그 자동 구성 -->
