@@ -1,0 +1,50 @@
+version: "3.9"
+
+networks:
+  bg:
+    driver: bridge
+
+services:
+  spring-blue:
+    container_name: spring-blue
+    image: eclipse-temurin:21-jre
+    command: ["java","-jar","/app/app.jar"]
+    environment:
+      - CONTAINER_COLOR=blue
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./spring-blue:/app
+    expose: ["8080"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      retries: 5
+    networks: [bg]
+
+  spring-green:
+    container_name: spring-green
+    image: eclipse-temurin:21-jre
+    command: ["java","-jar","/app/app.jar"]
+    environment:
+      - CONTAINER_COLOR=green
+      - SPRING_PROFILES_ACTIVE=prod
+    volumes:
+      - ./spring-green:/app
+    expose: ["8080"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      retries: 5
+    networks: [bg]
+
+  nginx:
+    container_name: nginx-proxy
+    image: nginx:1.27-alpine
+    volumes:
+      - ../nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    depends_on:
+      - spring-blue
+      - spring-green
+    networks: [bg]
