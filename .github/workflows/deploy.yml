@@ -104,12 +104,13 @@ jobs:
       - name: Switch containers
         run: |
           COLOR=${{ steps.upload.outputs.color }}
-          OLD=$([ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue)
-          
           if [ "$COLOR" = "blue" ]; then OLD=spring-green; else OLD=spring-blue; fi
+          FILE=/home/ubuntu/blue-green/docker-compose.bluegreen.yml
+          
             ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOS
             set -e
+          
           cd \$HOME/blue-green
           
           # 1) 새 색 컨테이너 기동
@@ -117,7 +118,7 @@ jobs:
           
           # 2) 헬스체크 대기
           for i in {1..20}; do
-           status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-\$COLOR)
+           status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-$COLOR)
            [ "\$status" = "healthy" ] && break
            sleep 3
           done
@@ -127,7 +128,7 @@ jobs:
           docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
           
           # 4) 구버전 중지
-          docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
+          docker compose -f docker-compose.bluegreen.yml stop $OLD || true
           EOS
 
 #      - name: Upload files to EC2
