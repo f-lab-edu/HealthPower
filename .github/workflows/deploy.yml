@@ -55,7 +55,7 @@ jobs:
           
           ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-              "mkdir -p \$HOME/blue-green $REMOTE_DIR/nginx/conf.d"
+              "mkdir -p /home/ubuntu/blue-green /home/ubuntu/nginx/conf.d"
           
           # docker-compose.bluegreen.yml
           scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
@@ -95,55 +95,44 @@ jobs:
           "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_BASE}/blue-green/spring-${COLOR}/app.jar"
           
 
-      # ───────────────────────── 6) Blue-Green 스위치
+      # ───────── 6) Blue-Green 스위치 ─────────
       - name: Switch containers
         run: |
           COLOR=${{ steps.upload.outputs.color }}
           if [ "$COLOR" = "blue" ]; then OLD=spring-green; else OLD=spring-blue; fi
-          FILE=/home/ubuntu/blue-green/docker-compose.bluegreen.yml
           
-            ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOS
+          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOF     
             set -e
+            cd /home/ubuntu/blue-green
           
-          cd \$HOME/blue-green
+            # 🌱 환경변수 주입
+            export JWT_SECRET='${{ secrets.JWT_SECRET }}'
+            export TOSS_SECRET='${{ secrets.TOSS_SECRET }}'
+            export TOSS_CLIENT='${{ secrets.TOSS_CLIENT }}'
+            export SLACK_WEBHOOK_URL='${{ secrets.SLACK_WEBHOOK_URL }}'
+            export AWS_ACCESS_KEY='${{ secrets.AWS_ACCESS_KEY }}'
+            export AWS_SECRET_KEY='${{ secrets.AWS_SECRET_KEY }}'
+            export AWS_S3_BUCKET='${{ secrets.AWS_S3_BUCKET }}'
+            export DB_URL='${{ secrets.DB_URL }}'
+            export DB_USERNAME='${{ secrets.DB_USERNAME }}'
+            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+            export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'
           
-          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-          export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
-          export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
-          export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
-          export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
-          export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
-          export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
-          export DB_URL="${{ secrets.DB_URL }}"
-          export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-          export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'   # ← 새 ELK IP
-        
-          # 1) 새 색 컨테이너 기동
-          docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-$COLOR
+            # 새 색 컨테이너 기동
+            docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-$COLOR
           
-          # 2) 헬스체크 대기
-          for i in {1..20}; do
-           status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-$COLOR)
-           [ "\$status" = "healthy" ] && break
-           sleep 3
-          done
-          [ "\$status" = "healthy" ] || { echo "Health FAIL"; exit 1; }
+            # 120 초까지 헬스체크
+            for i in {1..40}; do
+              status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-$COLOR || echo starting)
+              [ "\$status" = "healthy" ] && break
+              sleep 3
+            done
+            [ "\$status" = "healthy" ] || { echo 'Health FAIL'; exit 1; }
           
-          # 3) Nginx reload
-          docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
-          
-          # 4) 구버전 중지
-          docker compose -f docker-compose.bluegreen.yml stop $OLD || true
-          EOS
-
-      - name: Run Docker Compose with ELK
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
-            cd ~/elk
-            sudo docker-compose down || true
-            sudo docker-compose up -d
+            # Nginx reload & 구버전 중지
+            docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+            docker compose -f docker-compose.bluegreen.yml stop $OLD || true
           EOF
 
       - name: 🛠 Install Java on EC2

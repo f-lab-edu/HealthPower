@@ -39,19 +39,19 @@ jobs:
       # 3) ELK 파일 업로드
       - name: Copy compose & config
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
               ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} "mkdir -p ~/elk/logstash"
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
-              deploy/elk/docker-compose.yml \
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
+              elk/docker-compose.yml \
               ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:~/elk/
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
-              deploy/elk/logstash.conf \
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
+              elk/logstash.conf \
               ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:~/elk/logstash/
 
       # 4) ELK 스택 재기동
       - name: docker-compose up -d
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
               ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} <<'EOS'
             cd ~/elk
             docker-compose pull
