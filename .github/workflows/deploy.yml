@@ -56,20 +56,21 @@ jobs:
       # ───────────────────────── 4) compose / nginx 파일을 SCP
       - name: Copy compose & nginx config
         run: |
-          REMOTE_DIR="/home/ubuntu"
+          REMOTE_DIR=/home/ubuntu
+          
           ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-              "mkdir -p \$HOME/blue-green ${REMOTE_DIR}/nginx/conf.d"
+              "mkdir -p \$HOME/blue-green $REMOTE_DIR/nginx/conf.d"
           
           # docker-compose.bluegreen.yml
           scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               deploy/docker-compose.bluegreen.yml \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_DIR}/blue-green/"
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:$REMOTE_DIR/blue-green/"
           
           # nginx 설정
           scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               deploy/nginx/blue-green.conf \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_DIR}/nginx/conf.d/"
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:$REMOTE_DIR/nginx/conf.d/"
 
       # ───────────────────────── 5) 새 JAR → inactive 색 업로드
       - name: Upload JAR
@@ -115,14 +116,14 @@ jobs:
           docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
           EOS
 
-      - name: Upload files to EC2
-        run: |
-          JAR_FILE=$(find build/libs -name "*.jar" | sort | tail -n1)
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem src/main/resources/application.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application.yml
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/docker-compose.yml
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/logstash/logstash.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/logstash/logstash.conf
+#      - name: Upload files to EC2
+#        run: |
+#          JAR_FILE=$(find build/libs -name "*.jar" | sort | tail -n1)
+#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
+#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem src/main/resources/application.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application.yml
+#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/docker-compose.yml
+#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/logstash/logstash.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/logstash/logstash.conf
 
       - name: Run Docker Compose with ELK
         run: |
@@ -139,37 +140,37 @@ jobs:
             sudo apt install -y openjdk-21-jdk
           EOF
 
-      - name: Run Spring Boot App on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            echo "🔁 기존 앱 종료"
-            pkill -f java || true
-          
-            echo "⏳ logstash 포트 오픈 대기"
-            while ! nc -z localhost 5000; do
-              echo "logstash가 아직 준비되지 않았습니다. 대기 중..."
-              sleep 3
-            done
-      
-            echo "🌱 환경변수 설정"
-            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-            export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
-            export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
-            export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
-            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
-            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
-            export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
-            export DB_URL="${{ secrets.DB_URL }}"
-            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-      
-            echo "🚀 Spring Boot 애플리케이션 시작"
-            nohup java \
-            -Dspring.profiles.active=prod \
-            -jar /home/ubuntu/app.jar \
-            --spring.config.additional-location=file:/home/ubuntu/ \
-            > /home/ubuntu/app.log 2>&1 &
-          EOF
+#      - name: Run Spring Boot App on EC2
+#        run: |
+#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+#            echo "🔁 기존 앱 종료"
+#            pkill -f java || true
+#
+#            echo "⏳ logstash 포트 오픈 대기"
+#            while ! nc -z localhost 5000; do
+#              echo "logstash가 아직 준비되지 않았습니다. 대기 중..."
+#              sleep 3
+#            done
+#
+#            echo "🌱 환경변수 설정"
+#            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+#            export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
+#            export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
+#            export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
+#            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
+#            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
+#            export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
+#            export DB_URL="${{ secrets.DB_URL }}"
+#            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+#            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+#
+#            echo "🚀 Spring Boot 애플리케이션 시작"
+#            nohup java \
+#            -Dspring.profiles.active=prod \
+#            -jar /home/ubuntu/app.jar \
+#            --spring.config.additional-location=file:/home/ubuntu/ \
+#            > /home/ubuntu/app.log 2>&1 &
+#          EOF
 
       - name: Slack Notify - 성공
         if: success()
