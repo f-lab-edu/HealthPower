@@ -6,7 +6,7 @@ x-app-env: &app-env
   JWT_SECRET:       ${JWT_SECRET}
   TOSS_SECRET:      ${TOSS_SECRET}
   TOSS_CLIENT:      ${TOSS_CLIENT}
-  SLACK_WEBHOOK_URL : ${SLACK_WEBHOOK_URL}
+  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
   AWS_ACCESS_KEY:   ${AWS_ACCESS_KEY}
   AWS_SECRET_KEY:   ${AWS_SECRET_KEY}
   AWS_S3_BUCKET:    ${AWS_S3_BUCKET}
@@ -28,7 +28,7 @@ services:
     environment: *app-env
     expose: ["8080"]
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
       start_period: 90s                   # 최초 부팅 여유
       retries: 12
