@@ -1,0 +1,59 @@
+name: Deploy ELK to EC2
+
+on:
+  workflow_dispatch:        # 수동 실행
+  push:
+    paths:
+      - deploy/elk/**       # ELK 관련 파일이 바뀔 때만 자동 실행
+
+jobs:
+  deploy-elk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1) PEM 복원
+      - name: Decode PEM
+        run: |
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/elk.pem
+          chmod 600 ${{ github.workspace }}/elk.pem
+
+      # 2) 필수 패키지 (Docker & Compose) 설치
+      - name: Install Docker on ELK
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} <<'EOS'
+            set -e
+            command -v docker >/dev/null || {
+              sudo apt update && sudo apt -y install docker.io
+              sudo systemctl enable --now docker
+            }
+            command -v docker-compose >/dev/null || {
+              sudo curl -sSL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) \
+                   -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
+            }
+          EOS
+
+      # 3) ELK 파일 업로드
+      - name: Copy compose & config
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} "mkdir -p ~/elk/logstash"
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+              deploy/elk/docker-compose.yml \
+              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:~/elk/
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+              deploy/elk/logstash.conf \
+              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:~/elk/logstash/
+
+      # 4) ELK 스택 재기동
+      - name: docker-compose up -d
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} <<'EOS'
+            cd ~/elk
+            docker-compose pull
+            docker-compose up -d
+          EOS
