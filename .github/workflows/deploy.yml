@@ -78,33 +78,31 @@ jobs:
           COLOR=$(ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
           "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "
                 docker ps -a --format '{{.Names}}' | grep -q '^spring-blue$' && echo green || echo blue")
-          echo "COLOR=$COLOR"
-      
-          # 2) GitHub-recommended 방식으로 output 기록
           echo "color=$COLOR" >> "$GITHUB_OUTPUT"
-      
-          # 3) 절대경로로 디렉터리 생성
-          REMOTE_BASE="/home/ubuntu"
-          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-          "mkdir -p ${REMOTE_BASE}/blue-green/spring-${COLOR}"
-      
-          # 4) JAR 파일 전송 (절대경로 사용)
-          scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-          "$JAR" \
-          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_BASE}/blue-green/spring-${COLOR}/app.jar"
           
+          # 2) 로컬에서 가장 최신 JAR 하나 선택
+          JAR=$(ls -1 build/libs/*.jar | tail -n1)
+      
+          # 3) 원격 디렉토리 준비
+          ssh -i "${{ github.workspace }}/homepem.pem" \
+          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+          "mkdir -p /home/ubuntu/blue-green/spring-${COLOR}"
+          
+          # 4) 세 파일을 한꺼번에 복사
+          scp -i "${{ github.workspace }}/homepem.pem" \
+          $JAR Dockerfile src/main/resources/application-prod.properties \
+          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/blue-green/spring-${COLOR}/"
 
       # ───────── 6) Blue-Green 스위치 ─────────
       - name: Switch containers
         run: |
           COLOR=${{ steps.upload.outputs.color }}
-          if [ "$COLOR" = "blue" ]; then OLD=spring-green; else OLD=spring-blue; fi
-          
-          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOF     
-            set -e
-            cd /home/ubuntu/blue-green
+          OLD=$([ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue)
+                
+          ssh -i "${{ github.workspace }}/homepem.pem" \
+          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOF
+          set -e
+          cd /home/ubuntu/blue-green
           
             # 🌱 환경변수 주입
             export JWT_SECRET='${{ secrets.JWT_SECRET }}'
@@ -119,28 +117,28 @@ jobs:
             export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
             export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'
           
-            # 새 색 컨테이너 기동
-            docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-$COLOR
+            # 2) **새 색 이미지 빌드 + 기동**
+            docker compose -f docker-compose.bluegreen.yml build spring-${COLOR}
+            docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-${COLOR}
           
-            # 120 초까지 헬스체크
+            # 3) 헬스체크 (120 초 = 40×3s)
             for i in {1..40}; do
-              status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-$COLOR || echo starting)
-              [ "\$status" = "healthy" ] && break
-              sleep 3
+            status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-${COLOR} || echo starting)
+            [ "\$status" = "healthy" ] && break; sleep 3
             done
             [ "\$status" = "healthy" ] || { echo 'Health FAIL'; exit 1; }
-          
-            # Nginx reload & 구버전 중지
+      
+            # 4) Nginx reload 및 구버전 중지
             docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
-            docker compose -f docker-compose.bluegreen.yml stop $OLD || true
+            docker compose -f docker-compose.bluegreen.yml stop ${OLD} || true
           EOF
 
-      - name: 🛠 Install Java on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
-            sudo apt update
-            sudo apt install -y openjdk-21-jdk
-          EOF
+#      - name: 🛠 Install Java on EC2
+#        run: |
+#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
+#            sudo apt update
+#            sudo apt install -y openjdk-21-jdk
+#          EOF
 
 #      - name: Run Spring Boot App on EC2
 #        run: |

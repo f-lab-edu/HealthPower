@@ -4,18 +4,20 @@ networks:
 
 services:
   spring-blue:
+    build:
+      context: ./spring-blue
+      dockerfile: ../../Dockerfile
     container_name: spring-blue
-    image: eclipse-temurin:21-jre
-    command: ["java","-jar","/app/app.jar"]
     environment:
-      - CONTAINER_COLOR=blue
-      - SPRING_PROFILES_ACTIVE=prod
+      SPRING_PROFILES_ACTIVE: prod
+      LOGSTASH_HOST: ${LOGSTASH_HOST}
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - ./spring-blue:/app
     expose: ["8080"]
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s
       start_period: 60s
       retries: 10
