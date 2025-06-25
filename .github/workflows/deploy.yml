@@ -108,6 +108,18 @@ jobs:
           
           cd \$HOME/blue-green
           
+          export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+          export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
+          export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
+          export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
+          export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
+          export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
+          export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
+          export DB_URL="${{ secrets.DB_URL }}"
+          export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+          export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'   # ← 새 ELK IP
+        
           # 1) 새 색 컨테이너 기동
           docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-$COLOR
           

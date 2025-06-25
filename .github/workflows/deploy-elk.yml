@@ -17,13 +17,13 @@ jobs:
       # 1) PEM 복원
       - name: Decode PEM
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/elk.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
           chmod 600 ${{ github.workspace }}/elk.pem
 
       # 2) 필수 패키지 (Docker & Compose) 설치
       - name: Install Docker on ELK
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk.pem \
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
               ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} <<'EOS'
             set -e
             command -v docker >/dev/null || {
