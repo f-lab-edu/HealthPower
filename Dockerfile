@@ -1,4 +1,9 @@
 FROM openjdk:21-jdk-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* \
+
 WORKDIR /app
 
 # JAR과 프로퍼티 파일을 컨테이너에 복사

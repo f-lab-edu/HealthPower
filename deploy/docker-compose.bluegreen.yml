@@ -13,10 +13,12 @@ services:
     volumes:
       - ./spring-blue:/app
     expose: ["8080"]
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 5s
-      retries: 5
+      interval: 10s
+      start_period: 30s
+      retries: 10
     networks: [bg]
 
   spring-green:
