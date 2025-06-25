@@ -59,20 +59,19 @@ jobs:
         run: |
           JAR=$(ls -1 build/libs/*.jar | tail -n1)
           
-          # ─ active/inactive 색 계산 (원격에서 한 줄만 출력)
-          COLOR=$(ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH $EC2_USER@$EC2_HOST "\
+          COLOR=$(ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "\
             if docker ps --format '{{.Names}}' | grep -q spring-blue; then echo green; else echo blue; fi")
           echo "color=$COLOR" >> $GITHUB_OUTPUT
           
           scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH \
               \"$JAR\" \
-              $EC2_USER@$EC2_HOST:~/blue-green/spring-$COLOR/app.jar
+              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/spring-$COLOR/app.jar
 
       # 4) Blue-Green 스위치
       - name: Switch containers
         run: |
           COLOR=${{ steps.upload.outputs.color }}
-          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH $EC2_USER@$EC2_HOST <<EOSSH
+          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOSSH
           set -e
           cd ~/blue-green
 
