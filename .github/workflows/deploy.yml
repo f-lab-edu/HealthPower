@@ -56,20 +56,20 @@ jobs:
       # ───────────────────────── 4) compose / nginx 파일을 SCP
       - name: Copy compose & nginx config
         run: |
-          # 서버 기본 디렉터리 보장
+          REMOTE_DIR="/home/ubuntu"
           ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-              "mkdir -p \$HOME/blue-green \$HOME/nginx/conf.d"
+              "mkdir -p \$HOME/blue-green ${REMOTE_DIR}/nginx/conf.d"
           
           # docker-compose.bluegreen.yml
           scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               deploy/docker-compose.bluegreen.yml \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:\$HOME/blue-green/"
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_DIR}/blue-green/"
           
           # nginx 설정
           scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
               deploy/nginx/blue-green.conf \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:\$HOME/nginx/conf.d/"
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_DIR}/nginx/conf.d/"
 
       # ───────────────────────── 5) 새 JAR → inactive 색 업로드
       - name: Upload JAR
