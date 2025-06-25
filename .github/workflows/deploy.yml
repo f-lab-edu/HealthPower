@@ -104,23 +104,28 @@ jobs:
       - name: Switch containers
         run: |
           COLOR=${{ steps.upload.outputs.color }}
+          OLD=$([ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue)
+
           ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOS
           set -e
           cd \$HOME/blue-green
-
+          
+          # 1) 새 색 컨테이너 기동
           docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-\$COLOR
-
+          
+          # 2) 헬스체크 대기
           for i in {1..20}; do
            status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-\$COLOR)
            [ "\$status" = "healthy" ] && break
            sleep 3
           done
           [ "\$status" = "healthy" ] || { echo "Health FAIL"; exit 1; }
-
+          
+          # 3) Nginx reload
           docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
-
-          OLD=\$( [ "\$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
+          
+          # 4) 구버전 중지
           docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
           EOS
 
