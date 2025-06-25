@@ -30,9 +30,19 @@
         <!-- logstash 컨테이너 이름 기준 포트로 전송 -->
         <destination>127.0.0.1:5000</destination> <!-- localhost 대신 127.0.0.1 사용 -->
 
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <!-- JSON 포맷 로그 자동 구성 -->
         <customFields>{"appName":"healthpower-app"}</customFields>
+        <!-- 로그 레벨 포함 -->
+            <fieldNames>
+                <levelValue>level_value</levelValue>
+                <level>level</level>
+                <logger>logger_name</logger>
+                <thread>thread_name</thread>
+                <message>message</message>
+                <timestamp>@timestamp</timestamp>
+            </fieldNames>
+        </encoder>
     </appender>
 
     <!-- 루트 로거 설정 -->
@@ -41,4 +51,6 @@
         <appender-ref ref="FILE"/>
         <appender-ref ref="LOGSTASH"/> <!-- logstash 연동 추가 -->
     </root>
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="com.example" level="DEBUG"/>
 </configuration>
