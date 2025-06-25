@@ -7,7 +7,8 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 ---
 
 # 프로젝트 전체 구조
-<img src="https://github.com/user-attachments/assets/2cda7156-46b2-4e88-b3f8-99f99a9b2461" width="400"/>
+<img src="https://github.com/user-attachments/assets/104a87f3-f248-4f29-9e7e-05d0a246e995" width="800"/>
+
 
 ---
 
@@ -34,6 +35,7 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 * CI/CD : GitHub Actions → EC2 자동 배포
 * Containerization: Docker
 * Monitoring : Prometheus + Grafana
+* Log Manage : ELK
 * Alerting: AlertManager + Slack
 
 ---
