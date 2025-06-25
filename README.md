@@ -22,7 +22,7 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 - AWS S3 이미지 업로드
 - CPU/메모리 실시간 데이시보드, 잠재 감지 경고
 - GitHub Actions → EC2 자동 JAR 빌드 & Docker
-
+- ELK연동을 통한 로그시스템 관리 구축
 ---
 
 # 사용기술
