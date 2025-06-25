@@ -90,7 +90,7 @@ jobs:
           
           # 4) 세 파일을 한꺼번에 복사
           scp -i "${{ github.workspace }}/homepem.pem" \
-          $JAR Dockerfile src/main/resources/application-prod.properties \
+          $JAR Dockerfile src/main/resources/application.yml \
           "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/blue-green/spring-${COLOR}/"
 
       # ───────── 6) Blue-Green 스위치 ─────────
