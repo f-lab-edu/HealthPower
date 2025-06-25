@@ -76,21 +76,29 @@ jobs:
       - name: Upload JAR
         id: upload
         run: |
+          set -eo pipefail
           JAR=$(ls -1 build/libs/*.jar | tail -n1)
-          
+
+           # 1) 원격에서 active 색 확인 → inactive 색 계산
           COLOR=$(ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "
-                docker ps -a --format '{{.Names}}' | grep -q '^spring-blue$' \
-                && echo green || echo blue")
-          echo "::set-output name=color::$COLOR"
-          
+          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "
+                docker ps -a --format '{{.Names}}' | grep -q '^spring-blue$' && echo green || echo blue")
+          echo "COLOR=$COLOR"
+      
+          # 2) GitHub-recommended 방식으로 output 기록
+          echo "color=$COLOR" >> "$GITHUB_OUTPUT"
+      
+          # 3) 절대경로로 디렉터리 생성
+          REMOTE_BASE="/home/ubuntu"
           ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-              "mkdir -p \$HOME/blue-green/spring-$COLOR"
-          
+          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+          "mkdir -p ${REMOTE_BASE}/blue-green/spring-${COLOR}"
+      
+          # 4) JAR 파일 전송 (절대경로 사용)
           scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              "$JAR" \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:\$HOME/blue-green/spring-$COLOR/app.jar"
+          "$JAR" \
+          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${REMOTE_BASE}/blue-green/spring-${COLOR}/app.jar"
+          
 
       # ───────────────────────── 6) Blue-Green 스위치
       - name: Switch containers
