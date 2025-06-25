@@ -35,6 +35,7 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 * CI/CD : GitHub Actions → EC2 자동 배포
 * Containerization: Docker
 * Monitoring : Prometheus + Grafana
+* Log Manage : ELK
 * Alerting: AlertManager + Slack
 
 ---
