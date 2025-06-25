@@ -27,16 +27,16 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 
 # 사용기술
 
-* Language : Java 21
-* Framework : Spring Boot, Spring Security
-* DB : MySQL, Spring Data JPA
-* Infra : AWS EC2, RDS, S3, GitHub Actions
-* Others : JWT, WebSocket, STOMP, MultipartFile
-* CI/CD : GitHub Actions → EC2 자동 배포
-* Containerization: Docker
-* Monitoring : Prometheus + Grafana
-* Log Manage : ELK
-* Alerting: AlertManager + Slack
+* Language : ###Java 21
+* Framework : ###Spring Boot, Spring Security
+* DB : ###MySQL, Spring Data JPA
+* Infra : ###AWS EC2, RDS, S3, GitHub Actions
+* Others : ###JWT, WebSocket, STOMP, MultipartFile
+* CI/CD : ###GitHub Actions → EC2 자동 배포
+* Containerization: ###Docker
+* Monitoring : ###Prometheus + Grafana
+* Log Manage : ###ELK
+* Alerting: ###AlertManager + Slack
 
 ---
 
