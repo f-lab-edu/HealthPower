@@ -18,7 +18,7 @@ jobs:
       - name: Decode PEM
         run: |
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
-          chmod 600 ${{ github.workspace }}/elk.pem
+          chmod 600 ${{ github.workspace }}/homepem.pem
 
       # 2) 필수 패키지 (Docker & Compose) 설치
       - name: Install Docker on ELK
