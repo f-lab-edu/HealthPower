@@ -105,10 +105,11 @@ jobs:
         run: |
           COLOR=${{ steps.upload.outputs.color }}
           OLD=$([ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue)
-
-          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-           "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOS
-          set -e
+          
+          if [ "$COLOR" = "blue" ]; then OLD=spring-green; else OLD=spring-blue; fi
+            ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOS
+            set -e
           cd \$HOME/blue-green
           
           # 1) 새 색 컨테이너 기동
