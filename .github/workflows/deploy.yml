@@ -1,10 +1,5 @@
 name: Deploy Spring Boot to EC2
 
-env:
-  SSH_KEY_PATH: ${{ github.workspace }}/homepem.pem
-  EC2_USER: ${{ secrets.EC2_USER }}
-  EC2_HOST: ${{ secrets.EC2_HOST }}
-
 on:
   push:
     branches: [ master ]
@@ -56,46 +51,69 @@ jobs:
       - name: Create elk directory on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/elk/logstash"
-          
 
-      # 3) 새 JAR 업로드 (inactive 색)
+
+      # ───────────────────────── 4) compose / nginx 파일을 SCP
+      - name: Copy compose & nginx config
+        run: |
+          # 서버 기본 디렉터리 보장
+          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+              "mkdir -p \$HOME/blue-green \$HOME/nginx/conf.d"
+          
+          # docker-compose.bluegreen.yml
+          scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              deploy/docker-compose.bluegreen.yml \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:\$HOME/blue-green/"
+          
+          # nginx 설정
+          scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              deploy/nginx/blue-green.conf \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:\$HOME/nginx/conf.d/"
+
+      # ───────────────────────── 5) 새 JAR → inactive 색 업로드
       - name: Upload JAR
         id: upload
         run: |
           JAR=$(ls -1 build/libs/*.jar | tail -n1)
           
-          COLOR=$(ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH $EC2_USER@$EC2_HOST "\
-            if docker ps -a --format '{{.Names}}' | grep -q '^spring-blue$'; then echo green; else echo blue; fi")
-          echo "color=$COLOR" >> $GITHUB_OUTPUT
+          COLOR=$(ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "
+                docker ps -a --format '{{.Names}}' | grep -q '^spring-blue$' \
+                && echo green || echo blue")
+          echo "::set-output name=color::$COLOR"
           
-          scp -o StrictHostKeyChecking=no -i $SSH_KEY_PATH \
-               "$JAR" \
-              ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/spring-$COLOR/app.jar
+          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
+              "mkdir -p \$HOME/blue-green/spring-$COLOR"
+          
+          scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+              "$JAR" \
+              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:\$HOME/blue-green/spring-$COLOR/app.jar"
 
-      # 4) Blue-Green 스위치
+      # ───────────────────────── 6) Blue-Green 스위치
       - name: Switch containers
         run: |
           COLOR=${{ steps.upload.outputs.color }}
-          ssh -o StrictHostKeyChecking=no -i $SSH_KEY_PATH ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOSSH
+          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
+           "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOS
           set -e
-          cd ~/blue-green
+          cd \$HOME/blue-green
 
           docker compose -f docker-compose.bluegreen.yml up -d --no-deps spring-\$COLOR
 
-          # 헬스체크 60 초 대기
           for i in {1..20}; do
            status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-\$COLOR)
-           [ "\$status" = "healthy" ] && break || sleep 3
+           [ "\$status" = "healthy" ] && break
+           sleep 3
           done
           [ "\$status" = "healthy" ] || { echo "Health FAIL"; exit 1; }
 
           docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
 
-          # 구버전 정지
           OLD=\$( [ "\$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
           docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
-          EOSSH
-
+          EOS
 
       - name: Upload files to EC2
         run: |
