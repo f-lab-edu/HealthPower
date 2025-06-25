@@ -25,7 +25,7 @@ services:
     # 폴더에 Dockerfile, app.jar, application-prod.properties 를 복사해 둡니다
     build:
       context: ./spring-blue              # ← 원격 서버 기준 경로
-      dockerfile: ../Dockerfile           # 루트 Dockerfile 재사용
+      dockerfile: Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
     environment: *app-env
     expose: ["8080"]
@@ -41,7 +41,7 @@ services:
     container_name: spring-green
     build:
       context: ./spring-green             # Green 색의 빌드 컨텍스트
-
+      dockerfile: Dockerfile
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx-proxy
