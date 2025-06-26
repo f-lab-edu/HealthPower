@@ -4,13 +4,13 @@ on:
   push:
     branches: [ master ]
 
-env:
-  AWS_REGION: ap-northeast-2
-  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env: # ← job env 블록
+      AWS_REGION: ap-northeast-2
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
     steps:
       - uses: actions/checkout@v4
