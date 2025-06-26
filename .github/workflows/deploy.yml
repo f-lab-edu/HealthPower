@@ -36,15 +36,40 @@ jobs:
         env:
           COLOR:      ${{ steps.color.outputs.color }}
           IMAGE_TAG:  ${{ github.event.workflow_run.head_sha }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          TOSS_SECRET:  ${{ secrets.TOSS_SECRET }}
+          TOSS_CLIENT:  ${{ secrets.TOSS_CLIENT }}
+          SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_S3_BUCKET:  ${{ secrets.AWS_S3_BUCKET }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME:  ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD:  ${{ secrets.DB_PASSWORD }}
+          LOGSTASH_HOST:  ${{ secrets.ELK_HOST }}
         run: |
           OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
           
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOF
             set -e
+          
+          cat > ~/blue-green/.env <<'ENV'
             export COLOR="${{ env.COLOR }}"
             export IMAGE_TAG="${{ env.IMAGE_TAG }}"
             export ECR_REGISTRY="${{ env.ECR_REGISTRY }}"
+            export JWT_SECRET="${{ env.JWT_SECRET }}"
+            export TOSS_SECRET="${{ env.TOSS_SECRET }}"
+            export TOSS_CLIENT="${{ env.TOSS_CLIENT }}"
+            export SLACK_WEBHOOK_URL="${{ env.SLACK_WEBHOOK_URL }}"
+            export AWS_ACCESS_KEY="${{ env.AWS_ACCESS_KEY }}"
+            export AWS_SECRET_KEY="${{ env.AWS_SECRET_KEY }}"
+            export AWS_S3_BUCKET="${{ env.AWS_S3_BUCKET }}"
+            export DB_URL="${{ env.DB_URL }}"
+            export DB_USERNAME="${{ env.DB_USERNAME }}"
+            export DB_PASSWORD="${{ env.DB_PASSWORD }}"
+            export LOGSTASH_HOST="${{ env.ELK_HOST }}"
+          ENV
           
             cd /home/ubuntu/blue-green
           
@@ -52,16 +77,16 @@ jobs:
             export IMAGE_TAG   # compose 가 env 변수 읽음
           
             # ─── 2) 새 색 Pull & Up ───
-            docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
-            docker compose -f docker-compose.bluegreen.yml up -d --no-deps nginx "spring-$COLOR"
+            docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
+            docker compose -f docker-compose.bluegreen.yml up -d --no-deps nginx "spring-\$COLOR"
           
             # ─── 3) Health check (최대 120초) ───
             for i in {1..40}; do
-                status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-$COLOR" || echo starting)
+                status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-\$COLOR" || echo starting)
                 [ "\$status" = "healthy" ] && break
                 sleep 3
             done
-            [ "\$status" = "healthy" ] || { echo 'Health FAIL'; docker logs "spring-$COLOR"; exit 1; }
+            [ "\$status" = "healthy" ] || { echo 'Health FAIL'; docker logs "spring-\$COLOR"; exit 1; }
           
             # ─── 4) 스위치 ───
             docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
