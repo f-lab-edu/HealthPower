@@ -73,8 +73,9 @@ jobs:
             LOGSTASH_HOST="${{ env.ELK_HOST }}"
           ENV
 
-          set -a && source ~/blue-green/.env && set +a
-#            cd /home/ubuntu/blue-green
+          set -a 
+          source ~/blue-green/.env 
+          set +a
           cd ~/blue-green
           EOF
 #
