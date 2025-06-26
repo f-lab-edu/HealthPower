@@ -122,7 +122,7 @@ jobs:
           
             # 2) **새 색 이미지 빌드 + 기동**
             docker compose -f docker-compose.bluegreen.yml build --no-cache spring-${COLOR}
-            docker compose -f docker-compose.bluegreen.yml up   -d           spring-${COLOR}
+            docker compose -f docker-compose.bluegreen.yml up -d nginx spring-${COLOR}
           
             # 3) 헬스체크 (120 초 = 40×3s)
             for i in {1..40}; do
