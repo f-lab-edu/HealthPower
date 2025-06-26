@@ -1,0 +1,40 @@
+name: Build & Push image
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1) JAR 빌드 (Gradle 예시)
+      - name: Build jar
+        run: ./gradlew clean bootJar
+
+      # 2) AWS 로그인
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask_password: true
+          registry-type: public
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCESS_KEY_ID:     ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+
+      # 3) Docker build & push
+      - name: Build and push
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t $ECR_REGISTRY/healthpower:$IMAGE_TAG .
+          docker push  $ECR_REGISTRY/healthpower:$IMAGE_TAG
+          echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        id: build

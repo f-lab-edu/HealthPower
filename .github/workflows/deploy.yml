@@ -1,197 +1,64 @@
-name: Deploy Spring Boot to EC2
+name: Deploy (Blue-Green)
 
 on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
+  workflow_run:
+    workflows: [ "Build & Push image" ]
+    types: [ completed ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
 jobs:
-  build-and-deploy:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Grant execute permission for Gradle
-        run: chmod +x ./gradlew
-
-      - name: Decode PEM key for EC2
+      - name: Set color
+        id: color
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
-          chmod 600 ${{ github.workspace }}/homepem.pem
-
-      - name: DEBUG – check SSH port
-        run: nc -zv ${{ secrets.EC2_HOST }} 22 -w 5
-
-      - name: 🐳 Install Docker & Docker Compose on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            sudo apt update
-            sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
-            sudo apt update
-            sudo apt install -y docker-ce docker-ce-cli containerd.io
-            sudo systemctl start docker
-            sudo systemctl enable docker
-            sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-          EOF
-
-      - name: Clean old JARs
-        run: rm -f build/libs/*.jar
-
-      - name: Build Spring Boot application
-        run: ./gradlew clean bootJar
-
-      # ───────────────────────── 4) compose / nginx 파일을 SCP
-      - name: Copy compose & nginx config
-        run: |
-          REMOTE_DIR=/home/ubuntu
-          
-          ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-              "mkdir -p /home/ubuntu/blue-green /home/ubuntu/nginx/conf.d"
-          
-          # docker-compose.bluegreen.yml
-          scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              deploy/docker-compose.bluegreen.yml \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:$REMOTE_DIR/blue-green/"
-          
-          # nginx 설정
-          scp -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-              deploy/nginx/blue-green.conf \
-              "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:$REMOTE_DIR/nginx/conf.d/"
-
-      # ───────────────────────── 5) 새 JAR → inactive 색 업로드
-      - name: Upload JAR
-        id: upload
-        run: |
-          set -eo pipefail
-          JAR=$(ls -1 build/libs/*.jar | tail -n1)
-
-           # 1) 원격에서 active 색 확인 → inactive 색 계산
-          COLOR=$(ssh -o StrictHostKeyChecking=no -i "${{ github.workspace }}/homepem.pem" \
-          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" "
-                docker ps -a --format '{{.Names}}' | grep -q '^spring-blue$' && echo green || echo blue")
+          # 파란 → 초록 → 파란 … 토글
+          STATE_FILE=color.txt
+          COLOR=green
+          if [ -f $STATE_FILE ] && [ "$(cat $STATE_FILE)" = "green" ]; then
+            COLOR=blue
+          fi
+          echo $COLOR > $STATE_FILE
           echo "color=$COLOR" >> "$GITHUB_OUTPUT"
-          
-          # 2) 로컬에서 가장 최신 JAR 하나 선택
-          JAR=$(ls -1 build/libs/*.jar | tail -n1)
-      
-          # 3) 원격 디렉토리 준비
-          ssh -i "${{ github.workspace }}/homepem.pem" \
-          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" \
-          "mkdir -p /home/ubuntu/blue-green/spring-${COLOR}"
-          
-          # 4) 세 파일을 한꺼번에 복사
-          scp -i "${{ github.workspace }}/homepem.pem" \
-          $JAR Dockerfile src/main/resources/application.yml \
-          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/blue-green/spring-${COLOR}/"
 
-      # ───────── 6) Blue-Green 스위치 ─────────
       - name: Switch containers
+        env:
+          COLOR:      ${{ steps.color.outputs.color }}
+          IMAGE_TAG:  ${{ github.event.workflow_run.head_sha }}
         run: |
-          COLOR=${{ steps.upload.outputs.color }}
-          OLD=$([ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue)
-                
-          ssh -i "${{ github.workspace }}/homepem.pem" \
-          "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOF
-          set -e
-          cd /home/ubuntu/blue-green
+          OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
           
-            # 🌱 환경변수 주입
-            export JWT_SECRET='${{ secrets.JWT_SECRET }}'
-            export TOSS_SECRET='${{ secrets.TOSS_SECRET }}'
-            export TOSS_CLIENT='${{ secrets.TOSS_CLIENT }}'
-            export SLACK_WEBHOOK_URL='${{ secrets.SLACK_WEBHOOK_URL }}'
-            export AWS_ACCESS_KEY='${{ secrets.AWS_ACCESS_KEY }}'
-            export AWS_SECRET_KEY='${{ secrets.AWS_SECRET_KEY }}'
-            export AWS_S3_BUCKET='${{ secrets.AWS_S3_BUCKET }}'
-            export DB_URL='${{ secrets.DB_URL }}'
-            export DB_USERNAME='${{ secrets.DB_USERNAME }}'
-            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
-            export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
+            set -e
+            export COLOR="${{ env.COLOR }}"
+            export IMAGE_TAG="${{ env.IMAGE_TAG }}"
+            export ECR_REGISTRY="${{ env.ECR_REGISTRY }}"
           
-            # 2) **새 색 이미지 빌드 + 기동**
+            cd /home/ubuntu/blue-green
           
-            docker compose -f docker-compose.bluegreen.yml build \
-            --build-arg JAR_FILE=app.jar \
-            --no-cache spring-${COLOR}
+            # ─── 1) compose 파일에 태그값 주입 ───
+            export IMAGE_TAG   # compose 가 env 변수 읽음
           
-            docker compose -f docker-compose.bluegreen.yml up -d --no-deps nginx
+            # ─── 2) 새 색 Pull & Up ───
+            docker compose -f docker-compose.bluegreen.yml pull spring-\$COLOR
+            docker compose -f docker-compose.bluegreen.yml up -d --no-deps nginx spring-\$COLOR
           
-            docker compose -f docker-compose.bluegreen.yml up -d nginx spring-${COLOR}
-          
-            # 3) 헬스체크 (120 초 = 40×3s)
+            # ─── 3) Health check (최대 120초) ───
             for i in {1..40}; do
-            status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-${COLOR} || echo starting)
-            [ "\$status" = "healthy" ] && break; sleep 3
+                status=\$(docker inspect -f '{{ .State.Health.Status }}' spring-\$COLOR || echo starting)
+                [ "\$status" = "healthy" ] && break
+                sleep 3
             done
-            [ "\$status" = "healthy" ] || { echo 'Health FAIL'; exit 1; }
-      
-            # 4) Nginx reload 및 구버전 중지
-            docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+            [ "\$status" = "healthy" ] || { echo 'Health FAIL'; docker logs spring-\$COLOR; exit 1; }
           
-            docker compose -f docker-compose.bluegreen.yml stop ${OLD} || true
+            # ─── 4) 스위치 ───
+            docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+            docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
           EOF
-
-#      - name: 🛠 Install Java on EC2
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
-#            sudo apt update
-#            sudo apt install -y openjdk-21-jdk
-#          EOF
-
-#      - name: Run Spring Boot App on EC2
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-#            echo "🔁 기존 앱 종료"
-#            pkill -f java || true
-#
-#            echo "⏳ logstash 포트 오픈 대기"
-#            while ! nc -z localhost 5000; do
-#              echo "logstash가 아직 준비되지 않았습니다. 대기 중..."
-#              sleep 3
-#            done
-#
-#            echo "🌱 환경변수 설정"
-#            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-#            export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
-#            export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
-#            export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
-#            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
-#            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
-#            export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
-#            export DB_URL="${{ secrets.DB_URL }}"
-#            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-#            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-#
-#            echo "🚀 Spring Boot 애플리케이션 시작"
-#            nohup java \
-#            -Dspring.profiles.active=prod \
-#            -jar /home/ubuntu/app.jar \
-#            --spring.config.additional-location=file:/home/ubuntu/ \
-#            > /home/ubuntu/app.log 2>&1 &
-#          EOF
-
-      - name: Slack Notify - 성공
-        if: success()
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"✅ HealthPower 서버 배포 성공!"}' \
-            ${{ secrets.SLACK_ALERT_WEBHOOK }}
-
-      - name: Slack Notify - 실패
-        if: failure()
-        run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"❌ HealthPower 서버 배포 실패! 확인 필요"}' \
-            ${{ secrets.SLACK_ALERT_WEBHOOK }}
