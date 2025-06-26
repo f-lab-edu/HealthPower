@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env: # ← job env 블록
+      AWS_REGION: ap-northeast-2
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
 
     steps:
