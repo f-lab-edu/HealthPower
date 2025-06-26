@@ -44,6 +44,7 @@ services:
   spring-green:
     <<: *app
     container_name: spring-green
+    depends_on: [redis]          # ★ redis 먼저 기동
     build:
       context: ./spring-green             # Green 색의 빌드 컨텍스트
 
