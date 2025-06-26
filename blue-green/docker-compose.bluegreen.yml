@@ -32,6 +32,7 @@ services:
       dockerfile: ../Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
     environment: *app-env
+    depends_on: [redis]          # ★ redis 먼저 기동
     expose: ["8080"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
