@@ -2,15 +2,104 @@ name: Deploy (Blue-Green)
 
 on:
   workflow_run:
-    workflows: ["Build & Push image"]
-    types: [completed]
+    workflows: [ "Build & Push image" ]
+    types: [ completed ]
 
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
+    env:
+      AWS_REGION: ap-northeast-2
+      ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+
     steps:
-      - name: Dummy
+      - name: Write SSH key
         run: |
-          echo "✅ YAML 로드 성공!"
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
+          chmod 600 ${{ github.workspace }}/homepem.pem
+
+      - name: Set color
+        id: color
+        run: |
+          # 파란 → 초록 → 파란 … 토글
+          STATE_FILE=color.txt
+          COLOR=green
+          if [ -f $STATE_FILE ] && [ "$(cat $STATE_FILE)" = "green" ]; then
+            COLOR=blue
+          fi
+          echo $COLOR > $STATE_FILE
+          echo "color=$COLOR" >> "$GITHUB_OUTPUT"
+
+#      - name: Switch containers
+#        env:
+#          COLOR:          ${{ steps.color.outputs.color }}
+#          IMAGE_TAG:      ${{ github.event.workflow_run.head_sha }}
+#          JWT_SECRET:     ${{ secrets.JWT_SECRET }}
+#          TOSS_SECRET:    ${{ secrets.TOSS_SECRET }}
+#          TOSS_CLIENT:    ${{ secrets.TOSS_CLIENT }}
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+#          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+#          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+#          AWS_S3_BUCKET:  ${{ secrets.AWS_S3_BUCKET }}
+#          DB_URL:         ${{ secrets.DB_URL }}
+#          DB_USERNAME:    ${{ secrets.DB_USERNAME }}
+#          DB_PASSWORD:    ${{ secrets.DB_PASSWORD }}
+#          LOGSTASH_HOST:  ${{ secrets.ELK_HOST }}
+#          ECR_REGISTRY:   ${{ env.ECR_REGISTRY }}
+#        run: |
+#          OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
+#
+#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
+#            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
+#         set -eo pipefail
+#
+#          mkdir -p ~/blue-green
+#          cat > ~/blue-green/.env <<'ENV'
+#            COLOR="${{ env.COLOR }}"
+#            IMAGE_TAG="${{ env.IMAGE_TAG }}"
+#            ECR_REGISTRY="${{ env.ECR_REGISTRY }}"
+#            JWT_SECRET="${{ env.JWT_SECRET }}"
+#            TOSS_SECRET="${{ env.TOSS_SECRET }}"
+#            TOSS_CLIENT="${{ env.TOSS_CLIENT }}"
+#            SLACK_WEBHOOK_URL="${{ env.SLACK_WEBHOOK_URL }}"
+#            AWS_ACCESS_KEY="${{ env.AWS_ACCESS_KEY }}"
+#            AWS_SECRET_KEY="${{ env.AWS_SECRET_KEY }}"
+#            AWS_S3_BUCKET="${{ env.AWS_S3_BUCKET }}"
+#            DB_URL="${{ env.DB_URL }}"
+#            DB_USERNAME="${{ env.DB_USERNAME }}"
+#            DB_PASSWORD="${{ env.DB_PASSWORD }}"
+#            LOGSTASH_HOST="${{ env.ELK_HOST }}"
+#         ENV
+#
+#          set -a && source ~/blue-green/.env && set +a
+##            cd /home/ubuntu/blue-green
+#          cd ~/blue-green
+#
+#          # ─── 1) compose 파일에 태그값 주입 ───
+#          export IMAGE_TAG   # compose 가 env 변수 읽음
+#
+#          if ! groups $USER | grep -q '\bdocker\b'; then
+#           sudo usermod -aG docker $USER
+#           exec sg docker newgrp docker <<'INNER'
+#           echo "[info] docker 그룹 즉시 적용"
+#          INNER
+#          fi
+#
+#            # ─── 2) 새 색 Pull & Up ───
+#            docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
+#            docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
+#
+#            # ─── 3) Health check (최대 120초) ───
+#            for i in {1..40}; do
+#                status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-$COLOR" 2>/dev/null || echo starting)
+#                [ "\$status" = "healthy" ] && break
+#                sleep 3
+#            done
+#            [ "\$status" = "healthy" ] || { echo 'Health FAIL'; docker logs "spring-$COLOR"; exit 1; }
+#
+#            # ─── 4) 스위치 ───
+#            docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+#            docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
+#          EOF
