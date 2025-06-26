@@ -26,7 +26,7 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
-          mask_password: true
+          mask-password: true
           registry-type: public
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
