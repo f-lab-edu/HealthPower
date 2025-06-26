@@ -77,17 +77,17 @@ jobs:
           source ~/blue-green/.env 
           set +a
           cd ~/blue-green
+
+          # ─── 1) compose 파일에 태그값 주입 ───
+          export IMAGE_TAG   # compose 가 env 변수 읽음
+
+          if ! groups $USER | grep -q '\bdocker\b'; then
+           sudo usermod -aG docker $USER
+           exec sg docker newgrp docker <<'INNER'
+           echo "[info] docker 그룹 즉시 적용"
+          INNER
+          fi
           EOF
-#
-#          # ─── 1) compose 파일에 태그값 주입 ───
-#          export IMAGE_TAG   # compose 가 env 변수 읽음
-#
-#          if ! groups $USER | grep -q '\bdocker\b'; then
-#           sudo usermod -aG docker $USER
-#           exec sg docker newgrp docker <<'INNER'
-#           echo "[info] docker 그룹 즉시 적용"
-#          INNER
-#          fi
 #
 #            # ─── 2) 새 색 Pull & Up ───
 #            docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
