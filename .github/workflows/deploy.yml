@@ -34,19 +34,20 @@ jobs:
 
       - name: Switch containers
         env:
-          COLOR:      ${{ steps.color.outputs.color }}
-          IMAGE_TAG:  ${{ github.event.workflow_run.head_sha }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          TOSS_SECRET:  ${{ secrets.TOSS_SECRET }}
-          TOSS_CLIENT:  ${{ secrets.TOSS_CLIENT }}
+          COLOR:          ${{ steps.color.outputs.color }}
+          IMAGE_TAG:      ${{ github.event.workflow_run.head_sha }}
+          JWT_SECRET:     ${{ secrets.JWT_SECRET }}
+          TOSS_SECRET:    ${{ secrets.TOSS_SECRET }}
+          TOSS_CLIENT:    ${{ secrets.TOSS_CLIENT }}
           SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           AWS_S3_BUCKET:  ${{ secrets.AWS_S3_BUCKET }}
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME:  ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD:  ${{ secrets.DB_PASSWORD }}
+          DB_URL:         ${{ secrets.DB_URL }}
+          DB_USERNAME:    ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD:    ${{ secrets.DB_PASSWORD }}
           LOGSTASH_HOST:  ${{ secrets.ELK_HOST }}
+          ECR_REGISTRY:   ${{ env.ECR_REGISTRY }}
         run: |
           OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
           
@@ -73,7 +74,6 @@ jobs:
           ENV
           
           set -a && source ~/blue-green/.env && set +a
-          
 #            cd /home/ubuntu/blue-green
             cd ~/blue-green
           
@@ -81,10 +81,10 @@ jobs:
             export IMAGE_TAG   # compose 가 env 변수 읽음
                
              if ! groups $USER | grep -q '\bdocker\b'; then
-             sudo usermod -aG docker $USER
-             exec sg docker newgrp docker <<'INNER'
-             echo "[info] docker 그룹 즉시 적용"
-             INNER
+               sudo usermod -aG docker $USER
+               exec sg docker newgrp docker <<'INNER'
+            echo "[info] docker 그룹 즉시 적용"
+               INNER
              fi
           
             # ─── 2) 새 색 Pull & Up ───
