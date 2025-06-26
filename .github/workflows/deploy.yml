@@ -72,11 +72,11 @@ jobs:
             DB_PASSWORD="${{ env.DB_PASSWORD }}"
             LOGSTASH_HOST="${{ env.ELK_HOST }}"
           ENV
+
+          set -a && source ~/blue-green/.env && set +a
+#            cd /home/ubuntu/blue-green
+          cd ~/blue-green
           EOF
-#
-#          set -a && source ~/blue-green/.env && set +a
-##            cd /home/ubuntu/blue-green
-#          cd ~/blue-green
 #
 #          # ─── 1) compose 파일에 태그값 주입 ───
 #          export IMAGE_TAG   # compose 가 env 변수 읽음
