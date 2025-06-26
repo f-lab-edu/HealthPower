@@ -53,7 +53,7 @@ jobs:
 
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
-          set -eo pipefail
+          set -eo
 
           mkdir -p ~/blue-green
           cat > ~/blue-green/.env <<'ENV'
@@ -72,6 +72,7 @@ jobs:
             DB_PASSWORD="${{ env.DB_PASSWORD }}"
             LOGSTASH_HOST="${{ env.ELK_HOST }}"
           ENV
+          EOF
 #
 #          set -a && source ~/blue-green/.env && set +a
 ##            cd /home/ubuntu/blue-green
