@@ -15,6 +15,11 @@ jobs:
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
 
     steps:
+      - name: Write SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ${{ github.workspace }}/homepem.pem
+          chmod 600 ${{ github.workspace }}/homepem.pem
+
       - name: Set color
         id: color
         run: |
