@@ -32,7 +32,7 @@ services:
       dockerfile: ../Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
     environment: *app-env
-    depends_on: [redis]          # ★ redis 먼저 기동
+    depends_on: []          # ★ redis 먼저 기동
     expose: ["8080"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -44,7 +44,7 @@ services:
   spring-green:
     <<: *app
     container_name: spring-green
-    depends_on: [redis]          # ★ redis 먼저 기동
+    depends_on: []          # ★ redis 먼저 기동
     build:
       context: ./spring-green             # Green 색의 빌드 컨텍스트
 

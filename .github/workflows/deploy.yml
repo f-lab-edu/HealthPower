@@ -121,7 +121,13 @@ jobs:
             export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'
           
             # 2) **새 색 이미지 빌드 + 기동**
-            docker compose -f docker-compose.bluegreen.yml build --no-cache spring-${COLOR}
+          
+            docker compose -f docker-compose.bluegreen.yml build \
+            --build-arg JAR_FILE=app.jar \
+            --no-cache spring-${COLOR}
+          
+            docker compose -f docker-compose.bluegreen.yml up -d --no-deps nginx
+          
             docker compose -f docker-compose.bluegreen.yml up -d nginx spring-${COLOR}
           
             # 3) 헬스체크 (120 초 = 40×3s)
@@ -133,6 +139,7 @@ jobs:
       
             # 4) Nginx reload 및 구버전 중지
             docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+          
             docker compose -f docker-compose.bluegreen.yml stop ${OLD} || true
           EOF
 
