@@ -87,11 +87,11 @@ jobs:
            echo "[info] docker 그룹 즉시 적용"
           INNER
           fi
+          
+          # ─── 2) 새 색 Pull & Up ───
+          docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
+          docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
           EOF
-#
-#            # ─── 2) 새 색 Pull & Up ───
-#            docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
-#            docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
 #
 #            # ─── 3) Health check (최대 120초) ───
 #            for i in {1..40}; do
