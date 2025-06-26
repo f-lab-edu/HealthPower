@@ -32,6 +32,9 @@ jobs:
           echo $COLOR > $STATE_FILE
           echo "color=$COLOR" >> "$GITHUB_OUTPUT"
 
+      - name: DEBUG – ping
+        run: ping -c 4 ${{ secrets.EC2_HOST }}
+
       - name: Switch containers
         env:
           COLOR:      ${{ steps.color.outputs.color }}
@@ -67,3 +70,6 @@ jobs:
             docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
             docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
           EOF
+
+      - name: DEBUG – ping
+        run: ping -c 4 ${{ secrets.EC2_HOST }}
