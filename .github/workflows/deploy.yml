@@ -39,7 +39,7 @@ jobs:
           JWT_SECRET:     ${{ secrets.JWT_SECRET }}
           TOSS_SECRET:    ${{ secrets.TOSS_SECRET }}
           TOSS_CLIENT:    ${{ secrets.TOSS_CLIENT }}
-          SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           AWS_S3_BUCKET:  ${{ secrets.AWS_S3_BUCKET }}
@@ -52,8 +52,8 @@ jobs:
           OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
           
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
-          set -eo pipefail
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF' 
+               set -eo pipefail
           
           mkdir -p ~/blue-green
           cat > ~/blue-green/.env <<'ENV'
@@ -84,8 +84,8 @@ jobs:
            sudo usermod -aG docker $USER
            exec sg docker newgrp docker <<'INNER'
            echo "[info] docker 그룹 즉시 적용"
-           INNER
-           fi
+          INNER
+          fi
           
             # ─── 2) 새 색 Pull & Up ───
             docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
@@ -102,4 +102,4 @@ jobs:
             # ─── 4) 스위치 ───
             docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
             docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
-            EOF
+          EOF
