@@ -17,6 +17,12 @@ x-app-env: &app-env
   SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    expose: [ "6379" ]
+    networks: [ bg ]
+
   spring-blue: &app
     # GitHub Actions 스크립트에서
     #   /home/ubuntu/blue-green/spring-blue/
