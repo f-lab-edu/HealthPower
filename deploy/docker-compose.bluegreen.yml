@@ -24,20 +24,20 @@ services:
     networks: [ bg ]
 
   spring-blue: &app
-    # GitHub Actions 스크립트에서
-    #   /home/ubuntu/blue-green/spring-blue/
-    # 폴더에 Dockerfile, app.jar, application-prod.properties 를 복사해 둡니다
     build:
       context: ./spring-blue              # ← 원격 서버 기준 경로
       dockerfile: Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
     environment: *app-env
-    depends_on: [redis]          # ★ redis 먼저 기동
     expose: ["8080"]
+    depends_on:
+      redis:
+        condition: service_started
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 10s
-      start_period: 90s                   # 최초 부팅 여유
+      timeout: 3s
+      start_period: 30s                   # 최초 부팅 여유
       retries: 12
     networks: [bg]
 
@@ -56,6 +56,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - spring-blue
-      - spring-green
+      spring-blue:
+        condition: service_healthy
+      spring-green:
+        condition: service_started  # green이 아직 unhealthy여도 nginx는 실행
     networks: [bg]

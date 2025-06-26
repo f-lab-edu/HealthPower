@@ -94,11 +94,12 @@ jobs:
           
           # ─── 3) Health check (최대 120초) ───
           for i in {1..40}; do
-              status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-$COLOR" 2>/dev/null || echo starting)
-              [ "\$status" = "healthy" ] && break
-              sleep 3
+            status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-$COLOR" 2>/dev/null || echo starting)
+            echo "loop $i : $status"
+            [ "$status" = "healthy" ] && break
+            sleep 3
           done
-          [ "\$status" = "healthy" ] || { echo 'Health FAIL'; docker logs "spring-$COLOR"; exit 1; }
+          [ "\$status" = "healthy" ] || { echo 'Health FAIL' docker logs "spring-$COLOR" | tail -50 exit 1 }
           EOF
 #
 #            # ─── 4) 스위치 ───
