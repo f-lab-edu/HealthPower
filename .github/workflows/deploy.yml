@@ -27,6 +27,9 @@ jobs:
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
           chmod 600 ${{ github.workspace }}/homepem.pem
 
+      - name: DEBUG – check SSH port
+        run: nc -zv ${{ secrets.EC2_HOST }} 22 -w 5
+
       - name: 🐳 Install Docker & Docker Compose on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
