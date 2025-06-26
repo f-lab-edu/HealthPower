@@ -82,7 +82,7 @@ jobs:
           
             # ─── 2) 새 색 Pull & Up ───
             docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
-            docker compose -f docker-compose.bluegreen.yml up -d --no-deps nginx "spring-$COLOR"
+            docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
           
             # ─── 3) Health check (최대 120초) ───
             for i in {1..40}; do
