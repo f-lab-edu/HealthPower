@@ -13,7 +13,6 @@ x-app-env: &app-env
   DB_URL:           ${DB_URL}
   DB_USERNAME:      ${DB_USERNAME}
   DB_PASSWORD:      ${DB_PASSWORD}
-  REDIS_HOST:       ${REDIS_HOST}
   LOGSTASH_HOST:    ${LOGSTASH_HOST}
   SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
 

@@ -118,7 +118,6 @@ jobs:
             export DB_URL='${{ secrets.DB_URL }}'
             export DB_USERNAME='${{ secrets.DB_USERNAME }}'
             export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
-            export REDIS_HOST='${{ secrets.REDIS_HOST }}'
             export LOGSTASH_HOST='${{ secrets.ELK_HOST }}'
           
             # 2) **새 색 이미지 빌드 + 기동**
