@@ -92,22 +92,22 @@ jobs:
           docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
           docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
           
-#          # ─── 3) Health check (최대 120초) ───
-#
-#          for i in {1..40}; do
-#            status=$(docker inspect -f '{{ .State.Health.Status }}' "spring-$COLOR" 2>/dev/null || echo starting)
-#            echo "loop $i : $status"
-#            [ "$status" = "healthy" ] && break
-#            sleep 3
-#          done
-#
-#          [ "\$status" = "healthy" ] || {
-#           echo 'Health FAIL';
-#           docker logs "spring-$COLOR" | tail -50;
-#           exit 1;
-#          }
+          # ─── 3) Health check (최대 120초) ───
+
+          for i in {1..40}; do
+            status=$(docker inspect -f '{{ .State.Health.Status }}' "spring-$COLOR" 2>/dev/null || echo starting)
+            echo "loop $i : $status"
+            [ "$status" = "healthy" ] && break
+            sleep 3
+          done
+
+          [ "\$status" = "healthy" ] || {
+           echo 'Health FAIL';
+           docker logs "spring-$COLOR" | tail -50;
+           exit 1;
+          }
 
             # ─── 4) 스위치 ───
           docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
           docker compose -f docker-compose.bluegreen.yml stop "$OLD" || true
-          EOF
+         EOF
