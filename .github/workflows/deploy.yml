@@ -96,6 +96,10 @@ jobs:
           # ─── 2) 새 색 Pull & Up ───
           docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
           docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
+          
+          # ─── 디버그: 실제 헬스 엔드포인트 응답과 Docker health 상태 출력 ───
+          docker exec spring-$COLOR curl -v http://localhost:8080/actuator/health || true
+          docker inspect spring-$COLOR --format '{{json .State.Health}}'
     
           # ─── 3) Health check (최대 120초) ───
 

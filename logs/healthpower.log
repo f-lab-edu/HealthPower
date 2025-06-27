@@ -519,3 +519,133 @@ Caused by: org.springframework.util.PlaceholderResolutionException: Could not re
 	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:146)
 	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:509)
 	... 22 common frames omitted
+2025-06-27 19:21:08.317 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.2.Final
+2025-06-27 19:21:08.404 [restartedMain] INFO  c.e.H.HealthPowerApplication - Starting HealthPowerApplication using Java 21.0.5 with PID 9084 (C:\Users\JJS\Downloads\HealthPower\out\production\classes started by JJS in C:\Users\JJS\Downloads\HealthPower)
+2025-06-27 19:21:08.404 [restartedMain] DEBUG c.e.H.HealthPowerApplication - Running with Spring Boot v3.4.3, Spring v6.2.3
+2025-06-27 19:21:08.404 [restartedMain] INFO  c.e.H.HealthPowerApplication - The following 1 profile is active: "local"
+2025-06-27 19:21:08.491 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2025-06-27 19:21:08.491 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2025-06-27 19:21:10.177 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-06-27 19:21:10.177 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-06-27 19:21:10.400 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 213 ms. Found 12 JPA repository interfaces.
+2025-06-27 19:21:10.415 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-06-27 19:21:10.431 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.BoardRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.ChatMessageRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.ChatRoomParticipantRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.ChatRoomRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.CommentRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.PaymentRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.PostRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.ProductRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.RefreshTokenRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.ServerCheckLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.TransactionHistoryRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.example.HealthPower.repository.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-06-27 19:21:10.462 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 29 ms. Found 0 Redis repository interfaces.
+2025-06-27 19:21:11.784 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-06-27 19:21:11.790 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2025-06-27 19:21:11.790 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-06-27 19:21:11.790 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.36]
+2025-06-27 19:21:11.869 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-06-27 19:21:11.869 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3378 ms
+2025-06-27 19:21:12.849 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-06-27 19:21:12.928 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.8.Final
+2025-06-27 19:21:12.975 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-06-27 19:21:13.250 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-06-27 19:21:13.282 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-06-27 19:21:13.433 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7aa3ef32
+2025-06-27 19:21:13.433 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-06-27 19:21:13.524 [restartedMain] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.40
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-06-27 19:21:14.534 [restartedMain] INFO  o.h.m.i.EntityInstantiatorPojoStandard - HHH000182: No default (no-argument) constructor for class: com.example.HealthPower.entity.payment.Payment (class must be instantiated by Interceptor)
+2025-06-27 19:21:14.757 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-06-27 19:21:14.839 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-06-27 19:21:15.467 [restartedMain] DEBUG c.e.H.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2025-06-27 19:21:17.029 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-06-27 19:21:17.082 [restartedMain] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name userDetailsServiceImpl
+2025-06-27 19:21:17.290 [restartedMain] DEBUG o.s.w.s.s.s.WebSocketHandlerMapping - Patterns [/ws/**] in 'stompWebSocketHandlerMapping'
+2025-06-27 19:21:17.656 [restartedMain] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 1 endpoint beneath base path '/actuator'
+2025-06-27 19:21:17.914 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.AuthController:
+	
+2025-06-27 19:21:17.914 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.b.BoardController:
+	
+2025-06-27 19:21:17.914 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.b.CommentController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.c.ChatController:
+	{[MESSAGE],[/chat.enter]}: enterRoom(ChatMessageDTO)
+	{[MESSAGE],[/chat.exit]}: exitRoom(ChatMessageDTO)
+	{[MESSAGE],[/chat.send]}: sendMessage(ChatMessageDTO,Principal)
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.MainController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.m.DeleteController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.m.JoinController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.m.JoinController2:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.m.LoginController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.m.LogoutController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.m.MyPageController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.p.PaymentController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.s.Controller:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.s.Endpoint:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.w.HealthForwardController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	c.e.H.c.w.ServerCheckController:
+	
+2025-06-27 19:21:17.930 [restartedMain] DEBUG o.s.w.s.m.WebSocketAnnotationMethodMessageHandler - 
+	o.s.b.a.w.s.e.BasicErrorController:
+	
+2025-06-27 19:21:18.805 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2025-06-27 19:21:18.861 [restartedMain] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2025-06-27 19:21:18.877 [restartedMain] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@734a2b80]]
+2025-06-27 19:21:18.877 [restartedMain] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2025-06-27 19:21:18.877 [restartedMain] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2025-06-27 19:21:18.892 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2025-06-27 19:21:18.908 [restartedMain] INFO  c.e.H.HealthPowerApplication - Started HealthPowerApplication in 11.475 seconds (process running for 12.281)
+2025-06-27 19:21:28.766 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-06-27 19:21:28.766 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-06-27 19:21:28.767 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2025-06-27 19:21:39.467 [http-nio-8080-exec-6] INFO  c.e.HealthPower.jwt.JwtTokenProvider - 토큰 exp: Fri Jun 27 20:21:39 KST 2025
+2025-06-27 19:21:39.839 [http-nio-8080-exec-6] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 인증 성공 → SecurityContextHolder.setAuthentication(): oksktmddjs
+2025-06-27 19:21:39.839 [http-nio-8080-exec-6] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 isAuthenticated: true
+2025-06-27 19:21:39.840 [http-nio-8080-exec-6] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 최종 Authentication : UsernamePasswordAuthenticationToken [Principal=com.example.HealthPower.impl.UserDetailsImpl@463a902a, Credentials=[PROTECTED], Authenticated=true, Details=null, Granted Authorities=[ROLE_GYM_ADMIN]]
+2025-06-27 19:21:39.840 [http-nio-8080-exec-6] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 Principal : com.example.HealthPower.impl.UserDetailsImpl@463a902a
+2025-06-27 19:21:39.840 [http-nio-8080-exec-6] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 Authorities : [ROLE_GYM_ADMIN]
+2025-06-27 19:21:39.884 [http-nio-8080-exec-6] WARN  o.t.s.p.AbstractStandardFragmentInsertionTagProcessor - [THYMELEAF][http-nio-8080-exec-6][menu] Deprecated unwrapped fragment expression "fragments/header :: user-status" found in template menu, line 8, col 10. Please use the complete syntax of fragment expressions instead ("~{fragments/header :: user-status}"). The old, unwrapped syntax for fragment expressions will be removed in future versions of Thymeleaf.
+2025-06-27 19:21:39.948 [http-nio-8080-exec-7] INFO  c.e.HealthPower.jwt.JwtTokenProvider - 토큰 exp: Fri Jun 27 20:21:39 KST 2025
+2025-06-27 19:21:39.951 [http-nio-8080-exec-7] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 인증 성공 → SecurityContextHolder.setAuthentication(): oksktmddjs
+2025-06-27 19:21:39.951 [http-nio-8080-exec-7] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 isAuthenticated: true
+2025-06-27 19:21:39.951 [http-nio-8080-exec-7] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 최종 Authentication : UsernamePasswordAuthenticationToken [Principal=com.example.HealthPower.impl.UserDetailsImpl@79c5ba92, Credentials=[PROTECTED], Authenticated=true, Details=null, Granted Authorities=[ROLE_GYM_ADMIN]]
+2025-06-27 19:21:39.951 [http-nio-8080-exec-7] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 Principal : com.example.HealthPower.impl.UserDetailsImpl@79c5ba92
+2025-06-27 19:21:39.951 [http-nio-8080-exec-7] INFO  c.e.H.jwt.JwtAuthenticationFilter - 🟢 Authorities : [ROLE_GYM_ADMIN]
+2025-06-27 19:22:18.834 [MessageBroker-1] INFO  o.s.w.s.c.WebSocketMessageBrokerStats - WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 1, active threads = 1, queued tasks = 0, completed tasks = 0]
