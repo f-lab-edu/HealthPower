@@ -1,6 +1,7 @@
 spring:
   profiles:
-    active: prod # 실행 시 필요에 따라 prod, dev, local 변경
+#    active: local # 실행 시 필요에 따라 prod, dev, local 변경
+    active: prod
 
 ---
 spring:
@@ -32,6 +33,7 @@ jwt:
 
 toss:
   secret: ""
+  client: ""
 
 app:
   upload:
