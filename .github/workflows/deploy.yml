@@ -91,7 +91,12 @@ jobs:
           # ─── 2) 새 색 Pull & Up ───
           docker compose -f docker-compose.bluegreen.yml pull "spring-$COLOR"
           docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
-          
+
+      - name: Probe port 22 BEFORE SSH
+        run: |
+          timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.EC2_HOST }}/22" \
+          && echo "✅ 22/tcp reachable" || (echo "❌ 22/tcp closed"; exit 1)
+    
           # ─── 3) Health check (최대 120초) ───
 
           for i in {1..40}; do
