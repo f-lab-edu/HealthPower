@@ -108,6 +108,6 @@ jobs:
 #          }
 
             # ─── 4) 스위치 ───
-            docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
-            docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
-          EOF
+          docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+          docker compose -f docker-compose.bluegreen.yml stop \$OLD || true
+         EOF
