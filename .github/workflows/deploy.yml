@@ -101,9 +101,9 @@ jobs:
           done
           
           [ "\$status" = "healthy" ] || { 
-           echo 'Health FAIL' 
-           docker logs "spring-$COLOR" | tail -50 
-           exit 1 
+           echo 'Health FAIL';
+           docker logs "spring-$COLOR" | tail -50;
+           exit 1;
           }
           EOF
 #
