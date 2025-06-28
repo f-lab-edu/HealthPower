@@ -44,6 +44,8 @@ services:
   spring-green:
     <<: *app
     container_name: spring-green
+    ports:
+      - "8080:8080"
     build:
       context: ./spring-green             # Green 색의 빌드 컨텍스트
       dockerfile: Dockerfile
