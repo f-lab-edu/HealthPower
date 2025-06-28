@@ -26,6 +26,8 @@ services:
       - "6379:6379"
 
   spring-blue: &app
+    ports:
+      - "8081:8080"
     build:
       context: ./spring-blue              # ← 원격 서버 기준 경로
       dockerfile: Dockerfile           # 루트 Dockerfile 재사용
@@ -41,7 +43,8 @@ services:
       timeout: 5s
       start_period: 60s                   # 최초 부팅 여유
       retries: 15
-    networks: [bg]
+    networks:
+      - backend
 
   spring-green:
     <<: *app
@@ -51,6 +54,11 @@ services:
     build:
       context: ./spring-green             # Green 색의 빌드 컨텍스트
       dockerfile: Dockerfile
+    depends_on:
+      - redis
+    networks:
+      - backend
+
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx-proxy
@@ -64,4 +72,3 @@ services:
         condition: service_healthy
       spring-green:
         condition: service_started  # green이 아직 unhealthy여도 nginx는 실행
-    networks: [bg]
