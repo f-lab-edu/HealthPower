@@ -23,7 +23,7 @@ services:
         soft: -1
         hard: -1
     networks:
-      - elk
+      - backend
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.13
@@ -35,7 +35,7 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - elk
+      - backend
 
   logstash:
     image: docker.elastic.co/logstash/logstash:7.17.13
@@ -49,8 +49,7 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - elk
+      - backend
 
 networks:
   backend:
-    external: true
