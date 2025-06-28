@@ -123,6 +123,9 @@ spring:
 
 ---
 spring:
+  redis:
+    host: redis
+    port: 6379
   config:
     activate:
       on-profile: prod

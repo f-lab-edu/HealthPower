@@ -1,6 +1,6 @@
 networks:
-  bg:
-    driver: bridge
+  backend:
+    external: true
 
 x-app-env: &app-env
   JWT_SECRET:       ${JWT_SECRET}
@@ -18,10 +18,11 @@ x-app-env: &app-env
 
 services:
   redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: redis
     expose: [ "6379" ]
-    networks: [ bg ]
+    networks:
+      - backend
     ports:
       - "6379:6379"
 
@@ -60,6 +61,8 @@ services:
       - backend
 
   nginx:
+    networks:
+      - backend
     image: nginx:1.27-alpine
     container_name: nginx-proxy
     volumes:
