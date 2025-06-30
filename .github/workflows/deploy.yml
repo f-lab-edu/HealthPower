@@ -60,7 +60,6 @@ jobs:
           LOGSTASH_HOST=${{ secrets.ELK_HOST }}
           EOF
           
-          scp -vvv -i /home/runner/work/HealthPower/HealthPower/homepem.pem -o StrictHostKeyChecking=no .env ***@***:~/blue-green/.env
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/.env
 
       - name: Switch containers
