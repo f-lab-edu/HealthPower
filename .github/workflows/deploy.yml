@@ -91,13 +91,14 @@ jobs:
           fi
           EOF
 
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Upload docker-compose file
         run: |
-          echo "workspace: ${{ github.workspace }}"
-          echo "workspace: ${{ github.workspace }}/../"
-          echo "workspace: ${{ github.workspace }}/../../"
           
           echo "workspace: ${{ github.workspace }}/deploy"
+          ls -al ${{ github.workspace }}/deploy
           
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
           ${{ github.workspace }}/deploy/docker-compose.bluegreen.yml \
