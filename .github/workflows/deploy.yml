@@ -92,13 +92,12 @@ jobs:
           EOF
 
       - name: Upload docker-compose file
+        working-directory: ${{ github.workspace }}/..
         run: |
-          
-          echo "workspace: ${{ github.workspace }}/deploy"
-          echo "workspace: ${{ github.workspace }}/../deploy"
-          ls -al ${{ github.workspace }}/../deploy
-          scp -i ${{ github.workspace }}/../homepem.pem -o StrictHostKeyChecking=no \
-          ${{ github.workspace }}/../deploy/docker-compose.bluegreen.yml \
+          echo "현재 디렉토리:" $(pwd)
+          ls -al deploy
+          scp -i homepem.pem -o StrictHostKeyChecking=no \
+          deploy/docker-compose.bluegreen.yml \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
       - name: Switch containers
