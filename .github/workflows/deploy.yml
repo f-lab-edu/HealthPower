@@ -97,7 +97,7 @@ jobs:
           ls -al ${{ github.workspace }}/deploy
           
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-            ${{ github.workspace }}/deploy/docker-compose.bluegreen.yml \
+            ./deploy/docker-compose.bluegreen.yml \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
       - name: Switch containers
