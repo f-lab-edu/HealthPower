@@ -35,6 +35,8 @@ services:
       dockerfile: Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
     environment: *app-env
+    env_file:
+      - .env
     expose: ["8080"]
     depends_on:
       redis:
@@ -52,6 +54,8 @@ services:
     <<: *app
     container_name: spring-green
     environment: *app-env
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     build:
