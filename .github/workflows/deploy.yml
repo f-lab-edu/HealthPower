@@ -94,7 +94,7 @@ jobs:
         working-directory: ./deploy
         run: |
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-            deploy/docker-compose.bluegreen.yml \
+            docker-compose.bluegreen.yml \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
       - name: Switch containers
