@@ -68,74 +68,65 @@ jobs:
           set -e
   
           if ! command -v docker &> /dev/null; then
-            echo "🔧 Installing Docker..."
-              sudo apt update
-              sudo apt install -y docker.io
-              sudo systemctl enable docker
-              sudo systemctl start docker
-              sudo usermod -aG docker $USER
-            echo "✅ Docker installed and configured."
+          echo "🔧 Installing Docker..."
+          sudo apt update
+          sudo apt install -y docker.io
+          sudo systemctl enable docker
+          sudo systemctl start docker
+          sudo usermod -aG docker $USER
+          echo "✅ Docker installed and configured."
           else
-            echo "✅ Docker already installed."
-            fi
+          echo "✅ Docker already installed."
+          fi
           EOF
 
-#      - name: Switch containers
-#        run: |
-#          COLOR=${{ steps.color.outputs.color }}
-#          OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
-#
-#          ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-#          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
-#
-#          set -e -o pipefail
-#          cd ~/blue-green
-#
-#          set -a
-#          source .env
-#          set +a
-#
-#        # ─── 1) compose 파일에 태그값 주입 ───
-#          export IMAGE_TAG   # compose 가 env 변수 읽음
-#
-#          if ! groups $USER | grep -q '\bdocker\b'; then
-#            echo "[info] 현재 유저 그룹 확인"
-#            groups
-#            echo "[info] docker 그룹 즉시 적용"
-#            docker ps
-#          fi
-#
-#  # ─── 2) 새 색 Pull & Up ───
-#          docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
-#          docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"
-#
-#          # ─── 디버그: 실제 헬스 엔드포인트 응답과 Docker health 상태 출력 ───
-#
-#          docker exec spring-\$COLOR curl -s --fail http://localhost:8080/actuator/health || echo "❌ curl failed"
-#
-#          docker logs spring-\$COLOR | tail -30
-#
-#          docker inspect spring-\$COLOR --format '{{json .State.Health}}'
-#
-#          # ─── 3) Health check (최대 120초) ───
-#
-#          for i in {1..40}; do
-#            status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-\$COLOR" 2>/dev/null || echo starting)
-#            echo "loop $i : \$status"
-#            [ "$status" = "healthy" ] && break
-#            sleep 3
-#          done
-#
-#          [ "\$status" = "healthy" ] || {
-#           echo 'Health FAIL';
-#           docker logs "spring-$COLOR" | tail -50;
-#           exit 1;
-#          }
-#
-#            # ─── 4) 스위치 ───
-#          docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
-#          docker compose -f docker-compose.bluegreen.yml stop "$OLD" || true
-#          EOF
+      - name: Switch containers
+        run: |
+          COLOR=${{ steps.color.outputs.color }}
+          OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
+
+          ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
+          set -e -o pipefail
+          cd ~/blue-green
+          set -a
+          source .env
+          set +a
+
+          export IMAGE_TAG   # compose 가 env 변수 읽음
+
+          if ! groups $USER | grep -q '\bdocker\b'; then
+            echo "[info] 현재 유저 그룹 확인"
+            groups
+            echo "[info] docker 그룹 즉시 적용"
+            docker ps
+          fi
+
+          docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
+          docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"
+
+          docker exec spring-\$COLOR curl -s --fail http://localhost:8080/actuator/health || echo "curl failed"
+
+          docker logs spring-\$COLOR | tail -30
+
+          docker inspect spring-\$COLOR --format '{{json .State.Health}}'
+
+          for i in {1..40}; do
+            status=\$(docker inspect -f '{{ .State.Health.Status }}' "spring-\$COLOR" 2>/dev/null || echo starting)
+            echo "loop $i : \$status"
+            [ "$status" = "healthy" ] && break
+            sleep 3
+          done
+
+          [ "\$status" = "healthy" ] || {
+           echo 'Health FAIL';
+           docker logs "spring-$COLOR" | tail -50;
+           exit 1;
+          }
+
+          docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+          docker compose -f docker-compose.bluegreen.yml stop "$OLD" || true
+          EOF
           
       - name: Show Spring logs on failure
         if: failure()
