@@ -88,22 +88,22 @@ jobs:
           ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
           
-          set -e -o pipefail
-          cd ~/blue-green
-               
-          set -a
-          source .env
-          set +a
+            set -e -o pipefail
+            cd ~/blue-green
+                 
+            set -a
+            source .env
+            set +a
 
           # ─── 1) compose 파일에 태그값 주입 ───
-          export IMAGE_TAG   # compose 가 env 변수 읽음
+            export IMAGE_TAG   # compose 가 env 변수 읽음
 
-          if ! groups $USER | grep -q '\bdocker\b'; then
-          echo "[info] 현재 유저 그룹 확인"
-          groups
-          echo "[info] docker 그룹 즉시 적용"
-          docker ps
-          fi
+            if ! groups $USER | grep -q '\bdocker\b'; then
+              echo "[info] 현재 유저 그룹 확인"
+              groups
+              echo "[info] docker 그룹 즉시 적용"
+              docker ps
+            fi
           
   # ─── 2) 새 색 Pull & Up ───
           docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
