@@ -1,60 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true">
+<configuration>
 
-    <property name="LOG_DIR" value="logs"/>
-    <property name="APP_NAME" value="healthpower"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <property name="LOG_PATH" value="logs"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
 
-    <!-- 콘솔 출력 -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- 파일 출력 (일반 로그) -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DIR}/${APP_NAME}.log</file>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- 🟡 Logstash 연동 -->
+    <!-- ✅ Logstash Appender: 잠시 비활성화 -->
+    <!--
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <!-- logstash 컨테이너 이름 기준 포트로 전송 -->
-<!--        <destination>127.0.0.1:5000</destination> &lt;!&ndash; localhost 대신 127.0.0.1 사용 &ndash;&gt;-->
-        <destination>${LOGSTASH_HOST}</destination>
-        <throwExceptionOnWriteFailure>false</throwExceptionOnWriteFailure>
-        <keepAliveDuration>10 seconds</keepAliveDuration>
-        <reconnectionDelay>30000</reconnectionDelay>
-
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <!-- JSON 포맷 로그 자동 구성 -->
-        <customFields>{"appName":"healthpower-app"}</customFields>
-        <!-- 로그 레벨 포함 -->
-            <fieldNames>
-                <levelValue>level_value</levelValue>
-                <level>level</level>
-                <logger>logger_name</logger>
-                <thread>thread_name</thread>
-                <message>message</message>
-                <timestamp>@timestamp</timestamp>
-            </fieldNames>
-        </encoder>
+        <destination>${LOGSTASH_HOST:localhost}:5000</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
+    -->
 
-    <!-- 루트 로거 설정 -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="LOGSTASH"/> <!-- logstash 연동 추가 -->
-    </root>
+    <!-- 로그 출력 수준 설정 -->
     <logger name="org.springframework" level="INFO"/>
     <logger name="com.example" level="DEBUG"/>
+
+    <!-- root logger 설정 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <!-- <appender-ref ref="LOGSTASH"/> -->
+    </root>
+
 </configuration>
