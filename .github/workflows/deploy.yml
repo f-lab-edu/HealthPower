@@ -103,7 +103,6 @@ jobs:
           groups
           echo "[info] docker 그룹 즉시 적용"
           docker ps
-          INNER
           fi
           
   # ─── 2) 새 색 Pull & Up ───
