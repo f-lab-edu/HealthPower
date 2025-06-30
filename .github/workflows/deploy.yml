@@ -91,6 +91,7 @@ jobs:
           fi
           EOF
       - name: Upload docker-compose file
+        working-directory: ./deploy
         run: |
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
             deploy/docker-compose.bluegreen.yml \
