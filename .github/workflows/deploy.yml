@@ -75,7 +75,7 @@ jobs:
             DB_URL="${{ env.DB_URL }}"
             DB_USERNAME="${{ env.DB_USERNAME }}"
             DB_PASSWORD="${{ env.DB_PASSWORD }}"
-            LOGSTASH_HOST="${{ env.ELK_HOST }}"
+            LOGSTASH_HOST="${{ env.LOGSTASH_HOST }}"
           ENV
 
           set -a 
@@ -98,7 +98,11 @@ jobs:
           docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-$COLOR"
           
           # ─── 디버그: 실제 헬스 엔드포인트 응답과 Docker health 상태 출력 ───
-          docker exec spring-$COLOR curl -v http://localhost:8080/actuator/health || true
+
+          docker exec spring-$COLOR curl -s --fail http://localhost:8080/actuator/health || echo "❌ curl failed"
+               
+          docker logs spring-$COLOR | tail -30
+               
           docker inspect spring-$COLOR --format '{{json .State.Health}}'
     
           # ─── 3) Health check (최대 120초) ───
