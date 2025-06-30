@@ -50,6 +50,7 @@ services:
   spring-green:
     <<: *app
     container_name: spring-green
+    environment: *app-env
     ports:
       - "8080:8080"
     build:
