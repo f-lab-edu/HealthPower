@@ -95,6 +95,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           echo "현재 디렉토리:" $(pwd)
+          ls -al deploy
           ls -al ${{ github.workspace }}/deploy
           scp -i ./homepem.pem -o StrictHostKeyChecking=no \
           ./HealthPower/deploy/docker-compose.bluegreen.yml \

@@ -1,0 +1,93 @@
+networks:
+  backend:
+    external: true
+
+x-app-env: &app-env
+  JWT_SECRET:       ${JWT_SECRET}
+  TOSS_SECRET:      ${TOSS_SECRET}
+  TOSS_CLIENT:      ${TOSS_CLIENT}
+  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+  AWS_ACCESS_KEY:   ${AWS_ACCESS_KEY}
+  AWS_SECRET_KEY:   ${AWS_SECRET_KEY}
+  AWS_S3_BUCKET:    ${AWS_S3_BUCKET}
+  DB_URL:           ${DB_URL}
+  DB_USERNAME:      ${DB_USERNAME}
+  DB_PASSWORD:      ${DB_PASSWORD}
+#  LOGSTASH_HOST:    ${LOGSTASH_HOST}
+  LOGSTASH_HOST:    logstash:5000
+  SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    expose: [ "6379" ]
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+
+  spring-blue: &app
+    ports:
+      - "8081:8080"
+    build:
+      context: ./spring-blue              # ← 원격 서버 기준 경로
+      dockerfile: Dockerfile           # 루트 Dockerfile 재사용
+    container_name: spring-blue
+    environment: *app-env
+    env_file:
+      - .env
+    expose: ["8080"]
+    depends_on:
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s                   # 최초 부팅 여유
+      retries: 15
+    networks:
+      - backend
+
+  spring-green:
+    <<: *app
+    container_name: spring-green
+    environment: *app-env
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    build:
+      context: ./spring-green             # Green 색의 빌드 컨텍스트
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    networks:
+      - backend
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.17.13
+    container_name: logstash
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logstash:/usr/share/logstash/pipeline
+    networks:
+      - backend
+
+  nginx:
+    networks:
+      - backend
+    image: nginx:1.27-alpine
+    container_name: nginx-proxy
+    volumes:
+      # GitHub Actions 스크립트가 복사해 두는 conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+    depends_on:
+      spring-blue:
+        condition: service_healthy
+      spring-green:
+        condition: service_started  # green이 아직 unhealthy여도 nginx는 실행
