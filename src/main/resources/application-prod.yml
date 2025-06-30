@@ -180,6 +180,6 @@ app:
   upload:
     dir: /home/ubuntu/uploads
 logstash:
-  host: localhost
+  host: ${LOGSTASH_HOST}
   port: 5000
 
