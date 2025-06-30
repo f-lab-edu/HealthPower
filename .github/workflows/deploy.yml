@@ -107,10 +107,6 @@ jobs:
           INNER
           fi
           
-          {
-          docker ps
-          } || echo "⚠️ docker 명령어 실패 (무시하고 계속 진행)"
-
   # ─── 2) 새 색 Pull & Up ───
           docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
           docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"
