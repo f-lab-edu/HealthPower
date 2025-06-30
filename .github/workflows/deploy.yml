@@ -102,8 +102,8 @@ jobs:
             docker ps
           fi
 
-          docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
-          docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"
+          docker-compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
+          docker-compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"
 
           docker exec spring-\$COLOR curl -s --fail http://localhost:8080/actuator/health || echo "curl failed"
 
@@ -124,8 +124,8 @@ jobs:
            exit 1;
           }
 
-          docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
-          docker compose -f docker-compose.bluegreen.yml stop "$OLD" || true
+          docker-compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
+          docker-compose -f docker-compose.bluegreen.yml stop "$OLD" || true
           EOF
           
       - name: Show Spring logs on failure
