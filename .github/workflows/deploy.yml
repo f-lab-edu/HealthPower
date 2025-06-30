@@ -92,14 +92,15 @@ jobs:
           EOF
 
       - name: Upload docker-compose file
-        working-directory: ${{ github.workspace }}/../../
         run: |
           echo "workspace: ${{ github.workspace }}"
           echo "workspace: ${{ github.workspace }}/../"
           echo "workspace: ${{ github.workspace }}/../../"
           
-          scp -i HealthPower/homepem.pem -o StrictHostKeyChecking=no \
-          HealthPower/deploy/docker-compose.bluegreen.yml \
+          echo "workspace: ${{ github.workspace }}/deploy"
+          
+          scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
+          ${{ github.workspace }}/deploy/docker-compose.bluegreen.yml \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
       - name: Switch containers
