@@ -28,7 +28,8 @@
     <!-- 🟡 Logstash 연동 -->
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <!-- logstash 컨테이너 이름 기준 포트로 전송 -->
-        <destination>127.0.0.1:5000</destination> <!-- localhost 대신 127.0.0.1 사용 -->
+<!--        <destination>127.0.0.1:5000</destination> &lt;!&ndash; localhost 대신 127.0.0.1 사용 &ndash;&gt;-->
+        <destination>${LOGSTASH_HOST}</destination> <!-- localhost 대신 127.0.0.1 사용 -->
 
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <!-- JSON 포맷 로그 자동 구성 -->
