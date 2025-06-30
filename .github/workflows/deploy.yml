@@ -78,7 +78,7 @@ jobs:
             else
               echo "✅ Docker already installed."
             fi
-          EOF
+            EOF
 
       - name: Switch containers
         run: |
