@@ -60,7 +60,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "8082:8080"
     image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
     #    build:
     #      context: ./spring-green             # Green 색의 빌드 컨텍스트
