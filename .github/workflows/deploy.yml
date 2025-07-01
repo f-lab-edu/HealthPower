@@ -58,6 +58,7 @@ jobs:
           DB_USERNAME=${{ secrets.DB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           LOGSTASH_HOST=${{ secrets.ELK_HOST }}
+          LOGSTASH_HOST=5000
           EOF
           
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/.env
