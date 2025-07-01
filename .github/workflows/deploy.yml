@@ -58,7 +58,7 @@ jobs:
           DB_USERNAME=${{ secrets.DB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           LOGSTASH_HOST=${{ secrets.ELK_HOST }}
-          LOGSTASH_HOST=5000
+          LOGSTASH_PORT=5000
           EOF
           
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/.env
@@ -175,9 +175,9 @@ jobs:
 
           docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
           if docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR" then
-          echo "⚠️ spring-$COLOR 기동 실패, 컨테이너 로그 덤프:"
-          docker logs spring-$COLOR --tail 200 || true
-          exit 1
+            echo "⚠️ spring-$COLOR 기동 실패, 컨테이너 로그 덤프:"
+            docker logs spring-$COLOR --tail 200 || true
+            exit 1
           fi
 
           docker exec spring-\$COLOR curl -s --fail http://localhost:8080/actuator/health || echo "curl failed"
