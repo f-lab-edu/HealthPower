@@ -107,6 +107,13 @@ jobs:
           ./docker-compose.bluegreen.yml \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
+      - name: ECR loing #ec2와 ecr 로그인은 다름
+        run: |
+          ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOF
+          aws ecr get-login-password --region ap-northeast-2 \
+          | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+          EOF
+
       - name: Switch containers
         run: |
           COLOR=${{ steps.color.outputs.color }}
