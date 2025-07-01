@@ -16,6 +16,8 @@ x-app-env: &app-env
 #  LOGSTASH_HOST:    ${LOGSTASH_HOST}
   LOGSTASH_HOST:    logstash:5000
   SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+  IMAGE_TAG: ${{ github.sha }}
 
 services:
   redis:
@@ -30,9 +32,10 @@ services:
   spring-blue: &app
     ports:
       - "8081:8080"
-    build:
-      context: ./spring-blue              # ← 원격 서버 기준 경로
-      dockerfile: Dockerfile           # 루트 Dockerfile 재사용
+    image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+#    build:
+#      context: ./spring-blue              # ← 원격 서버 기준 경로
+#      dockerfile: Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
     environment: *app-env
     env_file:
@@ -58,9 +61,10 @@ services:
       - .env
     ports:
       - "8080:8080"
-    build:
-      context: ./spring-green             # Green 색의 빌드 컨텍스트
-      dockerfile: Dockerfile
+    image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+#    build:
+#      context: ./spring-green             # Green 색의 빌드 컨텍스트
+#      dockerfile: Dockerfile
     depends_on:
       - redis
     networks:

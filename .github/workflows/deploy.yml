@@ -45,7 +45,7 @@ jobs:
                
           cat > .env <<EOF
           COLOR=$COLOR
-          IMAGE_TAG=${{ github.event.workflow_run.head_sha }}
+          IMAGE_TAG=${{ github.sha }}
           ECR_REGISTRY=${{ env.ECR_REGISTRY }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           TOSS_SECRET=${{ secrets.TOSS_SECRET }}
