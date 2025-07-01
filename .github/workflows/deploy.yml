@@ -91,6 +91,11 @@ jobs:
           fi
           EOF
 
+      - name: Checkout repository to root
+        uses: actions/checkout@v3
+        with:
+          path: .
+
       - name: 디렉토리 구조 확인
         run: |
           echo "📂 현재 디렉토리: $(pwd)"
@@ -98,13 +103,16 @@ jobs:
           ls -al ..
           echo "📁 현재 디렉토리 구조:"
           ls -al .
+          
 
       - name: Upload docker-compose file
         run: |
           echo "현재 디렉토리:" $(pwd)
+          ls -al ./deploy
           
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-          ${{ github.workspace }}/docker-compose.bluegreen.yml \
+#          ${{ github.workspace }}/docker-compose.bluegreen.yml \
+          ./deploy/docker-compose.bluegreen.yml \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
       - name: Switch containers
