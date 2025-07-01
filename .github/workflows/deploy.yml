@@ -64,17 +64,19 @@ jobs:
           echo "✅ 1. .env generated"
           
           echo "▶️ 2. Create remote dir"
-          ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/blue-green"
+          ssh -i ${{ github.workspace }}/homepem.pem \
+          -o StrictHostKeyChecking=no \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+          "mkdir -p ~/blue-green"
           echo "✅ 2. Remote directory ready"
 
           echo "▶️ 2. mkdir -p on remote"
           
           echo "▶️ 3. Copy .env via SSH redirection"
           ssh -i ${{ github.workspace }}/homepem.pem \
-           -o StrictHostKeyChecking=no \
-           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-           "cat > ~/blue-green/.env" < .env
+          -o StrictHostKeyChecking=no \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+          "cat > ~/blue-green/.env" < .env
           echo "✅ 3. .env uploaded"
 
       - name: Install Docker (if not installed) + Compose v2
