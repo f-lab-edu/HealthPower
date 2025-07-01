@@ -172,6 +172,7 @@ jobs:
             docker ps
           fi
 
+          docker compose -f docker-compose.bluegreen.yml down
           docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
           docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"
 
