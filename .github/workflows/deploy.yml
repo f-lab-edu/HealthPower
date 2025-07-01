@@ -91,6 +91,14 @@ jobs:
           fi
           EOF
 
+      - name: 디렉토리 구조 확인
+        run: |
+          echo "📂 현재 디렉토리: $(pwd)"
+          echo "📁 상위 디렉토리 구조:"
+          ls -al ..
+          echo "📁 현재 디렉토리 구조:"
+          ls -al .
+
       - name: Upload docker-compose file
         run: |
           echo "현재 디렉토리:" $(pwd)
