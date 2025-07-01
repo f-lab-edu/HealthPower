@@ -41,16 +41,9 @@ jobs:
         run: |
           set -eux
           
-          echo "▶️ 1. Generate .env locally"
           COLOR=${{ steps.color.outputs.color }}
-          echo "✅ 1. .env generated"
           
-          echo "▶️ 2. mkdir -p on remote"
-          ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/blue-green"
-          echo "✅ 2. Remote directory ready"
-          
-          # 2) .env 파일을 로컬에서 printf 로 생성 (heredoc 대신)
+          echo "▶️ 1. Generate .env locally"
           printf "%s\n" \
             "COLOR=$COLOR" \
             "IMAGE_TAG=${{ github.sha }}" \
@@ -68,16 +61,17 @@ jobs:
             "LOGSTASH_HOST=${{ secrets.ELK_HOST }}" \
             "LOGSTASH_PORT=5000" \
           > .env
+          echo "✅ 1. .env generated"
+          
+          echo "▶️ 2. Create remote dir"
+          ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/blue-green"
+          echo "✅ 2. Remote directory ready"
 
           echo "▶️ 2. mkdir -p on remote"
           
-          scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/.env
-
-          echo "▶️ 3. scp .env to remote"
-          scp -vvv -o BatchMode=yes \
-            -i ${{ github.workspace }}/homepem.pem \
-            .env \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/.env
+          echo "▶️ 3. Copy .env via SSH redirection"
+          scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cat > :~/blue-green/.env" < .env
           echo "✅ 3. .env uploaded"
 
       - name: Install Docker (if not installed) + Compose v2
