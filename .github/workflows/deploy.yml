@@ -95,7 +95,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: .
-
       - name: Fix PEM file permission just before scp
         run: chmod 600 ${{ github.workspace }}/homepem.pem
 
@@ -114,7 +113,7 @@ jobs:
           OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
 
           ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOF
           set -e -o pipefail
           cd ~/blue-green
           set -a
