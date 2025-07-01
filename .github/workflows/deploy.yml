@@ -96,14 +96,8 @@ jobs:
         with:
           path: .
 
-      - name: 디렉토리 구조 확인
-        run: |
-          echo "📂 현재 디렉토리: $(pwd)"
-          echo "📁 상위 디렉토리 구조:"
-          ls -al ..
-          echo "📁 현재 디렉토리 구조:"
-          ls -al .
-          
+      - name: Fix PEM file permission just before scp
+        run: chmod 600 ${{ github.workspace }}/homepem.pem
 
       - name: Upload docker-compose file
         run: |
@@ -111,7 +105,7 @@ jobs:
           ls -al ./deploy
           
           scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-          ./deploy/docker-compose.bluegreen.yml \
+          ./docker-compose.bluegreen.yml \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/blue-green/docker-compose.bluegreen.yml
 
       - name: Switch containers
