@@ -16,8 +16,8 @@ x-app-env: &app-env
   #  LOGSTASH_HOST:    ${LOGSTASH_HOST}
   LOGSTASH_HOST:    logstash:5000
   SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
-  ECR_REGISTRY: ${{ ECR_REGISTRY }}
-  IMAGE_TAG: ${{ IMAGE_TAG }}
+  ECR_REGISTRY: ${ECR_REGISTRY}
+  IMAGE_TAG: ${IMAGE_TAG}
 
 services:
   redis:
