@@ -39,11 +39,13 @@ jobs:
 
       - name: Upload .env file
         run: |
+          set -eux
           COLOR=${{ steps.color.outputs.color }}
+          
           ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/blue-green"
-               
-          cat > .env <<EOF
+
+          cat <<EOF > .env
           COLOR=$COLOR
           IMAGE_TAG=${{ github.sha }}
           ECR_REGISTRY=${{ env.ECR_REGISTRY }}
