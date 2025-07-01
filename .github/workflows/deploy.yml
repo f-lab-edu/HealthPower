@@ -174,7 +174,8 @@ jobs:
           fi
 
           docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
-          if docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR" then
+          
+          if docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"; then
             echo "⚠️ spring-$COLOR 기동 실패, 컨테이너 로그 덤프:"
             docker logs spring-$COLOR --tail 200 || true
             exit 1
