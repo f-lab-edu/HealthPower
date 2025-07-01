@@ -157,7 +157,7 @@ jobs:
           OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
 
           ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
-          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOF
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<-EOF
           set -e -o pipefail
           cd ~/blue-green
           set -a
@@ -175,7 +175,7 @@ jobs:
 
           docker compose -f docker-compose.bluegreen.yml pull "spring-\$COLOR"
           
-          if docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"; then
+          if ! docker compose -f docker-compose.bluegreen.yml up -d redis nginx "spring-\$COLOR"; then
             echo "⚠️ spring-$COLOR 기동 실패, 컨테이너 로그 덤프:"
             docker logs spring-$COLOR --tail 200 || true
             exit 1
