@@ -130,6 +130,17 @@ jobs:
           | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
           EOF
 
+      - name: Create external Docker network if missing
+        run: |
+          ssh -i homepem.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
+          if ! docker network ls | grep -q backend; then
+            echo "🧱 Creating Docker network: backend"
+            docker network create backend
+          else
+            echo "✅ Docker network 'backend' already exists"
+          fi
+          EOF
+
       - name: Switch containers
         run: |
           COLOR=${{ steps.color.outputs.color }}
