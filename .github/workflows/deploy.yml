@@ -71,7 +71,10 @@ jobs:
           echo "▶️ 2. mkdir -p on remote"
           
           echo "▶️ 3. Copy .env via SSH redirection"
-          scp -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cat > :~/blue-green/.env" < .env
+          ssh -i ${{ github.workspace }}/homepem.pem \
+           -o StrictHostKeyChecking=no \
+           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+           "cat > ~/blue-green/.env" < .env
           echo "✅ 3. .env uploaded"
 
       - name: Install Docker (if not installed) + Compose v2
