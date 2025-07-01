@@ -13,8 +13,8 @@ x-app-env: &app-env
   DB_URL:           ${DB_URL}
   DB_USERNAME:      ${DB_USERNAME}
   DB_PASSWORD:      ${DB_PASSWORD}
-  #  LOGSTASH_HOST:    ${LOGSTASH_HOST}
-  LOGSTASH_HOST:    logstash:5000
+  LOGSTASH_HOST:    logstash
+  LOGSTASH_PORT:    5000
   SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
   ECR_REGISTRY: ${ECR_REGISTRY}
   IMAGE_TAG: ${IMAGE_TAG}
@@ -37,10 +37,10 @@ services:
     #      context: ./spring-blue              # ← 원격 서버 기준 경로
     #      dockerfile: Dockerfile           # 루트 Dockerfile 재사용
     container_name: spring-blue
-    environment: *app-env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
     env_file:
       - .env
-    expose: ["8080"]
     depends_on:
       redis:
         condition: service_started
@@ -56,7 +56,6 @@ services:
   spring-green:
     <<: *app
     container_name: spring-green
-    environment: *app-env
     env_file:
       - .env
     ports:
