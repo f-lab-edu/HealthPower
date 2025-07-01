@@ -66,18 +66,26 @@ jobs:
         run: |
           ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<'EOF'
           set -e
-          if ! command -v docker &> /dev/null; then
-            echo "🔧 Installing Docker..."
-            sudo apt update && sudo apt install -y docker.io
-            sudo systemctl enable docker
-            sudo systemctl start docker
-            sudo usermod -aG docker $USER
+          
+          sudo apt update
+          sudo apt install -y ca-certificates curl gnupg
+          sudo install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+          sudo apt update
+          sudo apt install -y docker-ce docker-ce-cli containerd.io
+          sudo usermod -aG docker $USER
           fi
-
+    
           if ! docker compose version &> /dev/null; then
-            echo "🔧 Installing Docker Compose Plugin..."
-            sudo apt update && sudo apt install -y docker-compose-plugin
+          echo "🔧 Installing Docker Compose V2 plugin..."
+          sudo apt install -y docker-compose-plugin
           fi
+    
           docker compose version
           EOF
 
