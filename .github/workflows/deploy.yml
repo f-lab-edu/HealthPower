@@ -39,12 +39,11 @@ jobs:
 
       - name: Check SSH port from runner
         run: |
-          apt update && apt install -y netcat
-          nc -vz ${{ secrets.EC2_HOST }} 22
+          sudo apt-get update
+          sudo apt-get install -y netcat-openbsd
 
       - name: Fetch SSH banner
         run: |
-          # 서버 접속 후 첫 줄(배너)만 찍어 봅니다
           nc -w5 ${{ secrets.EC2_HOST }} 22 | head -1
 
       - name: Debug SSH connectivity
