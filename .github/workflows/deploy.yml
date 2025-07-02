@@ -37,6 +37,16 @@ jobs:
           timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.EC2_HOST }}/22" \
           && echo "✅ 22/tcp reachable" || (echo "❌ 22/tcp closed"; exit 1)
 
+      - name: Debug SSH connectivity
+        run: |
+          set -eux
+          ssh -vvv \
+            -o ConnectTimeout=10 \
+            -o BatchMode=yes \
+            -i ${{ github.workspace }}/homepem.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "echo SSH OK"
+
       - name: Upload .env file
         run: |
           set -eux
