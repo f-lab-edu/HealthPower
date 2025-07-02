@@ -43,6 +43,8 @@ jobs:
           ssh -vvv \
             -o ConnectTimeout=10 \
             -o BatchMode=yes \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
             -i ${{ github.workspace }}/homepem.pem \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
             "echo SSH OK"
