@@ -42,6 +42,11 @@ jobs:
           apt update && apt install -y netcat
           nc -vz ${{ secrets.EC2_HOST }} 22
 
+      - name: Fetch SSH banner
+        run: |
+          # 순수 TCP 연결을 맺고, 서버>클라이언트 배너(SSH-2.0-...)를 읽어 봅니다
+          printf "" | nc -w3 ${{ secrets.EC2_HOST }} 22 #SSH-2.0-OpenSSH_9.6p1 Ubuntu-3...가 떠야 성공하는 것
+
       - name: Debug SSH connectivity
         run: |
           set -eux
