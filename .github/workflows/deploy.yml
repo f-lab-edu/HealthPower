@@ -57,10 +57,8 @@ jobs:
           -o BatchMode=yes \
           -o ConnectTimeout=10 \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOF
-          
           mkdir -p ~/blue-green
           cat > ~/blue-green/.env <<'EODE'
-          
             "COLOR=$COLOR"
             "IMAGE_TAG=${{ github.sha }}"
             "ECR_REGISTRY=${{ env.ECR_REGISTRY }}"
