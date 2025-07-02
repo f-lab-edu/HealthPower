@@ -44,9 +44,7 @@ jobs:
 
       - name: Fetch SSH banner
         run: |
-          ssh-keyscan -T5 ${{ secrets.EC2_HOST }} 2>/dev/null \
-          | cut -d' ' -f3 \
-          | head -1
+          nc -w5 ${{ secrets.EC2_HOST }} 22 | head -1
 
       - name: Debug SSH connectivity
         run: |
