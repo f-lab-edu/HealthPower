@@ -68,46 +68,38 @@ jobs:
 
       - name: Upload .env file
         run: |
-          set -eu
-          
+          set -eux
           COLOR="${{ steps.color.outputs.color }}"
-          
-          printf '%s\n' \
           
           for i in {1..5}; do
           ssh -i ${{ github.workspace }}/homepem.pem \
             -o StrictHostKeyChecking=no \
             -o BatchMode=yes \
             -o ConnectTimeout=30 \
-            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<EOF
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<EOF
             set -e
             mkdir -p ~/blue-green
             cat > ~/blue-green/.env <<'EODE'
           
-          COLOR='"$COLOR"'
-          IMAGE_TAG='"${{ github.sha }}"'
-          ECR_REGISTRY='"${{ env.ECR_REGISTRY }}"'
-          JWT_SECRET='"${{ secrets.JWT_SECRET }}"'
-          TOSS_SECRET='"${{ secrets.TOSS_SECRET }}"'
-          TOSS_CLIENT='"${{ secrets.TOSS_CLIENT }}"'
-          SLACK_WEBHOOK_URL='"${{ secrets.SLACK_WEBHOOK_URL }}"'
-          AWS_ACCESS_KEY='"${{ secrets.AWS_ACCESS_KEY }}"'
-          AWS_SECRET_KEY='"${{ secrets.AWS_SECRET_KEY }}"'
-          AWS_S3_BUCKET='"${{ secrets.AWS_S3_BUCKET }}"'
-          DB_URL='"${{ secrets.DB_URL }}"'
-          DB_USERNAME='"${{ secrets.DB_USERNAME }}"'
-          DB_PASSWORD='"${{ secrets.DB_PASSWORD }}"'
-          LOGSTASH_HOST='"${{ secrets.ELK_HOST }}"'
-          LOGSTASH_PORT='5000'
+          COLOR=$COLOR
+          IMAGE_TAG=${{ github.sha }}
+          ECR_REGISTRY=${{ env.ECR_REGISTRY }}
+          JWT_SECRET='{{ secrets.JWT_SECRET }}
+          TOSS_SECRET=${{ secrets.TOSS_SECRET }}
+          TOSS_CLIENT=${{ secrets.TOSS_CLIENT }}
+          SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
+          AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          DB_URL=${{ secrets.DB_URL }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          LOGSTASH_HOST=${{ secrets.ELK_HOST }}
+          LOGSTASH_PORT=5000
           EODE
           EOF
 
-          if [ $? -eq 0 ]; then
-          echo "✅ .env 업로드 성공"
-          break
-          fi
-          
-          sleep 3
+          sleep 2
           done
 
       - name: Install Docker (if not installed) + Compose v2
