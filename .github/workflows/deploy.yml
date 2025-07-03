@@ -45,6 +45,7 @@ jobs:
       - name: Fetch SSH banner
         run: |
           nc -w5 ${{ secrets.EC2_HOST }} 22 | head -1
+          printf "" | nc -w3 ${{ secrets.EC2_HOST }} 22
 
       - name: Debug SSH connectivity
         run: |
