@@ -49,15 +49,18 @@ jobs:
 
       - name: Debug SSH connectivity
         run: |
+          for i in {1..5}; do
           set -eux
           ssh -vvv \
-            -o ConnectTimeout=10 \
+            -o ConnectTimeout=30 \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
             -i ${{ github.workspace }}/homepem.pem \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
-            "echo SSH OK"
+            "echo SSH OK" && break
+          sleep 2
+          done
 
       - name: Upload .env file
         run: |
@@ -182,6 +185,7 @@ jobs:
           COLOR=${{ steps.color.outputs.color }}
           OLD=$( [ "$COLOR" = "blue" ] && echo spring-green || echo spring-blue )
 
+          for i in {1..5}; do
           ssh -i ${{ github.workspace }}/homepem.pem -o StrictHostKeyChecking=no \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} <<-EOF
           set -e -o pipefail
@@ -215,6 +219,10 @@ jobs:
           docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
           docker compose -f docker-compose.bluegreen.yml stop "$OLD" || true
           EOF
+          && break
+          
+          sleep 3
+          done
           
       - name: Show Spring logs on failure
         if: failure()
