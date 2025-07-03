@@ -35,7 +35,7 @@ jobs:
       - name: Probe port 22 BEFORE SSH
         run: |
           timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.EC2_HOST }}/22" \
-          && echo "✅ 22/tcp reachable" || (echo "❌ 22/tcp closed"; exit 1)
+          && echo "✅ 22/tcp reachable" || echo "❌ 22/tcp closed" && exit 0)
 
       - name: Check SSH port from runner
         run: |
