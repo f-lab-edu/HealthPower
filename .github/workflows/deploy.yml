@@ -33,9 +33,13 @@ jobs:
           echo "color=$COLOR" >> "$GITHUB_OUTPUT"
 
       - name: Probe port 22 BEFORE SSH
+        continue-on-error: true
         run: |
-          timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.EC2_HOST }}/22" \
-          && echo "✅ 22/tcp reachable" || echo "❌ 22/tcp closed" && exit 0)
+          if timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.EC2_HOST }}/22"; then
+           echo "✅ 22/tcp reachable"
+          else
+           echo "⚠️ 22/tcp closed – but we’ll continue anyway"
+          fi
 
       - name: Check SSH port from runner
         run: |
