@@ -229,11 +229,16 @@ jobs:
           docker compose -f docker-compose.bluegreen.yml exec nginx nginx -s reload
           docker compose -f docker-compose.bluegreen.yml stop "$OLD" || true
           EOF
-          && break
-          
-          sleep 3
+
+          if [ $? -eq 0 ]; then
+              echo "✅ Switch succeeded!"
+              break
+          else
+              echo "❌ Switch failed on attempt #$i, retry in 3s…"
+              sleep 3
+          fi
           done
-          
+
       - name: Show Spring logs on failure
         if: failure()
         run: |
