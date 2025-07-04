@@ -35,11 +35,11 @@ services:
     environment: *app-env
     depends_on: [redis]          # ★ redis 먼저 기동
     expose: ["8080"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 0"]
-      interval: 10s
-      start_period: 90s                   # 최초 부팅 여유
-      retries: 12
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 0"]
+#      interval: 10s
+#      start_period: 90s                   # 최초 부팅 여유
+#      retries: 12
     networks: [bg]
 
   spring-green:
