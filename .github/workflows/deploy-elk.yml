@@ -2,10 +2,6 @@ name: Deploy ELK to EC2
 
 on:
   workflow_dispatch:        # 수동 실행
-  push:
-    paths:
-      - elk/**       # ELK 관련 파일이 바뀔 때만 자동 실행
-    branches: [ master ]
 
 jobs:
   deploy-elk:

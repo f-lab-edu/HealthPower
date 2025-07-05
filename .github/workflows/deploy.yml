@@ -2,8 +2,7 @@ name: Deploy Spring Boot to EC2
 
 on:
   push:
-    branches:
-      - master
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -25,45 +24,88 @@ jobs:
 
       - name: Decode PEM key for EC2
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > homepem.pem
-          chmod 600 homepem.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
+          chmod 600 ${{ github.workspace }}/homepem.pem
 
-      - name: Build Spring Boot application (fat JAR)
+      - name: 🐳 Install Docker & Docker Compose on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            sudo apt update
+            sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+            sudo apt update
+            sudo apt install -y docker-ce docker-ce-cli containerd.io
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+          EOF
+
+      - name: Clean old JARs
+        run: rm -f build/libs/*.jar
+
+      - name: Build Spring Boot application
         run: ./gradlew clean bootJar
 
-      - name: Upload JAR and Dockerfile to EC2 via SCP
+      - name: Create elk directory on EC2
         run: |
-          JAR_FILE=$(ls build/libs/*.jar | head -n 1)
-          echo "Uploading $JAR_FILE to EC2..."
-          scp -o StrictHostKeyChecking=no -i homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
-          scp -o StrictHostKeyChecking=no -i homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/elk/logstash"
 
-      - name: Create log & upload directories on EC2
+      - name: Upload files to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-          mkdir -p /home/ubuntu/uploads /home/ubuntu/logs && chmod 755 /home/ubuntu/logs
-          "
+          JAR_FILE=$(find build/libs -name "*.jar" | sort | tail -n1)
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem src/main/resources/application.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application.yml
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/docker-compose.yml
+          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/logstash/logstash.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/logstash/logstash.conf
+
+      - name: Run Docker Compose with ELK
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
+            cd ~/elk
+            sudo docker-compose down || true
+            sudo docker-compose up -d
+          EOF
+
+      - name: 🛠 Install Java on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
+            sudo apt update
+            sudo apt install -y openjdk-21-jdk
+          EOF
 
       - name: Run Spring Boot App on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-          echo "Stopping existing Java process..."
-          pkill -f 'java' || true
-
-          echo "Starting Spring Boot application..."
-          nohup java \
-          -Dspring.profiles.active=prod \
-          -Dspring.datasource.url=${{ secrets.DB_URL }} \
-          -Dspring.datasource.username=${{ secrets.DB_USERNAME }} \
-          -Dspring.datasource.password=${{ secrets.DB_PASSWORD }} \
-          -Djwt.secret=${{ secrets.JWT_SECRET }} \
-          -Dtoss.secret=${{ secrets.TOSS_SECRET }} \
-          -Dcloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }} \
-          -Dcloud.aws.credentials.secret-key=${{ secrets.AWS_SECRET_KEY }} \
-          -Dcloud.aws.s3.bucket=${{ secrets.AWS_S3_BUCKET }} \
-          -Dslack.webhook.url=${{ secrets.SLACK_WEBHOOK_URL }} \
-          -Dapp.upload.dir=/home/ubuntu/uploads \
-          -jar /home/ubuntu/app.jar > /home/ubuntu/app.log 2>&1 &
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            echo "🔁 기존 앱 종료"
+            pkill -f java || true
+          
+            echo "⏳ logstash 포트 오픈 대기"
+            while ! nc -z localhost 5000; do
+              echo "logstash가 아직 준비되지 않았습니다. 대기 중..."
+              sleep 3
+            done
+          
+            echo "🌱 환경변수 설정"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
+            export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
+            export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
+            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
+            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
+            export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
+            export DB_URL="${{ secrets.DB_URL }}"
+            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+          
+            echo "🚀 Spring Boot 애플리케이션 시작"
+            nohup java \
+            -Dspring.profiles.active=prod \
+            -jar /home/ubuntu/app.jar \
+            --spring.config.additional-location=file:/home/ubuntu/ \
+            > /home/ubuntu/app.log 2>&1 &
           EOF
 
       - name: Slack Notify - 성공
@@ -77,5 +119,5 @@ jobs:
         if: failure()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"❌ *HealthPower* 서버 배포 *실패* \n확인 필요!"}' \
+            --data '{"text":"❌ HealthPower 서버 배포 실패! 확인 필요"}' \
             ${{ secrets.SLACK_ALERT_WEBHOOK }}
