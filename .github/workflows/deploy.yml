@@ -61,14 +61,6 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/docker-compose.yml
           scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/logstash/logstash.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/logstash/logstash.conf
 
-      - name: Run Docker Compose with ELK
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
-            cd ~/elk
-            sudo docker-compose down || true
-            sudo docker-compose up -d
-          EOF
-
       - name: 🛠 Install Java on EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
