@@ -18,12 +18,13 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 - 선착순 쿠폰 발급 (Redis / Kafka)
 - 마이페이지 (사진 업로드, Toss api 연동을 통한 마일리지 충전) 업데이트 기능
 - 게시판 기능 (이미지 첨부 포함)
-- 실시간 채팅 (WebSocket + STOMP)
+- 실시간 채팅 (WebSocket + STOMP) + 단체 채팅 및 이미지 전송 기능 
 - Toss Payments 결제 및 거래 로그 저장
 - AWS S3 이미지 업로드
 - CPU/메모리 실시간 데이시보드, 잠재 감지 경고
 - GitHub Actions → EC2 자동 JAR 빌드 & Docker
 - ELK연동을 통한 로그시스템 관리 구축
+- S3 presigned url Spring Boot (이미지 업로드 속도 개선)
 ---
 
 # 사용기술
