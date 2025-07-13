@@ -20,6 +20,7 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 - 게시판 기능 (이미지 첨부 포함)
 - 실시간 채팅 (WebSocket + STOMP) + 단체 채팅 및 이미지 전송 기능 
 - Toss Payments 결제 및 거래 로그 저장
+- 아임포트(IamPort) 연동으로 결제 기능 구현
 - AWS S3 이미지 업로드
 - CPU/메모리 실시간 데이시보드, 잠재 감지 경고
 - GitHub Actions → EC2 자동 JAR 빌드 & Docker
