@@ -5,7 +5,7 @@
     <title>상품등록</title>
 </head>
 <body>
-  <form th:action="@{/board/product/post2}" method="post" th:object="${productDTO}" enctype="multipart/form-data">
+  <form th:action="@{/board/product/post2}" method="post" th:object="${productDTO}">
     <div>
       <label>상품명:</label>
       <input type="text" th:field="*{productName}" />
@@ -39,9 +39,45 @@
     </div>
     <div>
       <label>상품 사진:</label>
-      <input type="file" th:field="*{photo}" accept="image/*" />
+      <input type="file" id="photoInput" accept="image/*" />
     </div>
+    <input type="hidden" name="imageUrl" id="imageUrl">
     <button type="submit">상품 등록</button>
   </form>
 </body>
+<script>
+  const photoInput = document.getElementById("photoInput");
+  const imageUrlInput = document.getElementById("imageUrl");
+
+  photoInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const filename = `${Date.now()}_${file.name}`;
+    const folder = "product-image";
+    const contentType = file.type;
+
+    try {
+      // 1. Presigned URL 발급
+      const res = await fetch(`/s3/presign?folder=${folder}&filename=${filename}&contentType=${encodeURIComponent(contentType)}`);
+      const { presignedUrl, staticUrl } = await res.json();
+
+      // 2. S3 업로드
+      const uploadRes = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file
+      });
+
+      if (uploadRes.ok) {
+        alert("✅ 이미지 업로드 성공");
+        imageUrlInput.value = staticUrl;
+      } else {
+        alert("❌ 업로드 실패");
+      }
+    } catch (err) {
+      alert("에러 발생: " + err.message);
+    }
+  });
+</script>
 </html>

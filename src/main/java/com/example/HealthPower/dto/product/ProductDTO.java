@@ -41,9 +41,7 @@ public class ProductDTO {
     @NotBlank(message = "내용 입력은 필수입니다.")
     private String content;
 
-    private MultipartFile photo;
-
-    @Column(name = "photo_url")
-    private String photoUrl;
+    @Column(name = "image_url")
+    private String imageUrl; //s3:presign형식으로 업로드
 
 }

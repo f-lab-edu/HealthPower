@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor(staticName = "of")
 public class ChatMessageResponseDTO {
-    private String roomId;
+    private Long roomId;
     private String senderId;
     private String senderNickname;
     private String content;
@@ -20,7 +20,7 @@ public class ChatMessageResponseDTO {
     /* ── 엔티티 → DTO 변환 헬퍼 ── */
     public static ChatMessageResponseDTO from(ChatMessage m) {
         return of(
-                m.getRoomId(),
+                m.getChatRoom().getRoomId(),
                 m.getSenderId(),
                 m.getSenderNickname(),
                 m.getContent(),

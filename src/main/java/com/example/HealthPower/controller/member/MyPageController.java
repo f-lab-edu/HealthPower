@@ -3,7 +3,6 @@ package com.example.HealthPower.controller.member;
 import com.example.HealthPower.controller.api.SuccessResponse;
 import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.dto.user.UserModifyDTO;
-import com.example.HealthPower.dto.user.UserModifyTestDTO;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.exception.user.UserNotFoundException;
 import com.example.HealthPower.impl.UserDetailsImpl;
@@ -19,13 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
@@ -82,7 +79,7 @@ public class MyPageController {
 
     /* 마이페이지 수정 */
     /*@PutMapping(value = "/myInfoUpdate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> saveMyInfo(@ModelAttribute UserModifyTestDTO userModifyDTO,
+    public ResponseEntity<String> saveMyInfo(@ModelAttribute UserModifyDTO userModifyDTO,
                                              @RequestPart(required = false) MultipartFile photo) throws IOException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 

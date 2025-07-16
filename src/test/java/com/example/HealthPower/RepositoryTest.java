@@ -31,7 +31,7 @@ public class RepositoryTest {
                 .password("12341234")
                 .phoneNumber("01077881234")
                 .address("")
-                .photoUrl("")
+                .imageUrl("")
                 .photoPath("")
                 .gender(Gender.MAN)
                 .birth(LocalDate.of(1992, 12, 4))

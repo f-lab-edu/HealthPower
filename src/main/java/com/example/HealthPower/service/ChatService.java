@@ -8,16 +8,28 @@ import com.example.HealthPower.entity.User;
 import com.example.HealthPower.entity.chat.ChatMessage;
 import com.example.HealthPower.entity.chat.ChatRoom;
 import com.example.HealthPower.entity.chat.ChatRoomParticipant;
+import com.example.HealthPower.exception.user.UserNotFoundException;
 import com.example.HealthPower.repository.ChatMessageRepository;
 import com.example.HealthPower.repository.ChatRoomParticipantRepository;
 import com.example.HealthPower.repository.ChatRoomRepository;
 import com.example.HealthPower.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +42,24 @@ public class ChatService {
     private final ChatRoomParticipantRepository chatRoomParticipantRepository;
     private final UserRepository userRepository;
 
+
+    @Transactional
+    public Long createRoom(String name, String creatorId) {
+        User creator = userRepository.findByUserId(creatorId)
+                .orElseThrow(() -> new UserNotFoundException("사용자가 존재하지 않습니다."));
+
+        ChatRoom chatRoom = new ChatRoom();
+        chatRoom.setName(name);
+        chatRoom.setCreatorId(creatorId);
+        chatRoomRepository.save(chatRoom);
+
+        ChatRoomParticipant cp = ChatRoomParticipant.of(chatRoom, creator, true);
+
+        chatRoomParticipantRepository.save(cp);
+
+        return chatRoom.getRoomId();
+    }
+
     // 두 사용자 간의 고정된 채팅방 생성 or 조회
     @Transactional
     public ChatRoom createRoomId(String userA, String userB) {
@@ -41,7 +71,7 @@ public class ChatService {
         /* 순서 고정 */
         String a = userA.compareTo(userB) < 0 ? userA : userB;
         String b = userA.compareTo(userB) < 0 ? userB : userA;
-        String roomId = a + "_" + b;
+        Long roomId = Long.valueOf(a + "_" + b);
 
         ChatRoom room = chatRoomRepository.findByRoomId(roomId).orElse(null);
         if (room != null) {
@@ -53,7 +83,7 @@ public class ChatService {
             throw new IllegalStateException("이미 존재했던 채팅방입니다. 입장할 수 없습니다.");
         }
 
-        room = chatRoomRepository.save(new ChatRoom(a, b));
+        room = chatRoomRepository.save(new ChatRoom());
 
         User A = userRepository.findByUserId(userA).orElseThrow();
         User B = userRepository.findByUserId(userB).orElseThrow();
@@ -64,7 +94,14 @@ public class ChatService {
         return room;
     }
 
-    private void verifyNotExited(String roomId, String userA, String userB) {
+    public List<ChatRoomListItemDTO> getRoomsUserNotJoined(String userId) {
+        return chatRoomRepository.findAllNotJoinedByUser(userId)
+                .stream()
+                .map(r -> new ChatRoomListItemDTO(r, false)) // exited 의미X
+                .toList();
+    }
+
+    private void verifyNotExited(Long roomId, String userA, String userB) {
         ChatRoomParticipant participantA = chatRoomParticipantRepository
                 .findByChatRoomRoomIdAndUserUserId(roomId, userA)
                 .orElseThrow();
@@ -83,9 +120,7 @@ public class ChatService {
     public void save(ChatRoom chatRoom, ChatMessageDTO ChatMessageDTO) {
 
         ChatMessage message = new ChatMessage(
-                ChatMessageDTO.getRoomId(),
                 ChatMessageDTO.getSenderId(),
-                ChatMessageDTO.getReceiverId(),
                 ChatMessageDTO.getContent(),
                 ChatMessageDTO.getTimeStamp(),
                 chatRoom
@@ -99,7 +134,7 @@ public class ChatService {
     // 사용자가 속한 모든 채팅방 조회
     public List<ChatRoomListItemDTO> getRoomsByUser(String userId) {
 
-        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUser_UserId(userId);
+        List<ChatRoomParticipant> participants = chatRoomParticipantRepository.findByUserUserIdAndExitedFalse(userId);
 
         return participants
                 .stream()
@@ -118,22 +153,20 @@ public class ChatService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("유저 없음"));
 
-        /*ChatRoom room = chatRoomRepository.findByRoomId(roomId).orElseThrow();*/
-        ChatRoomParticipant participant = chatRoomParticipantRepository.findByChatRoomAndUser(chatRoom, user).orElseThrow();
-        participant.setExited(true);
-        chatRoomParticipantRepository.save(participant);
+        ChatRoomParticipant participant = chatRoomParticipantRepository.findByChatRoomAndUser(chatRoom, user)
+                .orElseThrow();
 
-        boolean allExited = chatRoomParticipantRepository.findByChatRoom(chatRoom).stream()
-                .allMatch(ChatRoomParticipant::isExited);
-
-        if (allExited) {
+        if (participant.isOwner()) {
             chatMessageRepository.deleteByChatRoom(chatRoom);
             chatRoomParticipantRepository.deleteByChatRoom(chatRoom);
             chatRoomRepository.delete(chatRoom);
+            return;
         }
+
+        participant.setExited(true);
     }
 
-    public boolean hasUserActiveInRoom(String roomId, String userId) {
+    public boolean hasUserActiveInRoom(Long roomId, String userId) {
         ChatRoom room = chatRoomRepository.findByRoomId(roomId)
                 .orElseThrow(() -> new RuntimeException("방이 존재하지 않습니다"));
 
@@ -143,12 +176,12 @@ public class ChatService {
         /*return chatRoomchatRoomParticipantRepositorysitory.findByChatRoomAndUser(room, user)
                 .filter(participant -> !participant.isExited()) // 나간 상태가 아니어야 입장 허용
                 .isPresent();*/
-        return chatRoomParticipantRepository.findByChatRoomRoomIdAndUserUserId(roomId,userId)
+        return chatRoomParticipantRepository.findByChatRoomRoomIdAndUserUserId(roomId, userId)
                 .map(p -> !p.isExited())
-                .orElse(false);
+                .orElse(true);
     }
 
-    public ChatRoom getChatRoomByRoomId(String roomId) {
+    public ChatRoom getChatRoomByRoomId(Long roomId) {
         return chatRoomRepository.findByRoomId(roomId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 채팅방이 존재하지 않습니다: " + roomId));
     }
@@ -161,7 +194,7 @@ public class ChatService {
         switch (chatMessageDTO.getChatType()) {
             case ENTER -> enter(chatMessageDTO);
             case TALK -> talk(chatMessageDTO);
-            case LEAVE -> leave(chatMessageDTO);
+            case EXIT -> leave(chatMessageDTO);
         }
     }
     
@@ -184,10 +217,14 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findByRoomId(chatMessageDTO.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("방이 없습니다"));
 
-        String enterText = chatMessageDTO.getSenderNickname() + "님이 입장했습니다";
+        String senderNickname = chatMessageDTO.getSenderNickname();
+
+        String senderId = chatMessageDTO.getSenderId();
+
+        String enterText = senderId + "님이 입장했습니다";
 
         /* ② “OOO님이 입장했습니다” 시스템 메시지 저장 */
-        ChatMessage sysMsg = ChatMessage.systemMessage(chatRoom, enterText, ChatType.ENTER);
+        ChatMessage sysMsg = ChatMessage.systemMessage(chatRoom, enterText, senderNickname, senderId, ChatType.ENTER);
         chatMessageRepository.save(sysMsg);
 
         /* ③ 브로드캐스트  (/topic/{roomId}) */
@@ -226,15 +263,49 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findByRoomId(chatMessageDTO.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("방이 없습니다"));
 
-        String leaveText = chatMessageDTO.getContent() + "님이 퇴장했습니다.";
+        String senderNickname = chatMessageDTO.getSenderNickname();
+
+        String senderId = chatMessageDTO.getSenderId();
+
+        String leaveText = senderId + "님이 퇴장했습니다.";
 
         /* ② “OOO님이 퇴장했습니다” 시스템 메시지 */
         ChatMessage sysMsg = ChatMessage.systemMessage(
-                chatRoom, leaveText, ChatType.LEAVE);
+                chatRoom, leaveText, senderNickname, senderId, ChatType.EXIT);
         chatMessageRepository.save(sysMsg);
 
         /* ③ 브로드캐스트 */
         simpMessagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(),
                 ChatMessageResponseDTO.from(sysMsg));
     }
+
+    public List<ChatRoomParticipant> getUsersByRoomId(Long roomId) {
+        return chatRoomParticipantRepository.findByChatRoom_RoomIdAndExitedFalse(roomId);
+    }
+
+    @Service
+    public class FileStorageService {
+
+        @Value("${app.upload.dir}")
+        private String rootDir;
+
+        public String save(Long roomId, MultipartFile file) throws IOException {
+
+            // 1) 디렉터리 없으면 생성
+            Path roomPath = Paths.get(rootDir, String.valueOf(roomId));
+            Files.createDirectories(roomPath);
+
+            // 2) 파일명 생성
+            String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String filename = UUID.randomUUID() + "." + ext;
+
+            // 3) 복사
+            Path target = roomPath.resolve(filename);
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            // 4) 정적 리소스 URL 반환
+            return "/uploads/" + roomId + "/" + filename;     // 실제로는 CDN·S3 URL 등
+        }
+    }
+
 }

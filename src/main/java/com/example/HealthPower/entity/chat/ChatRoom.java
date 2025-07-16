@@ -1,5 +1,6 @@
 package com.example.HealthPower.entity.chat;
 
+import com.example.HealthPower.entity.User;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,27 +13,24 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(
-        name = "uk_private_pari", columnNames = {"participantA", "participantB"}))
+@Table
 public class ChatRoom {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; //숫자 pk 유지
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "room_id")
+    private Long roomId;
 
-    @Column(name = "room_id", nullable = false, unique = true)
-    private String roomId; // userA_userB 구조
-
-    @Column(nullable = false)
-    private String participantA;
-
-    @Column(nullable = false)
-    private String participantB;
+    @Column(nullable = false, unique = true)
+    private String name;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -43,26 +41,15 @@ public class ChatRoom {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public ChatRoom(String participantA, String participantB) {
-        if (participantA.compareTo(participantB) < 0) { //participantA < participantB
-            this.participantA = participantA;
-            this.participantB = participantB;
-        } else {
-            this.participantA = participantB;
-            this.participantB = participantA;
-        }
-        this.roomId = this.participantA + "_" + this.participantB;
-    }
+    @Column(nullable = false)
+    private String creatorId;
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        ChatRoom chatRoom = (ChatRoom) o;
-        return Objects.equals(roomId, chatRoom.roomId) && Objects.equals(participantA, chatRoom.participantA) && Objects.equals(participantB, chatRoom.participantB);
-    }
+    @ManyToMany
+    @JoinTable(name = "Chat_room_participant",
+            joinColumns = @JoinColumn(name = "chat_room_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(roomId, participantA, participantB);
-    }
+    private List<User> participants = new ArrayList<>();
+
 }

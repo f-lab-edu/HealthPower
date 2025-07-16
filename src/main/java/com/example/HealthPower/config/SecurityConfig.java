@@ -42,7 +42,6 @@ public class SecurityConfig {
         // REST API이므로 basic auth 및 csrf 보안을 사용하지 않음
         //csrf, cors, basichttp 비활성화
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/chat/exit/**"))
                 .csrf(AbstractHttpConfigurer::disable)
                 //.cors(AbstractHttpConfigurer::disable) form-data 테스트를 위해서 주석처리
                 .cors(cors -> {})
@@ -60,12 +59,12 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/hello").permitAll()
                         .requestMatchers("/health").permitAll()
+                        .requestMatchers("/s3/presign").permitAll()
                         .requestMatchers("/members/menu").permitAll()
                         .requestMatchers("/members/checkUserId", "/members/checkUserEmail", "/members/checkUserNickname").permitAll()
                         .requestMatchers("/members/joinSuccess").permitAll()
                         .requestMatchers("/members/login2").permitAll() //form login 테스트용
                         .requestMatchers("/", "/members/login", "/members/join", "/test", "/payment/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/static/**","/ws/**").permitAll() //정적자원 허용
                         .requestMatchers("/error/**").permitAll()
                         //나머지 모든 경로는 인증 필요
                         .anyRequest().authenticated()
