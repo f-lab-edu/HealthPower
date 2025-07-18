@@ -27,6 +27,8 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 - GitHub Actions → EC2 자동 JAR 빌드 & Docker
 - ELK연동을 통한 로그시스템 관리 구축
 - S3 presigned url Spring Boot (이미지 업로드 속도 개선)
+- Spring batch를 통한 일괄 처리
+- Spring MultiModule 방식으로 core와 api, infra로 구분
 ---
 
 # 사용기술
