@@ -28,7 +28,7 @@ HealthPower는 헬스인들을 위한 통합 플랫폼으로, 실시간 채팅, 
 - ELK연동을 통한 로그시스템 관리 구축
 - S3 presigned url Spring Boot (이미지 업로드 속도 개선)
 - Spring batch를 통한 일괄 처리 (만료된 쿠폰 자동 처리 및 하루 판매 물품 통계 저장, 장기간 미사용 유저 비활성화)
-- Spring MultiModule 방식으로 core와 api, infra로 구분
+- Spring MultiModule 방식으로 core, api, batch, infra로 구분
 ---
 
 # 사용기술
