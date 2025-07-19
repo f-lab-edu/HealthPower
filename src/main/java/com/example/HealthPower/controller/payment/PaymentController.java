@@ -45,23 +45,6 @@ public class PaymentController {
         return "payment";
     }
 
-    /*@PostMapping("/request")
-    public ResponseEntity<?> createOrder(@AuthenticationPrincipal UserDetailsImpl user,
-                                         @RequestBody Payment payment) {
-        String orderId = "order_" + UUID.randomUUID(); // or Toss 요구 포맷
-
-        paymentService.savePaymentInfoRedis(orderId, user.getUserId(), payment.getQuantity(), payment.getOrderName(), payment.getProductId());
-
-        // Toss 결제 페이지로 redirect URL 생성
-        return ResponseEntity.ok(Map.of(
-                "userId", user.getUserId(),
-                "orderId", orderId,
-                "orderName", payment.getOrderName(),
-                "amount", payment.getAmount(),
-                "redirectUrl", "http://localhost:8080/payment/success" // Toss SDK URL
-        ));
-    }*/
-
     @PostMapping("/request")
     @ResponseBody
     public Map<String, Object> createOrder2(@AuthenticationPrincipal UserDetailsImpl user,
@@ -82,10 +65,6 @@ public class PaymentController {
         res.put("amount", payment.getAmount());
         res.put("orderId", orderId);
         res.put("orderName", payment.getOrderName());
-       /* res.put("redirectUrl", "http://15.165.17.171:8080/payment");
-        res.put("successUrl", "http://15.165.17.171:8080/payment/success");
-        res.put("failUrl", "http://15.165.17.171:8080/payment/fail");*/
-
         res.put("redirectUrl", "http://3.39.61.129:8080/payment");
         res.put("successUrl", "http://3.39.61.129:8080/payment/success");
         res.put("failUrl", "http://3.39.61.129:8080/payment/fail");

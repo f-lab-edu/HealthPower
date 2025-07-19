@@ -5,7 +5,6 @@ import com.example.HealthPower.controller.api.ErrorResponse;
 import com.example.HealthPower.exception.user.UserException;
 import com.example.HealthPower.exception.user.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;

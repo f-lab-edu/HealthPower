@@ -13,12 +13,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class ChatMessageDTO {
-    private String roomId;
+    private Long roomId;
     private String senderId;
     private String receiverId;
     private String senderNickname;
     private String content;
-    private String photoUrl;
+    private String imageUrl;
     private String token;
     private MessageType type;
     private LocalDateTime timeStamp;
@@ -30,9 +30,8 @@ public class ChatMessageDTO {
     /* 엔티티 변환 */
     public ChatMessage toEntity(ChatRoom room) {
         return ChatMessage.builder()
-                .roomId(room.getRoomId())           // ★ 객체 주입
+                .chatRoom(room)           // ★ 객체 주입
                 .senderId(senderId)
-                .receiverId(receiverId)
                 .content(content)
                 .chatType(chatType)
                 .senderNickname(senderNickname)

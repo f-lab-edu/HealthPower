@@ -50,7 +50,7 @@ public class CommentService {
                         .userId(comment.getUser().getUserId())
                         .content(comment.getContent())
                         .nickname(comment.getUser().getNickname())
-                        .photoUrl(comment.getUser().getPhotoUrl())
+                        .imageUrl(comment.getUser().getImageUrl())
                         .createdAt(comment.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());

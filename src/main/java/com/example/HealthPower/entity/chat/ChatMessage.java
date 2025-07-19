@@ -21,8 +21,6 @@ public class ChatMessage {
 
     private String senderId;
 
-    private String receiverId;
-
     @Lob //대형 객체 데이터를 저장하기 위한 가변 길이 데이터 유형
     private String content;
 
@@ -36,27 +34,23 @@ public class ChatMessage {
     }
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false) // fk 타입 = BIGINT
-    @JoinColumn(name = "chat_room_id", nullable = false)
+    //@JoinColumn(name = "chat_room_id", nullable = false)
+    @JoinColumn(name = "roomId", nullable = false)
     private ChatRoom chatRoom;
 
     @Enumerated(EnumType.STRING)
     private ChatType chatType;
 
-    @Column(name = "room_id", nullable = false)
-    private String roomId;
-
     //public ChatMessage(String roomId, String senderId, String receiverId, String content) {
-    public ChatMessage(String senderId, String receiverId, String content, ChatRoom chatRoom) {
+    public ChatMessage(String senderId, String content, ChatRoom chatRoom) {
         this.senderId = senderId;
-        this.receiverId = receiverId;
         this.content = content;
         this.chatRoom = chatRoom;
     }
 
-    public ChatMessage(String roomId, String senderId, String receiverId, String content, LocalDateTime timeStamp, ChatRoom chatRoom) {
+    public ChatMessage(String senderId, String content, LocalDateTime timeStamp, ChatRoom chatRoom) {
         this.chatRoom = chatRoom;
         this.senderId = senderId;
-        this.receiverId = receiverId;
         this.content = content;
         this.sentAt = timeStamp;
     }
@@ -67,11 +61,15 @@ public class ChatMessage {
     public static ChatMessage systemMessage(
             ChatRoom chatRoom,
             String text,
+            String senderNickname,
+            String senderId,
             ChatType chatType) {
         return ChatMessage.builder()
                 .chatRoom(chatRoom)
-                .roomId(chatRoom.getRoomId())
                 .content(text)
+                .senderNickname(senderNickname)
+                .senderId(senderId)
+                .sentAt(LocalDateTime.now())
                 .chatType(chatType)
                 .build();
     }
@@ -79,12 +77,11 @@ public class ChatMessage {
     // 일반 TALK 메시지
     public static ChatMessage userMessage(ChatMessageDTO chatMessageDTO, ChatRoom chatRoom) {
         return ChatMessage.builder()
-                .chatRoom(chatRoom)                     // ★ FK 세팅
-                .roomId(chatRoom.getRoomId())
+                .chatRoom(chatRoom)// ★ FK 세팅
                 .senderId(chatMessageDTO.getSenderId())
-                .receiverId(chatMessageDTO.getReceiverId())
                 .content(chatMessageDTO.getContent())
                 .chatType(chatMessageDTO.getChatType())
+                .sentAt(chatMessageDTO.getTimeStamp())
                 .build();
     }
 }

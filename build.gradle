@@ -64,10 +64,21 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
 
+	//kafka
+	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
+
 	// AWS SDK 사용 시 자주 같이 쓰이는 필수 의존성
 	implementation "software.amazon.awssdk:s3:$awsSdkVersion"
 	implementation "software.amazon.awssdk:auth:$awsSdkVersion"
 	implementation "software.amazon.awssdk:regions:$awsSdkVersion"
+
+	//iamport
+	implementation 'com.github.iamport:iamport-rest-client-java:0.2.21'
+
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.json:json:20240303'
 }
 
 tasks.named('test') {

@@ -79,15 +79,16 @@
 
         <div>
             <label>프로필 사진:</label>
-            <input type="file" th:field="*{photo}" accept="image/*" />
+            <input type="file" class="form-control" id="photoInput" accept="image/*" />
         </div>
+            <input type="hidden" name="imageUrl" id="imageUrl">
         <button type="submit">가입하기</button>
     </form>
 </body>
 <script>
     function checkDuplicate(inputId, messageId, apiUrl) {
-    const value = document.getElementById(inputId).value;
-    const msgDiv = document.getElementById(messageId);
+        const value = document.getElementById(inputId).value;
+        const msgDiv = document.getElementById(messageId);
 
     if (!value) {
         msgDiv.textContent = "";
@@ -162,5 +163,41 @@
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
+
+    const photoInput = document.getElementById("photoInput");
+    const imageUrlInput = document.getElementById("imageUrl");
+
+    photoInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const filename = `${Date.now()}_${file.name}`;
+        const folder = "userPhoto";
+        const contentType = file.type;
+
+    try {
+      // 1. Presigned URL 요청
+      const res = await fetch(`/s3/presign?folder=${folder}&filename=${filename}&contentType=${encodeURIComponent(contentType)}`);
+      const { presignedUrl, staticUrl } = await res.json();
+
+      // 2. S3로 직접 업로드
+      const uploadRes = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type
+        },
+        body: file
+      });
+
+      if (uploadRes.ok) {
+        alert("✅ 이미지 업로드 성공");
+        imageUrlInput.value = staticUrl; // 서버로 보낼 키 저장
+      } else {
+        alert("❌ 이미지 업로드 실패");
+      }
+    } catch (err) {
+      alert("에러 발생: " + err.message);
+    }
+    });
 </script>
 </html>

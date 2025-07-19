@@ -33,10 +33,7 @@ public class JoinController2 {
     }
 
     // form-data 방식으로 회원가입 + 사진 업로드
-    @PostMapping(
-            value = "/join",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
+    @PostMapping(value = "/join")
     public String join(
             @Validated @ModelAttribute JoinDTO joinDTO,
             BindingResult bindingResult

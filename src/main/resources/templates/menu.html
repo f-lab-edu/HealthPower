@@ -6,12 +6,8 @@
 </head>
 <body>
     <div th:replace="fragments/header :: user-status"></div>
-    <!--<a th:href="@{/board/product}">상품게시판</a>
-    <a th:href="@{/payment}">결제하기</a>
-    <a th:href="@{/chat/list}">채팅하기</a>
--->
     <a href="javascript:void(0);" onclick="secureNavigate('/board/product')">상품게시판</a><br>
-    <a href="javascript:void(0);" onclick="secureNavigate('/chat/list')">채팅하기</a>
+    <a href="javascript:void(0);" onclick="secureNavigate('/chat/chatList')">채팅하기</a>
 </body>
 <script th:src="@{/js/common.js}"></script>
 </html>

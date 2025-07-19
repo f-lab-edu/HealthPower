@@ -1,5 +1,6 @@
 package com.example.HealthPower.jwt;
 
+import com.example.HealthPower.dto.login.LoginDTO;
 import com.example.HealthPower.dto.user.UserDTO;
 import com.example.HealthPower.impl.UserDetailsImpl;
 import com.example.HealthPower.repository.UserRepository;
@@ -7,12 +8,14 @@ import com.example.HealthPower.userType.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -74,6 +77,8 @@ public class JwtTokenProvider {
                 .claim("auth", authorities)
                 .claim("userId", userDTO.getUserId())
                 .claim("id", userDTO.getId())
+                .claim("nickname", userDTO.getNickname())
+                .claim("email", userDTO.getEmail())
                 .signWith(key, SignatureAlgorithm.HS256) //key 값이 서버에서 검증하는 key 값과 동일해야 함.
                 .setExpiration(accessTokenExpiresln)
                 .compact();
@@ -94,7 +99,7 @@ public class JwtTokenProvider {
 
         //id설정을 어떻게 해줘야하지?
         return JwtToken.builder()
-                .userId(userDTO.getUserId()) //왜 return 시 userId가 null이 되지?
+                .userId(userDTO.getUserId())
                 .grantType("Bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -108,6 +113,8 @@ public class JwtTokenProvider {
 
         String jti = UUID.randomUUID().toString(); // 고유한 JWT ID 생성
 
+        String userId = authentication.getName();
+
         long now = (new Date()).getTime();
         Date validity = new Date(now + 86400000);
 
@@ -115,8 +122,10 @@ public class JwtTokenProvider {
                 .setSubject(authentication.getName())
                 .claim("auth", authorities)
                 .claim("jti", jti)
-                .claim("userId",authentication.getPrincipal()) //마이페이지를 위해 추가
-                .signWith(key, SignatureAlgorithm.HS512)
+                //.claim("userId",authentication.getPrincipal()) //마이페이지를 위해 추가
+                .claim("userId", userId) //제대로 된 userId
+                .signWith(key, SignatureAlgorithm.HS256)
+                //.signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();
     }

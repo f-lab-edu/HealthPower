@@ -139,10 +139,6 @@ public class BoardController {
             return "/board/product";
         }
 
-        String imageUrl = s3Uploader.uploadFile(productDTO.getPhoto(), "product-image");
-
-        productDTO.setPhotoUrl(imageUrl);
-
         postService.createProduct(productDTO, currentUser);
 
         return "redirect:/board/product";
@@ -201,7 +197,6 @@ public class BoardController {
     public String updateProduct2(@PathVariable("id") Long id,
                                  @Valid @ModelAttribute("productDTO") ProductDTO productDTO,
                                  @LoginUser UserDTO loginUser,
-                                 @RequestParam(value = "photo", required = false) MultipartFile photo,
                                  BindingResult bindingResult,
                                  RedirectAttributes redirectAttributes) throws IOException {
 
@@ -214,7 +209,7 @@ public class BoardController {
         UserDetailsImpl userDetails = (UserDetailsImpl) principal;
         String userId = userDetails.getUserId();
 
-        postService.updateProduct(id, userId, photo, productDTO);
+        postService.updateProduct(id, userId, productDTO);
 
         redirectAttributes.addFlashAttribute("msg", "상품 수정이 완료되었습니다.");
 

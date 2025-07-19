@@ -2,6 +2,12 @@ spring:
   config:
     activate:
       on-profile: local
+  mvc:
+    locale: ko_KR
+    locale-resolver: fixed
+    hiddenmethod:
+      filter:
+        enabled: true
   application:
     name: HealthPower
   thymeleaf:
@@ -20,6 +26,17 @@ spring:
   redis:
     host: localhost
     port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.example.HealthPower.kafka
+        spring.json.value.default.type: com.example.HealthPower.kafka.CouponIssuedEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   session:
     store-type: redis
 jwt:
@@ -37,9 +54,6 @@ servlet:
     enabled: true
     max-file-size: 10MB
     max-request-size: 10MB
-mvc:
-  locale: ko_KR
-  locale-resolver: fixed
 http:
   encoding:
     force: true

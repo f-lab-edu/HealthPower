@@ -32,8 +32,8 @@ public class Board {
 
     private String photo; //게시물 사진
 
-    @Column(name = "photo_url")
-    private String photoUrl;
+    @Column(name = "image_url")
+    private String imageUrl;
 
     private String status; // 게시물 상태
 }

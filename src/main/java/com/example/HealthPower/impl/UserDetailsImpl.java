@@ -1,6 +1,8 @@
 package com.example.HealthPower.impl;
 
 import com.example.HealthPower.entity.User;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,10 +10,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.Collection;
 
-
 @Getter
 //UserDetails => Spring Security에서 인증 및 권한 부여에 필요한 사용자 정보를 제공하는 인터페이스
 //구현 시 인증과 권한 검사를 수행
+@AllArgsConstructor
+@Builder
 public class UserDetailsImpl implements UserDetails {
 
     private final User user;
@@ -19,22 +22,21 @@ public class UserDetailsImpl implements UserDetails {
     // 기존 생성자 (User 객체만 받는 경우)
     public UserDetailsImpl(User user) {
         this.user = user;
-        this.userId = user.getUserId();  // User 객체에서 userId를 추출
-        this.authorities = new ArrayList<>(user.getAuthorities());  // User 객체에서 권한을 추출
+        this.userId = user.getUserId();
+        this.nickname = user.getNickname();
+        this.authorities = new ArrayList<>(user.getAuthorities());
     }
 
     // userId와 authorities를 받는 생성자 추가
     public UserDetailsImpl(String subject, String id, Collection<GrantedAuthority> authorities, String userId) {
-        this.user = null;  // 실제 User 객체를 저장하지 않음
+        this.user = null;
         this.username = subject;
-        this.userId = userId;  // 외부에서 전달된 userId 설정
-        this.authorities = authorities; // 외부에서 전달된 권한 설정
+        this.userId = userId;
+        this.authorities = authorities;
         this.id = id;
     }
 
     //임의로 설정
-    private static final long serialVersionUID = 174726374856727L;
-
     private String id;	// DB에서 PK 값
     private String userId;		// 로그인용 ID 값
     private String password;    // 비밀번호
@@ -59,9 +61,6 @@ public class UserDetailsImpl implements UserDetails {
 
     //pk값
     @Override
-    /*public String getUsername() {
-        return id;
-    }*/
     public String getUsername() {
         return userId;
     }
