@@ -1,44 +1,41 @@
 package com.example.HealthPower.controller.chat;
 
 import com.example.HealthPower.chatType.ChatType;
-import com.example.HealthPower.dto.chat.ChatMessageDTO;
-import com.example.HealthPower.dto.chat.ChatRoomListItemDTO;
-import com.example.HealthPower.dto.user.UserDTO;
+import com.example.HealthPower.dto.chat.*;
 import com.example.HealthPower.entity.User;
 import com.example.HealthPower.entity.chat.ChatMessage;
 import com.example.HealthPower.entity.chat.ChatRoom;
+import com.example.HealthPower.entity.chat.ChatRoomParticipant;
 import com.example.HealthPower.impl.UserDetailsImpl;
+import com.example.HealthPower.impl.UserDetailsServiceImpl;
 import com.example.HealthPower.jwt.JwtTokenProvider;
+import com.example.HealthPower.chatetc.PresenceStore;
+import com.example.HealthPower.repository.ChatMessageRepository;
+import com.example.HealthPower.repository.ChatRoomRepository;
 import com.example.HealthPower.repository.UserRepository;
 import com.example.HealthPower.service.ChatService;
-import com.example.HealthPower.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.*;
 import org.springframework.messaging.simp.SimpAttributesContextHolder;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -48,52 +45,48 @@ public class ChatController {
 
     private final UserRepository userRepository;
     private final ChatService chatService;
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsServiceImpl userDetailsService;
+    private final ChatService.FileStorageService fileStorage;
+    private final PresenceStore store;
 
-    @GetMapping("/enter/{targetUserId}")
-    public String enterChatRoom(@AuthenticationPrincipal UserDetailsImpl user,
-                                @PathVariable("targetUserId") String targetUserId,
-                                RedirectAttributes redirectAttributes) {
-        try {
-            ChatRoom chatRoom = chatService.createRoomId(user.getUserId(), targetUserId);
-            return "redirect:/chat/" + chatRoom.getRoomId();
-        } catch (IllegalStateException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/chat/list"; // 에러 메시지와 함께 목록으로 리디렉션
-        }
+    @Value("${jwt.secret}")
+    private String secret;
+
+    @GetMapping("/create")
+    public String createChatRoom(Model model) {
+        model.addAttribute("users", userRepository.findAll());
+        return "chat/createRoom";
     }
 
-    /*@MessageMapping("/chat.send")
-    public void sendMessage(@Payload ChatMessageDTO chatMessageDTO,
-                            @Header("simpSessionAttributes") Map<String, Object> sessionAttributes) {
+    @PostMapping("/create")
+    public String createChatRoom(@AuthenticationPrincipal UserDetailsImpl user,
+                                 @ModelAttribute ChatRoomDTO chatRoomDTO) {
 
-        String userId = (String) sessionAttributes.get("userId");
+        Long roomId = chatService.createRoom(chatRoomDTO.getName(), user.getUserId());
 
-        User sender = chatService.getByUserId(userId);
+        return "redirect:/chat/chatRoom/" + roomId;
+    }
 
-        ChatRoom chatRoom = chatService.getChatRoomByRoomId(chatMessageDTO.getRoomId());
+    //로그인 유저의 채팅방 목록
+    @GetMapping("/rooms")
+    public String roomList(@RequestParam("userId") Long userId, Model model) {
+        User user = userRepository.findById(userId).orElseThrow(()->new IllegalArgumentException("사용자 없음"));
 
-        ChatMessageDTO enrichedMessage = ChatMessageDTO.builder()
-                .roomId(chatMessageDTO.getRoomId())
-                .senderId(sender.getUserId())
-                .senderNickname(sender.getNickname())
-                .photoUrl(sender.getPhotoUrl())
-                .receiverId(chatMessageDTO.getReceiverId())
-                .content(chatMessageDTO.getContent())
-                .timeStamp(java.time.LocalDateTime.now())
-                .build();
+        model.addAttribute("rooms", user.getChatRooms());
+        model.addAttribute("userId", user.getId());
 
-        chatService.save(chatRoom, enrichedMessage);
-        messagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(), enrichedMessage);
-
-        System.out.println("토로로롱");
-    }*/
+        return "chat/chatList";
+    }
 
     //메세지 내역 불러오기
-    @GetMapping("/{roomId}")
-    public String enterChatRoom(@PathVariable String roomId,
+    @GetMapping("/chatRoom/{roomId}")
+    public String enterChatRoom(@PathVariable Long roomId,
                                 HttpServletRequest request,
+                                Authentication authentication,
                                 @AuthenticationPrincipal UserDetailsImpl user,
                                 RedirectAttributes redirectAttributes,
                                 Model model) {
@@ -102,69 +95,86 @@ public class ChatController {
 
         if (!allowed) {
             redirectAttributes.addFlashAttribute("msg", "이미 나간 채팅방입니다.");
-            return "redirect:/chat/list";
+            return "redirect:/chat/chatList";
         }
+
+        String jwt = jwtTokenProvider.createToken(authentication);
 
         ChatRoom room = chatService.getChatRoomByRoomId(roomId);
 
-        /*List<ChatMessage> chatHistory = chatService.getMessages(roomId);*/
         List<ChatMessage> chatHistory = chatService.getMessages(room);
 
+        List<ChatRoomParticipant> users = chatService.getUsersByRoomId(roomId);
+
+        model.addAttribute("jwt", jwt);
         model.addAttribute("roomId", roomId);
-        model.addAttribute("currentUserId", user.getUserId());
-        model.addAttribute("jwt", request.getHeader("Authorization"));
-
-        // roomId로 상대방 ID 추출 (user1_user2 구조 활용)
-        /*String[] ids = roomId.split("_");
-        String receiverId = ids[0].equals(user.getUserId()) ? ids[1] : ids[0];
-        model.addAttribute("receiverId", receiverId);*/
-
-        String receiverId = room.getParticipantA().equals(user.getUserId())
-                ? room.getParticipantB() : room.getParticipantA();
-
-        //상대방 정보 가져오기
-        User partner = chatService.getByUserId(receiverId);
-        model.addAttribute("receiverId", receiverId);
-        model.addAttribute("partnerName", partner.getUsername());
-        model.addAttribute("partnerPhoto", partner.getPhotoUrl());
-
+        model.addAttribute("roomName", room.getName());
+        model.addAttribute("users", users);
         model.addAttribute("messages", chatHistory);
+        model.addAttribute("senderNickname", user.getNickname());
+        model.addAttribute("currentUserId", user.getUserId());
 
-        return "chatRoom";
+        return "chat/chatRoom";
+    }
+
+    @MessageMapping("chatRoom/{roomId}")
+    public void enter(@DestinationVariable Long roomId, Principal principal) {
+        String userId = principal.getName();
+        String nickname = String.valueOf(userDetailsService.loadUserByUsername(userId));
+        store.addUser(roomId, new ChatUserDTO(userId, nickname));
+
+        //채팅방에 참가자 명단 전송
+        messagingTemplate.convertAndSend("/topic/room/" + roomId+"/users", store.getUsers(roomId));
     }
 
     //채팅방 목록
-    @GetMapping("/list")
+    @GetMapping("/chatList")
     @PreAuthorize("isAuthenticated()")
     public String myChatRooms(@AuthenticationPrincipal UserDetailsImpl user,
                               Model model) {
+
+        // ① 내가 참가 중인 모든 방 (participant 기준)
         List<ChatRoomListItemDTO> chatRooms = chatService.getRoomsByUser(user.getUserId())
                 .stream().sorted(Comparator.comparing(dto ->
                                 dto.getChatRoom().getUpdatedAt(),
                         Comparator.reverseOrder()))
                 .toList();
 
+        List<ChatRoomListItemDTO> chatRoomOthers = chatService.getRoomsUserNotJoined(user.getUserId())
+                .stream().sorted(Comparator.comparing(dto ->
+                                dto.getChatRoom().getUpdatedAt(),
+                        Comparator.reverseOrder()))
+                .toList();
+
+        // ② 내가 만든 방
+        List<ChatRoomListItemDTO> myRooms = chatRooms.stream()
+                .filter(r -> r.getChatRoom().getCreatorId().equals(user.getUserId())).toList();
+
+        // 다른 사람이 만든 방 분리
+        List<ChatRoomListItemDTO> otherRooms = chatRoomOthers.stream()
+                .filter(r -> !r.getChatRoom().getCreatorId().equals(user.getUserId())).toList();
+
         List<User> userList = userRepository.findAll()
                 .stream()
                 .filter(u -> !u.getUserId().equals(user.getUserId()))
                 .toList();
 
-        model.addAttribute("chatrooms", chatRooms);
+        model.addAttribute("chatRooms", chatRooms);
+        model.addAttribute("myRooms", myRooms);
+        model.addAttribute("otherRooms", otherRooms);
         model.addAttribute("currentUserId", user.getUserId());
-        model.addAttribute("userList", userList);
-        return "chatList";
+
+        return "chat/chatList";
     }
 
     //채팅방 나가기
     @PostMapping("/exit/{roomId}")
     public String exitRoom(@AuthenticationPrincipal UserDetailsImpl user,
-                           @PathVariable String roomId) {
-        log.info("채팅방 나가기 요청: roomId={}, userId={}", roomId, user.getUserId());
-
+                           @PathVariable Long roomId) {
         ChatRoom chatRoom = chatService.getChatRoomByRoomId(roomId);
         chatService.markUserExited(chatRoom, user.getUserId());
 
-        return "redirect:/chat/list";
+        return "redirect:/chat/chatList";
     }
 
     @MessageMapping("/chat.send")
@@ -172,12 +182,27 @@ public class ChatController {
                             Principal principal) {
 
         // ① 인증 유저 → senderId 주입
+        ChatRoom chatRoom = chatRoomRepository.findByRoomId(chatMessageDTO.getRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+        ChatMessage chatMessage = ChatMessage.userMessage(chatMessageDTO, chatRoom);
+
+
         String senderId = principal.getName();
+
+        User user = userRepository.findByUserId(senderId).orElse(null);
+
         chatMessageDTO.setSenderId(senderId);
+        chatMessageDTO.setTimeStamp(chatMessage.getSentAt());
+        chatMessageDTO.setImageUrl(user.getImageUrl());
+
+        chatMessageRepository.save(chatMessage);
+
+        messagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(), chatMessageDTO);
 
         // ② roomId 누락 방지 – 클라이언트가 안 줬다면 URL/Session 로부터
         if (chatMessageDTO.getRoomId() == null) {
-            String roomId = (String) SimpAttributesContextHolder.currentAttributes()
+            Long roomId = (Long) SimpAttributesContextHolder.currentAttributes()
                     .getAttribute("roomId");
             chatMessageDTO.setRoomId(roomId);
         }
@@ -195,15 +220,40 @@ public class ChatController {
 
     @MessageMapping("/chat.exit")
     public void exitRoom(ChatMessageDTO chatMessageDTO) {
-        chatMessageDTO.setChatType(ChatType.LEAVE);
+        chatMessageDTO.setChatType(ChatType.EXIT);
         chatService.handle(chatMessageDTO);
+    }
+
+    @PostMapping(value = "/upload", consumes= "multipart/form-data")
+    public ResponseEntity<Void> upload(ChatMessageDTO chatMessageDTO, @RequestPart("file") MultipartFile file) throws IOException {
+
+        String url = fileStorage.save(chatMessageDTO.getRoomId(), file);
+
+        ChatRoom chatRoom = chatRoomRepository.findByRoomId(chatMessageDTO.getRoomId())
+                .orElseThrow(() -> new IllegalArgumentException("방이 존재하지 않습니다."));
+
+        ChatMessage msg = ChatMessage.builder()
+                .chatRoom(chatRoom)
+                .senderId(chatMessageDTO.getSenderId())
+                .senderNickname(chatMessageDTO.getSenderNickname())
+                .chatType(ChatType.IMAGE)
+                .content(url)
+                .sentAt(LocalDateTime.now())
+                .build();
+        chatMessageRepository.save(msg);
+
+        messagingTemplate.convertAndSend("/topic/" + chatMessageDTO.getRoomId(), of(msg));
+
+        return ResponseEntity.ok().build();
+    }
+
+    private Object of(ChatMessage msg) {
+        return msg;
     }
 
     public ChatMessage toEntity(ChatMessageDTO chatMessageDTO) {
         return ChatMessage.builder()
-                .roomId(chatMessageDTO.getRoomId())
                 .senderId(chatMessageDTO.getSenderId())
-                .receiverId(chatMessageDTO.getReceiverId())
                 .content(chatMessageDTO.getContent())
                 .chatType(chatMessageDTO.getChatType())
                 .build();

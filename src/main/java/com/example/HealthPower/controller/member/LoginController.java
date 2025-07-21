@@ -24,7 +24,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-/*@RestController*/ //@Controller에 @ResponseBody가 추가된 것 + Json 형태로 객체 데이터를 반환
+//@RestController //@Controller에 @ResponseBody가 추가된 것 + Json 형태로 객체 데이터를 반환
 @RequiredArgsConstructor
 @RequestMapping("/members")
 @Controller //는 주로 View를 반환하기 위해서 사용

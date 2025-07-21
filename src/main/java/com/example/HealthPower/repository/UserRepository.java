@@ -4,6 +4,7 @@ import com.example.HealthPower.dto.user.UserModifyDTO;
 import com.example.HealthPower.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -23,4 +24,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUserId(String username);
 
     User getReferenceByUserId(String senderId);
+
+    List<User> findAllByUserIdIn(List<String> userIds);
 }

@@ -1,5 +1,6 @@
 package com.example.HealthPower.entity;
 
+import com.example.HealthPower.entity.chat.ChatRoom;
 import com.example.HealthPower.userType.Gender;
 import com.example.HealthPower.userType.Role;
 import jakarta.persistence.*;
@@ -10,8 +11,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @Entity
 /*@Table(name = "user")*/
@@ -49,8 +52,8 @@ public class User implements UserDetails{
     @Column(name = "address")
     private String address;
 
-    @Column(name = "photo_url")
-    private String photoUrl;
+    @Column(name = "image_url")
+    private String imageUrl;
 
     @Column(name = "photo_path")
     private String photoPath;
@@ -80,6 +83,9 @@ public class User implements UserDetails{
     private boolean activated;
 
     private Collection<? extends GrantedAuthority> authorities;
+
+    @ManyToMany(mappedBy = "participants")
+    private List<ChatRoom> chatRooms = new ArrayList<>();
 
    /* @ManyToMany
     @JoinTable(

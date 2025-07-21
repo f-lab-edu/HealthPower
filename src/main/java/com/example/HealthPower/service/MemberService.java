@@ -70,7 +70,7 @@ public class MemberService {
             throw new DuplicateMemberException("이미 가입되어 있는 아이디입니다.");
         }
 
-        String uploadedUrl = s3Uploader.uploadFile(joinDTO.getPhoto(), "userPhoto");
+        String uploadedUrl = joinDTO.getImageUrl();
 
         // Role 값에 따라 authorities 지정
         List<GrantedAuthority> authorities = new ArrayList<>();
@@ -94,17 +94,11 @@ public class MemberService {
                 .birth(joinDTO.getBirth())
                 .gender(joinDTO.getGender())
                 .balance(0L)
-                .photoUrl(uploadedUrl)
+                .imageUrl(uploadedUrl)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         User joinedUser = userRepository.save(user);
-
-        //프로필 이미지가 있으면 저장
-        MultipartFile file = joinDTO.getPhoto();
-        if (file != null && !file.isEmpty()) {
-            storeProfileImage(joinedUser, file);
-        }
 
         return JoinDTO.from(joinedUser);
     }
@@ -298,10 +292,10 @@ public class MemberService {
 
         System.out.println("🔑 accessKey: " + System.getenv("AWS_ACCESS_KEY"));
 
-        MultipartFile file = userModifyDTO.getPhoto();
-        if (file != null && !file.isEmpty()) {
-            String uploadedUrl = s3Uploader.uploadFile(file, "userPhoto");
-            user.setPhotoUrl(uploadedUrl);
+        String uploadedUrl = userModifyDTO.getImageUrl();
+
+        if (StringUtils.hasText(uploadedUrl)) {
+            user.setImageUrl(uploadedUrl);
         }
 
         log.info("DTO 전체: {}", userModifyDTO); // toString() 자동 생성 시 사용 가능

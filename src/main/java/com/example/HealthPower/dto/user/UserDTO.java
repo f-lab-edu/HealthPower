@@ -25,7 +25,7 @@ public class UserDTO {
 
     private MultipartFile photo;
 
-    private String photoUrl;
+    private String imageUrl;
 
     private String userId;
 
@@ -64,7 +64,7 @@ public class UserDTO {
     public static UserDTO of(User user) {
         return UserDTO.builder()
                 .userId(user.getUserId())
-                .photoUrl(user.getPhotoUrl())
+                .imageUrl(user.getImageUrl())
                 .nickname(user.getNickname())
                 .address(user.getAddress())
                 .balance(user.getBalance())

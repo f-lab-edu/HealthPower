@@ -8,19 +8,20 @@
 <div>
     <div th:replace="fragments/header :: user-status"></div>
 
-    <form th:action="@{/members/myInfoUpdate2}" method="post" enctype="multipart/form-data" th:object="${userModifyDTO}">
+    <form th:action="@{/members/myInfoUpdate2}" method="post" th:object="${userModifyDTO}" enctype="multipart/form-data">
         <input type="hidden" name="_method" value="PUT"/>
         <div>
             <label>프로필 사진</label>
-            <img th:if="*{photoUrl}"
-                 th:src="*{photoUrl}" width="150" alt="프로필"/>
+            <img th:if="*{imageUrl}"
+                 th:src="*{imageUrl}" width="150" alt="프로필"/>
 
-            <img th:unless="*{photoUrl != null}"
+            <img th:unless="*{imageUrl != null}"
                  th:src="@{/images/default-profile.png}" width="150" alt="기본 프로필"/>
         </div>
             <span><label>프로필 사진 업로드</label>
-            <input type="file" name="photo">
+            <input type="file" id="photoInput" accept="image/*">
             </span>
+        <input type="hidden" name="imageUrl" id="imageUrl">
         <div>
             <label>이메일</label>
             <input type="email" name="email" th:field="*{email}">
@@ -60,6 +61,12 @@
         </div>
 
         <div>
+            <label>계정 활성화</label>
+            <label><input type="radio" th:field="*{activated}" value="1">활성화</label>
+            <label><input type="radio" th:field="*{activated}" value="0">비활성화</label>
+        </div>
+
+        <div>
             <label>주소</label>
             <input type="text" name="address" th:field="*{address}">
         </div>
@@ -94,4 +101,41 @@
     </div>
 </div>
 </body>
+<script>
+    const photoInput = document.getElementById("photoInput");
+    const imageUrlInput = document.getElementById("imageUrl");
+
+    photoInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const filename = `${Date.now()}_${file.name}`;
+      const folder = "userPhoto";
+      const contentType = file.type;
+
+      try {
+        const res = await fetch(`/s3/presign?folder=${folder}&filename=${filename}&contentType=${encodeURIComponent(contentType)}`);
+        const { presignedUrl, staticUrl } = await res.json();
+
+        const uploadRes = await fetch(presignedUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type,
+          },
+          body: file,
+        });
+
+        if (uploadRes.ok) {
+          alert("✅ 프로필 이미지 업로드 성공");
+          imageUrlInput.value = staticUrl;
+        } else {
+          alert("❌ 이미지 업로드 실패");
+          throw new Error(`S3 업로드 실패 - 상태코드: ${uploadRes.status}`);
+        }
+      } catch (err) {
+        console.error("업로드 실패", err);
+        alert("에러: " + err.message);
+      }
+    });
+</script>
 </html>

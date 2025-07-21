@@ -24,20 +24,22 @@ public class ChatRoomParticipant {
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "exited")
-    private boolean exited = false;
+    private boolean owner;
+
+    private boolean exited;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    public static ChatRoomParticipant of(ChatRoom room, User user, boolean exited) {
+    public static ChatRoomParticipant of(ChatRoom room, User user, boolean owner) {
         ChatRoomParticipant chatRoomParticipant = new ChatRoomParticipant();
         chatRoomParticipant.chatRoom = room;
         chatRoomParticipant.user = user;
-        chatRoomParticipant.exited = exited;
+        chatRoomParticipant.owner = owner;
+        chatRoomParticipant.exited = false;
         return chatRoomParticipant;
     }
 

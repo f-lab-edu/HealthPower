@@ -29,9 +29,7 @@ public class UserModifyDTO {
     @NotBlank(message = "닉네임은 필수 입력 값입니다.")
     private String nickname;
 
-    private MultipartFile photo;
-
-    private String photoUrl;
+    private String imageUrl;
 
     private String address;
 

@@ -58,7 +58,7 @@ public class JoinDTO {
     @NotNull(message = "성별은 필수 입력 값입니다.")
     private Gender gender;
 
-    private MultipartFile photo;
+    private String imageUrl; //s3:presign형식으로 업로드
 
     private Collection<GrantedAuthority> authorities;
 
@@ -100,19 +100,4 @@ public class JoinDTO {
     }
 
 }
-
-    /*public User toEntity() {
-        return User.builder()
-                .userId(userId)
-                .email(email)
-                .username(username)
-                .nickname(nickname)
-                .password(password)
-                .phoneNumber(phoneNumber)
-                .address(address)
-                .birth(birth)
-                .photo(photo)
-                .authorities(authorities)
-                .createdAt(createdAt)
-                .build();*/
 
