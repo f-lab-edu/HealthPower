@@ -45,6 +45,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   session:
     store-type: redis
+#    실서버수정
 jwt:
   secret: ""
 

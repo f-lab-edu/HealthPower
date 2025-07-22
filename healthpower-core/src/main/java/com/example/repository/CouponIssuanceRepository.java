@@ -5,10 +5,11 @@ import com.example.entity.coupon.Coupon;
 import com.example.entity.coupon.CouponIssuance;
 import com.example.enumpackage.CouponStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+@Repository
 public interface CouponIssuanceRepository extends JpaRepository<CouponIssuance, Long> {
     // 별도 작성 필요 없음: saveAll() 사용
     boolean existsByCouponIdAndUserId(long couponId, User user);

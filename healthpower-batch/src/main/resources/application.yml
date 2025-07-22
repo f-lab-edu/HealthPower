@@ -17,5 +17,7 @@ spring:
       root: info
       com.example: info
   batch:
+    job:
+      name: inactiveUserJob
     jdbc:
       initialize-schema: always

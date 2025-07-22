@@ -78,6 +78,9 @@ public class User /*implements UserDetails*/ {
     @Column(name = "activated")
     private boolean activated;
 
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+
     /*@ManyToMany(mappedBy = "participants")
     private List<ChatRoom> chatRooms = new ArrayList<>();*/
 

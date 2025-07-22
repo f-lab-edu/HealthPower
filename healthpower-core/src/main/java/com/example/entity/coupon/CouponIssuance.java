@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,6 +20,8 @@ public class CouponIssuance {
     @Id
     @GeneratedValue
     private Long id;
+
+    private String name;
 
     @Column(name = "issued_at")
     private Instant issuedAt;
@@ -52,6 +53,7 @@ public class CouponIssuance {
 
     public void markAsExpired() {
         this.status = CouponStatus.EXPIRED;
+        this.isExpired = true;
     }
 
     public void expire() {
@@ -60,6 +62,7 @@ public class CouponIssuance {
         }
 
         this.status = CouponStatus.EXPIRED;
+        this.isExpired = true;
     }
 
     public boolean isExpire() {
