@@ -1,6 +1,7 @@
 package com.example.entity.chat;
 
 import com.example.entity.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,11 +22,13 @@ public class ChatRoomParticipant {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id", nullable = false)
+    @JsonBackReference
     private ChatRoom chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    /*@JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)*/
-    @JoinColumn(name = "user_id", nullable = false)
+    //User엔티티의 userId는 String 타입이므로
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     private boolean owner;

@@ -73,7 +73,7 @@ public class CouponService {
                 .coupon(coupon)
                 .user(user)
                 .issuedAt(Instant.now())
-                .expiredAt(LocalDateTime.now().plusDays(3))
+                .expiredAt(Instant.now().plusSeconds(259200)) //3일
                 .status(CouponStatus.ACTIVE)
                 .isExpired(false)
                 .build();
@@ -101,7 +101,7 @@ public class CouponService {
 
         //사용처리
         couponIssuance.setStatus(CouponStatus.USED);
-        couponIssuance.setUsedAt(LocalDateTime.now());
+        couponIssuance.setUsedAt(Instant.now());
     }
 
     //할인 금액 계산

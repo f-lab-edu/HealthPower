@@ -217,14 +217,12 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findByRoomId(chatMessageDTO.getRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("방이 없습니다"));
 
-        String senderNickname = chatMessageDTO.getSenderNickname();
-
         String senderId = chatMessageDTO.getSenderId();
 
         String enterText = senderId + "님이 입장했습니다";
 
         /* ② “OOO님이 입장했습니다” 시스템 메시지 저장 */
-        ChatMessage sysMsg = ChatMessage.systemMessage(chatRoom, enterText, senderNickname, senderId, ChatType.ENTER);
+        ChatMessage sysMsg = ChatMessage.systemMessage(chatRoom, enterText, senderId, ChatType.ENTER);
         chatMessageRepository.save(sysMsg);
 
         /* ③ 브로드캐스트  (/topic/{roomId}) */
@@ -271,7 +269,7 @@ public class ChatService {
 
         /* ② “OOO님이 퇴장했습니다” 시스템 메시지 */
         ChatMessage sysMsg = ChatMessage.systemMessage(
-                chatRoom, leaveText, senderNickname, senderId, ChatType.EXIT);
+                chatRoom, leaveText, senderId, ChatType.EXIT);
         chatMessageRepository.save(sysMsg);
 
         /* ③ 브로드캐스트 */

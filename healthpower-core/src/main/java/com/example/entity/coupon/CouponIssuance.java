@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class CouponIssuance {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -27,10 +27,10 @@ public class CouponIssuance {
     private Instant issuedAt;
 
     @Column(name = "expired_at")
-    private LocalDateTime expiredAt;
+    private Instant expiredAt;
 
     @Column(name = "used_at")
-    private LocalDateTime usedAt;
+    private Instant usedAt;
 
     @Column(name = "is_expired")
     private boolean isExpired;
@@ -39,16 +39,24 @@ public class CouponIssuance {
     private CouponStatus status;
 
     @ManyToOne
-    @JoinColumn(name = "coupon_id")
+    @JoinColumn(name = "coupon_id", nullable = false)
     private Coupon coupon;
 
     @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    public CouponIssuance(Instant issuedAt, LocalDateTime expiredAt) {
+    public CouponIssuance(Instant issuedAt, Instant expiredAt) {
         this.issuedAt = issuedAt;
         this.expiredAt = expiredAt;
         this.status = CouponStatus.ACTIVE;
+    }
+
+    public void expire() {
+        if (!isExpired()) {
+            throw new IllegalStateException("아직 만료되지 않았습니다.");
+        }
+        markAsExpired();
     }
 
     public void markAsExpired() {
@@ -56,16 +64,7 @@ public class CouponIssuance {
         this.isExpired = true;
     }
 
-    public void expire() {
-        if (!isExpire()) {
-            throw new IllegalStateException("아직 만료되지 않았습니다.");
-        }
-
-        this.status = CouponStatus.EXPIRED;
-        this.isExpired = true;
-    }
-
-    public boolean isExpire() {
-        return expiredAt.isBefore(LocalDateTime.now());
+    public boolean isExpired() {
+        return expiredAt.isBefore(Instant.now());
     }
 }
