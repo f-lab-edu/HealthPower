@@ -22,8 +22,10 @@ public class CouponController {
     @PostMapping("/{id}/claim")
     public ResponseEntity<?> claim(@PathVariable long id, @AuthenticationPrincipal UserDetailsImpl user) {
         long left = couponService.claim(id, user.getUserId());
-        return ResponseEntity.ok(Map.of("left", left));
-
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "left", left,
+                "message", "쿠폰이 발급되었습니다."));
     }
 }
 

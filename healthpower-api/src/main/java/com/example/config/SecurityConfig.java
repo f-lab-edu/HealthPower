@@ -58,6 +58,8 @@ public class SecurityConfig {
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/s3/presign").permitAll()
                         .requestMatchers("/members/menu").permitAll()
+                        .requestMatchers("/chat/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/members/checkUserId", "/members/checkUserEmail", "/members/checkUserNickname").permitAll()
                         .requestMatchers("/members/joinSuccess").permitAll()
                         .requestMatchers("/members/login2").permitAll() //form login 테스트용

@@ -23,9 +23,6 @@ public class ChatMessage {
     @Lob //대형 객체 데이터를 저장하기 위한 가변 길이 데이터 유형
     private String content;
 
-    @Column(name = "sender_nickname")
-    private String senderNickname;
-
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
@@ -62,13 +59,11 @@ public class ChatMessage {
     public static ChatMessage systemMessage(
             ChatRoom chatRoom,
             String text,
-            String senderNickname,
             String senderId,
             ChatType chatType) {
         return ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .content(text)
-                .senderNickname(senderNickname)
                 .senderId(senderId)
                 .sentAt(LocalDateTime.now())
                 .chatType(chatType)

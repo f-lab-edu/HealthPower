@@ -4,6 +4,7 @@ import com.example.jwt.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -26,19 +28,26 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                                    ServerHttpResponse response,
                                    WebSocketHandler wsHandler,
                                    Map<String, Object> attributes) throws Exception {
+
         if (request instanceof ServletServerHttpRequest servletRequest) {
             HttpServletRequest req = servletRequest.getServletRequest();
             Cookie[] cookies = req.getCookies();
+
+            log.info("🔵 Handshake 요청됨");
+
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
+                    log.info("🔎 쿠키 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
                     if (cookie.getName().equals("Authorization")) {
                         String token = cookie.getValue();
-                        // ✅ 검증 및 사용자 정보 저장
                         Authentication auth = jwtTokenProvider.getAuthentication(token);
                         SecurityContextHolder.getContext().setAuthentication(auth);
                         attributes.put("userId", jwtTokenProvider.getUserIdFromToken(token));
+                        log.info("✅ 인증 성공: userId = {}", jwtTokenProvider.getUserIdFromToken(token));
                     }
                 }
+            } else {
+                log.warn("⚠️ 쿠키 없음");
             }
         }
         return true;
@@ -47,6 +56,5 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler
             wsHandler, Exception exception) {
-
     }
 }

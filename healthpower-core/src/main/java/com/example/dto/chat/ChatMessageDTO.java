@@ -33,7 +33,6 @@ public class ChatMessageDTO {
                 .senderId(senderId)
                 .content(content)
                 .chatType(chatType)
-                .senderNickname(senderNickname)
                 .build();
     }
 }

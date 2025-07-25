@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Service
@@ -176,7 +177,7 @@ public class ImpService {
             var usedCoupon = order.getCouponIssuance();
 
             usedCoupon.setStatus(CouponStatus.USED);
-            usedCoupon.setUsedAt(LocalDateTime.now());
+            usedCoupon.setUsedAt(Instant.now());
             couponIssuanceRepository.save(usedCoupon);
 
             var coupon = usedCoupon.getCoupon();
