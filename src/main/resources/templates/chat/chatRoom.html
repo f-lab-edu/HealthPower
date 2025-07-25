@@ -8,7 +8,6 @@
          th:data-room="${roomId}"
          th:data-user="${currentUserId}"
          th:data-receiver="${receiverId}"
-         th:data-sender-nickname="${senderNickname}"
          th:data-jwt="${jwt}">
     </div>
 
@@ -73,8 +72,7 @@
 <script th:inline="javascript">
     /* ===== 1. 템플릿에서 전달받은 값 ===== */
 
-    const {room:roomId, user:currentUserId, receiver:receiverId,
-           senderNickname, jwt} = document.getElementById('meta').dataset;
+    const {room:roomId, user:currentUserId, receiver:receiverId, jwt} = document.getElementById('meta').dataset;
 
     /* ===== 2. STOMP 연결 ===== */
     const stomp = Stomp.over(new SockJS("/ws/chat"));
@@ -82,7 +80,7 @@
 
       /* --- 입장 --- */
       stomp.send("/app/chat.enter", {}, JSON.stringify({
-        roomId, senderId: currentUserId, senderNickname, chatType:"ENTER"
+        roomId, senderId: currentUserId, chatType:"ENTER"
       }));
 
       /* --- 구독 --- */
@@ -111,7 +109,7 @@
 
       if(msg.chatType === "IMAGE"){
         div.innerHTML =
-          `${mine ? "" : `<b>${msg.senderNickname}</b><br>`}
+          `${mine ? "" : `<b>${msg.senderId}</b><br>`}
            <img src="${msg.content}" style="max-width:200px;border-radius:6px;"><br>
            <small style="margin-left:4px;">${timeStr}</small>`;
       }else{
@@ -132,8 +130,7 @@
       if(!content) return;
 
       stomp.send("/app/chat.send", {}, JSON.stringify({
-        roomId, senderId:currentUserId, receiverId, senderNickname,
-        content, chatType:"TALK"
+        roomId, senderId:currentUserId, receiverId, content, chatType:"TALK"
       }));
 
       inp.value = "";
@@ -156,7 +153,6 @@
       form.append("file", file);
       form.append("roomId", roomId);
       form.append("senderId", currentUserId);
-      form.append("senderNickname", senderNickname);
 
       try{
         const res = await fetch("/chat/upload", {
@@ -172,7 +168,7 @@
     /* --- 입장 --- */
     function exitChatRoom(){
       stomp.send("/app/chat.exit", {}, JSON.stringify({
-        roomId, senderId: currentUserId, senderNickname, chatType:"EXIT"
+        roomId, senderId: currentUserId, chatType:"EXIT"
       }));
       alert("채팅방을 나갑니다.");
       location.href="/chat/chatList";

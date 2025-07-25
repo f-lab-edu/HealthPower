@@ -22,6 +22,13 @@
         </div>
     </li>
 </ul>
+<div>
+    <a th:href="@{/board/productCreate}">상품등록</a>
+</div>
+
+<button id="claimBtn" data-coupon-id="4">선착순 쿠폰 받기(한정 수량 100개)</button>
+<p id="result"></p>
+
 <div class="pagination">
     <!-- 첫 페이지로 이동 -->
     <a th:if="${!productPage.first}" th:href="@{/board/product(page=0)}">« 처음</a>
@@ -50,5 +57,28 @@
     <a th:href="@{/board/productCreate}">상품등록</a>
 </div>
 </body>
+<script>
+    document.getElementById("claimBtn").addEventListener("click", async () => {
+    const couponId = document.getElementById("claimBtn").dataset.couponId;
+
+    try {
+      const response = await fetch(`/coupons/${couponId}/claim`, {
+        method: "POST",
+        credentials: "include"
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        document.getElementById("result").innerText =
+          `🎉 쿠폰 발급 성공! 남은 수량: ${result.left}`;
+      } else {
+        document.getElementById("result").innerText = `❌ 오류: ${result.message}`;
+      }
+    } catch (err) {
+      document.getElementById("result").innerText = "⚠️ 서버 오류 발생";
+    }
+  });
+</script>
 <link rel="stylesheet" th:href="@{/css/style.css}">
 </html>

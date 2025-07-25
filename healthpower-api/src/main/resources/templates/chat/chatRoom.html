@@ -8,7 +8,6 @@
          th:data-room="${roomId}"
          th:data-user="${currentUserId}"
          th:data-receiver="${receiverId}"
-         th:data-sender-nickname="${senderNickname}"
          th:data-jwt="${jwt}">
     </div>
 
@@ -73,8 +72,10 @@
 <script th:inline="javascript">
     /* ===== 1. 템플릿에서 전달받은 값 ===== */
 
-    const {room:roomId, user:currentUserId, receiver:receiverId,
-           senderNickname, jwt} = document.getElementById('meta').dataset;
+    const {room:roomId, user:currentUserId, receiver:receiverId, jwt} = document.getElementById('meta').dataset;
+
+    // JWT를 쿠키로 설정 (with path & expires 옵션 포함 가능)
+    document.cookie = "Authorization=" + jwt + "; path=/";
 
     /* ===== 2. STOMP 연결 ===== */
     const stomp = Stomp.over(new SockJS("/ws/chat"));
@@ -82,7 +83,7 @@
 
       /* --- 입장 --- */
       stomp.send("/app/chat.enter", {}, JSON.stringify({
-        roomId, senderId: currentUserId, senderNickname, chatType:"ENTER"
+        roomId, senderId: currentUserId, chatType:"ENTER"
       }));
 
       /* --- 구독 --- */
@@ -95,32 +96,27 @@
       const div = document.createElement("div");
       const mine = msg.senderId === currentUserId;
 
-      const sent = msg.timeStamp ? msg.timeStamp.split('.')[0].replace(' ', 'T') : null;
-      const timeStr = sent ? new Date(sent)
-                       .toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})
-                     : '';
+      const timeStr = msg.timeStamp ? new Date(msg.timeStamp.split('.')[0].replace(' ', 'T')).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
 
       div.style.marginBottom = "8px";
       div.style.textAlign    = mine ? "right" : "left";
 
       if(msg.chatType === "ENTER" || msg.chatType === "EXIT"){
-        // 입장/퇴장 메시지
-        div.style.textAlign = "center";  // 시스템 메시지는 중앙
-        div.innerHTML = `<span style="color: gray; font-size: 0.85em;">${msg.senderId}님이 ${msg.chatType === 'ENTER' ? '입장' : '퇴장'}했습니다</span>`;
-      }
+            div.style.textAlign = "center";
+            div.innerHTML = `<span style="color: gray; font-size: 0.85em;">${msg.senderId}님이 ${msg.chatType === 'ENTER' ? '입장' : '퇴장'}했습니다</span>
+            <small style="margin-left:4px;">${timeStr}</small>`;
+      } else if(msg.chatType === "IMAGE"){
+            div.innerHTML =
+            `${mine ? "" : `<b>${msg.senderId}</b><br>`}
+            <img src="${msg.content}" style="max-width:200px;border-radius:6px;margin:10px;"><br>
+            <small style="margin-left:4px;">${timeStr}</small>`;
+      } else {
+            div.innerHTML =
+            `${mine ? "" : `<strong>${msg.senderId}</strong><br>`}
+            <span style="background:${mine ? "#dcf8c6" : "#eee"}; padding:6px;border-radius:8px;margin:10px;">${msg.content}</span>
+            <small style="margin-left:4px;">${timeStr}</small>`;
+        }
 
-      if(msg.chatType === "IMAGE"){
-        div.innerHTML =
-          `${mine ? "" : `<b>${msg.senderNickname}</b><br>`}
-           <img src="${msg.content}" style="max-width:200px;border-radius:6px;"><br>
-           <small style="margin-left:4px;">${timeStr}</small>`;
-      }else{
-        div.innerHTML =
-          `${mine?"":`<strong>${timeStr}</strong><br>`}
-           <span style="background:${mine ? "#dcf8c6" : "#eee"}; padding:6px;border-radius:8px;">${msg.content}</span>
-           <small style="margin-left:4px;">${timeStr}</small>`;
-
-      }
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;       // 항상 맨 아래로
     }
@@ -132,8 +128,7 @@
       if(!content) return;
 
       stomp.send("/app/chat.send", {}, JSON.stringify({
-        roomId, senderId:currentUserId, receiverId, senderNickname,
-        content, chatType:"TALK"
+        roomId, senderId:currentUserId, receiverId, content, chatType:"TALK"
       }));
 
       inp.value = "";
@@ -156,7 +151,6 @@
       form.append("file", file);
       form.append("roomId", roomId);
       form.append("senderId", currentUserId);
-      form.append("senderNickname", senderNickname);
 
       try{
         const res = await fetch("/chat/upload", {
@@ -172,7 +166,7 @@
     /* --- 입장 --- */
     function exitChatRoom(){
       stomp.send("/app/chat.exit", {}, JSON.stringify({
-        roomId, senderId: currentUserId, senderNickname, chatType:"EXIT"
+        roomId, senderId: currentUserId, chatType:"EXIT"
       }));
       alert("채팅방을 나갑니다.");
       location.href="/chat/chatList";

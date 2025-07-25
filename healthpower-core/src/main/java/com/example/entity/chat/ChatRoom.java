@@ -1,6 +1,6 @@
 package com.example.entity.chat;
 
-import com.example.entity.User;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +10,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -41,15 +40,7 @@ public class ChatRoom {
     private String creatorId;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ChatRoomParticipant> participants;
-
-    /*@ManyToMany
-    @JoinTable(
-            name = "chat_room_participant",
-            joinColumns = @JoinColumn(name = "chat_room_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-
-    private List<User> participants = new ArrayList<>();*/
 
 }

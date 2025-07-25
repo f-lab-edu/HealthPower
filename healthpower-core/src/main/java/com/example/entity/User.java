@@ -4,6 +4,7 @@ import com.example.entity.chat.ChatRoom;
 import com.example.entity.chat.ChatRoomParticipant;
 import com.example.enumpackage.Gender;
 import com.example.enumpackage.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -81,10 +82,8 @@ public class User /*implements UserDetails*/ {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
-    /*@ManyToMany(mappedBy = "participants")
-    private List<ChatRoom> chatRooms = new ArrayList<>();*/
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<ChatRoomParticipant> chatRoomParticipants = new ArrayList<>();
 
     public void deductBalance(int amount) {

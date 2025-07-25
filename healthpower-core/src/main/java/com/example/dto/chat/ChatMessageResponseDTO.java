@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 public class ChatMessageResponseDTO {
     private Long roomId;
     private String senderId;
-    private String senderNickname;
     private String content;
     private ChatType type;
     private LocalDateTime sentAt;
@@ -22,7 +21,6 @@ public class ChatMessageResponseDTO {
         return of(
                 m.getChatRoom().getRoomId(),
                 m.getSenderId(),
-                m.getSenderNickname(),
                 m.getContent(),
                 m.getChatType(),
                 m.getSentAt()

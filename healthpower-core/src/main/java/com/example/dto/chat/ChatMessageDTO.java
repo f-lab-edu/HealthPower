@@ -15,7 +15,6 @@ public class ChatMessageDTO {
     private Long roomId;
     private String senderId;
     private String receiverId;
-    private String senderNickname;
     private String content;
     private String imageUrl;
     private String token;
@@ -33,7 +32,6 @@ public class ChatMessageDTO {
                 .senderId(senderId)
                 .content(content)
                 .chatType(chatType)
-                .senderNickname(senderNickname)
                 .build();
     }
 }

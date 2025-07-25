@@ -114,7 +114,6 @@ public class ChatController {
         model.addAttribute("roomName", room.getName());
         model.addAttribute("users", users);
         model.addAttribute("messages", chatHistory);
-        model.addAttribute("senderNickname", user.getNickname());
         model.addAttribute("currentUserId", user.getUserId());
 
         return "chat/chatRoom";
@@ -181,8 +180,7 @@ public class ChatController {
     }
 
     @MessageMapping("/chat.send")
-    public void sendMessage(ChatMessageDTO chatMessageDTO,
-                            Principal principal) {
+    public void sendMessage(ChatMessageDTO chatMessageDTO, Principal principal) {
 
         // ① 인증 유저 → senderId 주입
         ChatRoom chatRoom = chatRoomRepository.findByRoomId(chatMessageDTO.getRoomId())
@@ -190,13 +188,12 @@ public class ChatController {
 
         ChatMessage chatMessage = ChatMessage.userMessage(chatMessageDTO, chatRoom);
 
-
         String senderId = principal.getName();
 
         User user = userRepository.findByUserId(senderId).orElse(null);
 
         chatMessageDTO.setSenderId(senderId);
-        chatMessageDTO.setTimeStamp(chatMessage.getSentAt());
+        chatMessageDTO.setTimeStamp(LocalDateTime.now());
         chatMessageDTO.setImageUrl(user.getImageUrl());
 
         chatMessageRepository.save(chatMessage);
@@ -238,7 +235,6 @@ public class ChatController {
         ChatMessage msg = ChatMessage.builder()
                 .chatRoom(chatRoom)
                 .senderId(chatMessageDTO.getSenderId())
-                .senderNickname(chatMessageDTO.getSenderNickname())
                 .chatType(ChatType.IMAGE)
                 .content(url)
                 .sentAt(LocalDateTime.now())

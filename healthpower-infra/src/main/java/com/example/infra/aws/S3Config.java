@@ -25,8 +25,8 @@ public class S3Config {
                         StaticCredentialsProvider.create(
                                 AwsBasicCredentials.create(
                                         /*실서버수정*/
-                                        "",
-                                        ""
+                                        ACCESS_KEY_ID,
+                                        SECRET_ACCESS_KEY
                                 )
                         )
                 ).build();
