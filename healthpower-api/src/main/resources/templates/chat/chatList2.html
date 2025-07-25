@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>채팅방 목록</title>
+
+  <!-- Tailwind 등 전역 CSS가 있다면 링크 -->
+  <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="bg-gray-50">
+
+<!-- ✅ Deprecated 문법 교체 -->
+<div th:replace="~{fragments/header :: user-status}"></div>
+
+<main class="max-w-2xl mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-6">채팅방</h1>
+
+  <!-- 빈 목록 처리 -->
+  <div th:if="${#lists.isEmpty(rooms)}" class="text-gray-500">
+    참여 중인 채팅방이 없습니다.
+  </div>
+
+  <!-- 채팅방 카드 반복 -->
+  <ul class="space-y-4" th:each="room : ${rooms}">
+    <li>
+      <a th:href="@{|/chat/room/${room.roomPk}|}"
+         class="flex flex-col p-4 bg-white rounded-xl shadow hover:shadow-md transition">
+
+        <!-- 방 이름/상대 닉네임 -->
+        <span class="font-semibold text-lg"
+              th:text="${room.displayName}">
+            채팅방 이름
+          </span>
+
+        <!-- 최근 메시지 미리보기 -->
+        <span class="text-sm text-gray-600 mt-1 truncate"
+              th:text="${room.lastMessage}">
+            최근 메시지…
+          </span>
+
+        <!-- 최근 활동 시각 -->
+        <span class="text-xs text-gray-400 mt-0.5"
+              th:text="${#temporals.format(room.updatedAt, 'yyyy-MM-dd HH:mm')}">
+            2025-07-08 18:45
+          </span>
+      </a>
+    </li>
+  </ul>
+
+  <div>
+    <a href="javascript:void(0);" onclick="secureNavigate('/chat/create')">채팅방 만들기</a>
+  </div>
+</main>
+</body>
+<script th:src="@{/js/common.js}"></script>
+</html>
