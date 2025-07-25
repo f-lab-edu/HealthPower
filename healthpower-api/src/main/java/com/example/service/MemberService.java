@@ -174,8 +174,13 @@ public class MemberService {
         try {
             // 3. 인증 정보를 기반으로 JWT 토큰 생성
             Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+
+            // ✅ 로그인 성공 후 마지막 로그인 시각 갱신
+            User user = findUserId.get();
+            user.setLastLoginAt(LocalDateTime.now());
             JwtToken jwtToken = jwtTokenProvider.generateToken(authentication, userDTO);
             return jwtToken;
+
         } catch (Exception e) {
             log.error("에러발생{}", e.getMessage());
             e.printStackTrace();
@@ -365,17 +370,23 @@ public class MemberService {
         }
     }
 
-//테스트용
-public User authenticate(String userId, String password) {
-    User user = userRepository.findByUserId(userId)
-            .orElseThrow(() -> new UsernameNotFoundException("해당 유저 없음: " + userId));
+    @Transactional
+    public User authenticate(String userId, String password) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("해당 유저 없음: " + userId));
 
-    if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
-        throw new BadCredentialsException("비밀번호 불일치");
+        if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
+            throw new BadCredentialsException("비밀번호 불일치");
+        }
+
+        if (user.isActivated() == false) {
+            throw new IllegalArgumentException("비활성화 된 유저입니다.");
+        }
+
+        user.setLastLoginAt(LocalDateTime.now());
+
+        return user;
     }
-
-    return user;
-}
 
 }
 

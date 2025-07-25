@@ -1,7 +1,9 @@
 package com.example.scheduler;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class CouponExpireScheduler {
 
     private final JobLauncher jobLauncher;
@@ -20,8 +23,12 @@ public class CouponExpireScheduler {
 
     @Scheduled(cron = "0 0 0 * * *") // 매일 0시
     public void runExpireJob() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
-        jobLauncher.run(expireCouponJob, new JobParametersBuilder()
+
+        log.info("🕐 [ExpireCouponScheduler] 쿠폰 만료 Job 시작");
+
+        JobParameters jobParameters = new JobParametersBuilder()
                 .addLong("time", System.currentTimeMillis())
-                .toJobParameters());
+                .toJobParameters();
+        jobLauncher.run(expireCouponJob, jobParameters);
     }
 }
