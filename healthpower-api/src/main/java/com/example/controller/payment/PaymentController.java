@@ -66,14 +66,14 @@ public class PaymentController {
         res.put("orderName", payment.getOrderName());
 
         //테스트
-        res.put("redirectUrl", "http://localhost:8080/payment");
-        res.put("successUrl", "http://localhost:8080/payment/success");
-        res.put("failUrl", "http://localhost:8080/payment/fail");
+        //res.put("redirectUrl", "http://localhost:8080/payment");
+        //res.put("successUrl", "http://localhost:8080/payment/success");
+        //res.put("failUrl", "http://localhost:8080/payment/fail");
 
         //실서버
-        /*res.put("redirectUrl", "http://3.39.61.129:8080/payment");
+        res.put("redirectUrl", "http://3.39.61.129:8080/payment");
         res.put("successUrl", "http://3.39.61.129:8080/payment/success");
-        res.put("failUrl", "http://3.39.61.129:8080/payment/fail");*/
+        res.put("failUrl", "http://3.39.61.129:8080/payment/fail");
 
         return res;
 

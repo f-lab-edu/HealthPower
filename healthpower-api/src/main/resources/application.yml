@@ -1,7 +1,7 @@
 spring:
   profiles:
-    active: local # 실행 시 필요에 따라 prod, dev, local 변경
-#    active: prod
+#    active: local # 실행 시 필요에 따라 prod, dev, local 변경
+    active: prod
 
 ---
 spring:
@@ -47,11 +47,11 @@ spring:
     store-type: redis
 #    실서버수정
 jwt:
-  secret: ""
+  secret: "cG93ZXJwb3dlcnRlc3RoZWFsdGhwb3dlcnRoZXN0cG93ZXI="
 
 toss:
-  secret: ""
-  client: ""
+  secret: "test_sk_6BYq7GWPVvnRvyQgxoMwVNE5vbo1"
+  client: "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm"
 
 app:
   upload:

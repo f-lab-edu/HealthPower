@@ -41,8 +41,8 @@ public class ImpService {
     private final CouponRepository couponRepository;
 
     //실서버 반영 시 수정
-    private final String API_KEY = "";
-    private final String API_SECRET = "";
+    private final String API_KEY = "0721110655237464";
+    private final String API_SECRET = "iXZZvSjuDnP4YFy4X9HIIEUI7vB0hzvaMwGw2ORMurRyQpMsjrFHV4IAd1Ni84ZzR7IAtNEVeg1FK5nJ";
 
     public String getToken() {
         HttpHeaders headers = new HttpHeaders();
