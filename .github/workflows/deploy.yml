@@ -11,7 +11,7 @@ jobs:
 
     env:
       PROJECT_NAME: HealthPower
-      PROJECT_PATH_ON_EC2: /home/ubuntu/${{ env.PROJECT_NAME }}
+      PROJECT_PATH_ON_EC2: /home/ubuntu/${{ vars.PROJECT_NAME }}
 
     steps:
       - name: Checkout source code
