@@ -37,7 +37,7 @@ jobs:
 
       - name: Ensure Docker and Docker Compose are installed on ELK EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << 'EOF'
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo apt update
@@ -59,7 +59,7 @@ jobs:
 
       - name: Run ELK Docker Compose on ELK EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << EOF
             cd ${{ env.PROJECT_PATH_ON_EC2 }}/elk
             sudo docker compose -f docker-compose.yml up -d --build 
           EOF
@@ -94,17 +94,17 @@ jobs:
 
       - name: Decode PEM key for APP EC2
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
-          chmod 600 ${{ github.workspace }}/homepem.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/app_homepem.pem
+          chmod 600 ${{ github.workspace }}/app_homepem.pem
 
       - name: Sync APP project files to APP EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.PROJECT_PATH_ON_EC2 }}"
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "mkdir -p ${{ env.PROJECT_PATH_ON_EC2 }}"
           rsync -avz --exclude '.git' --exclude '.github' --exclude 'build' --exclude 'out' -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem" . ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.PROJECT_PATH_ON_EC2 }}
           
       - name: Create .env file on APP EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "cat > ${{ env.PROJECT_PATH_ON_EC2 }}/.env << EOF
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "cat > ${{ env.PROJECT_PATH_ON_EC2 }}/.env << EOF
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             TOSS_SECRET=${{ secrets.TOSS_SECRET }}
             TOSS_CLIENT=${{ secrets.TOSS_CLIENT }}
@@ -149,7 +149,7 @@ jobs:
 
       - name: Execute deploy script on APP EC2
         run: |
-            ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "chmod +x ${{ env.PROJECT_PATH_ON_EC2 }}/deploy.sh && ${{ env.PROJECT_PATH_ON_EC2 }}/deploy.sh"
+            ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "chmod +x ${{ env.PROJECT_PATH_ON_EC2 }}/deploy.sh && ${{ env.PROJECT_PATH_ON_EC2 }}/deploy.sh"
         env: # deploy.sh 스크립트로 환경 변수를 전달
           # 여기서 secrets 값을 deploy.sh가 직접 접근할 수 있도록 export 합니다.
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -164,59 +164,6 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           # ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }} # ECR 사용 시 주석 해제
           # IMAGE_TAG: latest # ECR 사용 시 주석 해제
-
-#      - name: Create elk directory on EC2
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ~/elk/logstash"
-#
-#      - name: Upload files to EC2
-#        run: |
-#          JAR_FILE=$(find build/libs -name "*.jar" | sort | tail -n1)
-#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem "$JAR_FILE" ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/app.jar
-#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/Dockerfile
-#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem src/main/resources/application.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/application.yml
-#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/docker-compose.yml
-#          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem elk/logstash/logstash.conf ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/elk/logstash/logstash.conf
-#
-#      - name: 🛠 Install Java on EC2
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << "EOF"
-#            sudo apt update
-#            sudo apt install -y openjdk-21-jdk
-#          EOF
-#
-#      - name: Run Spring Boot App on EC2
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-#            echo "🔁 기존 앱 종료"
-#            pkill -f java || true
-#
-#            echo "⏳ logstash 포트 오픈 대기"
-#            while ! nc -z localhost 5000; do
-#              echo "logstash가 아직 준비되지 않았습니다. 대기 중..."
-#              sleep 3
-#            done
-#
-#            echo "🌱 환경변수 설정"
-#            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
-#            export TOSS_SECRET="${{ secrets.TOSS_SECRET }}"
-#            export TOSS_CLIENT="${{ secrets.TOSS_CLIENT }}"
-#            export SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
-#            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
-#            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
-#            export AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}"
-#            export DB_URL="${{ secrets.DB_URL }}"
-#            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-#            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-#
-#            echo "🚀 Spring Boot 애플리케이션 시작"
-#            nohup java \
-#            -Dspring.profiles.active=prod \
-#            -jar /home/ubuntu/app.jar \
-#            --spring.config.additional-location=file:/home/ubuntu/ \
-#            > /home/ubuntu/app.log 2>&1 &
-#          EOF
-
 
   # --- 배포 성공/실패 알림 ---
   notify-slack:
