@@ -1,4 +1,4 @@
-name: Deploy Spring Boot to EC2
+name: Deploy Spring Boot to Multi-EC2 Instances
 
 on:
   push:
@@ -6,12 +6,68 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+#  ELK 스택 배포 (ELK 서버)
+  deploy-elk:
     runs-on: ubuntu-latest
 
     env:
       PROJECT_NAME: HealthPower
       PROJECT_PATH_ON_EC2: /home/ubuntu/${{ vars.PROJECT_NAME }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Decode PEM key for ELK EC2
+        run: |
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/elk_homepem.pem
+          chmod 600 ${{ github.workspace }}/elk_homepem.pem
+
+      - name: Sync ELK project files to ELK EC2
+        run: |
+          # ELK 서버에 HealthPower 디렉토리 생성 및 elk 폴더만 복사
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} "mkdir -p ${{ env.ELK_PROJECT_PATH_ON_EC2 }}/elk"
+          rsync -avz --exclude 'healthpower-api' --exclude 'nginx' --exclude 'deploy.sh' --exclude 'docker-compose.bluegreen.yml' --exclude '.git' --exclude '.github' --exclude 'build' --exclude 'out' -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" . ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }}:${{ env.ELK_PROJECT_PATH_ON_EC2 }}
+          # 또는 더 명확하게 elk 디렉토리만 동기화
+          # rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" elk/ ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }}:${{ env.ELK_PROJECT_PATH_ON_EC2 }}/elk/
+
+      - name: Ensure Docker and Docker Compose are installed on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found, installing..."
+              sudo apt update
+              sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+              sudo apt update
+              sudo apt install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker ubuntu
+            fi
+            if ! command -v docker-compose &> /dev/null; then
+              echo "docker-compose not found, installing..."
+              sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
+          EOF
+
+      - name: Run ELK Docker Compose (if not already running)
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+            cd ${{ env.PROJECT_PATH_ON_EC2 }}/elk
+            sudo docker compose -f docker-compose.yml up -d --build 
+          EOF
+
+  # --- 애플리케이션 배포 (애플리케이션 서버) ---
+  deploy-app:
+    runs-on: ubuntu-latest
+    needs: deploy-elk
+
+    env:
+      PROJECT_NAME: HealthPower
+      APP_PROJECT_PATH_ON_EC2: /home/ubuntu/${{ vars.PROJECT_NAME }}
 
     steps:
       - name: Checkout source code
@@ -60,9 +116,9 @@ jobs:
             # IMAGE_TAG=latest # 또는 GitHub Action run ID 등을 태그로 사용
             EOF"
 
-      - name: Ensure Docker and Docker Compose are installed on EC2
+      - name: Ensure Docker and Docker Compose are installed on APP EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << 'EOF'
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo apt update
@@ -80,13 +136,11 @@ jobs:
               sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
-          EOF
-
-      - name: Run ELK Docker Compose (if not already running)
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            cd ${{ env.PROJECT_PATH_ON_EC2 }}/elk
-            sudo docker compose -f docker-compose.yml up -d --build 
+            # Docker network 생성 (애플리케이션 서버에서 사용할 backend 네트워크)
+            if ! docker network ls | grep -q "backend"; then
+                echo "Creating Docker network 'backend'..."
+                sudo docker network create backend
+            fi
           EOF
 
       - name: Execute deploy script on EC2
@@ -159,15 +213,23 @@ jobs:
 #            > /home/ubuntu/app.log 2>&1 &
 #          EOF
 
+
+  # --- 배포 성공/실패 알림 ---
+  notify-slack:
+    runs-on: ubuntu-latest
+    needs: [deploy-elk, deploy-app] # 두 Job 모두 완료된 후에 실행
+    if: always() # 어떤 경우에도 실행되도록
+
+    steps:
       - name: Slack Notify - 성공
-        if: success()
+        if: success() && needs.deploy-elk.result == 'success' && needs.deploy-app.result == 'success'
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"✅ HealthPower 서버 배포 성공!"}' \
+            --data '{"text":"✅ HealthPower 전체 서버 배포 성공!"}' \
             ${{ secrets.SLACK_ALERT_WEBHOOK }}
 
       - name: Slack Notify - 실패
-        if: failure()
+        if: failure() || needs.deploy-elk.result == 'failure' || needs.deploy-app.result == 'failure'
         run: |
           curl -X POST -H 'Content-type: application/json' \
             --data '{"text":"❌ HealthPower 서버 배포 실패! 확인 필요"}' \
