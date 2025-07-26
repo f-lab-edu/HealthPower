@@ -25,14 +25,14 @@ jobs:
 
       - name: Sync ELK project files to ELK EC2
         run: |
-        # ELK 서버에 HealthPower 디렉토리 생성
-        # 변수를 명시적으로 사용하고, SSH 명령을 더 명확하게 구성
-        # ELK_PROJECT_DIR은 /home/ubuntu/HealthPower가 될 것입니다.
+          # ELK 서버에 HealthPower 디렉토리 생성
+          # 변수를 명시적으로 사용하고, SSH 명령을 더 명확하게 구성
+          # ELK_PROJECT_DIR은 /home/ubuntu/HealthPower가 될 것입니다.
           ELK_PROJECT_DIR="${{ env.ELK_PROJECT_PATH_ON_EC2 }}"
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} "mkdir -p \"${ELK_PROJECT_DIR}\""
 
-        # elk 폴더만 동기화하는 것이 더 안전하고 명확합니다.
-        # rsync 명령의 원본 경로도 elk/ 로 명시
+          # elk 폴더만 동기화하는 것이 더 안전하고 명확합니다.
+          # rsync 명령의 원본 경로도 elk/ 로 명시
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" elk/ ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }}:"${ELK_PROJECT_DIR}/elk/"
 
       - name: Ensure Docker and Docker Compose are installed on ELK EC2
