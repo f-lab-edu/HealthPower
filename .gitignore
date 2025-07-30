@@ -11,6 +11,12 @@ logs/
 #uploads
 uploads/
 
+#pem-key
+homepem.pem
+
+#txt
+deps.txt
+
 ### STS ###
 .apt_generated
 .classpath

@@ -25,11 +25,11 @@ public class ExpireCouponProcessor implements ItemProcessor<CouponIssuance, Coup
         log.info("🟢 Processor 진입: id={}, expiredAt={}, isExpire()={}",
                 couponIssuance.getId(),
                 couponIssuance.getExpiredAt(),
-                couponIssuance.isExpire()
+                couponIssuance.isExpired()
         );
 
         // 만료 대상이면 expire() 호출 → 상태 변경
-        if (couponIssuance.isExpire()) {
+        if (couponIssuance.isExpired()) {
             couponIssuance.expire();
 
             ExpiredCouponLog log = new ExpiredCouponLog();

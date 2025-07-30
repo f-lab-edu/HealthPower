@@ -1,9 +1,22 @@
 spring:
+#  실서버
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/springJWT?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+#    username: root
+#    password: 1234
+#    driver-class-name: com.mysql.cj.jdbc.Driver
   datasource:
-    url: jdbc:mysql://localhost:3306/springJWT?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    username: root
-    password: 1234
+    url: jdbc:mysql://healthpowerdb.cxqwus40uhci.ap-northeast-2.rds.amazonaws.com:3306/healthpowerdb?useSSL=false&serverTimezone=Asia/Seoul
+    username: admin
+    password: tmddjs11!!
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari: # HikariCP 설정 추가 (매우 중요)
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 0
   jpa:
     hibernate:
       ddl-auto: update
