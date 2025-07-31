@@ -3,76 +3,64 @@ name: Deploy Spring Boot to Multi-EC2 Instances
 on:
   push:
     branches: [ master ]
-  workflow_dispatch: # 수동 실행을 허용합니다.
+  workflow_dispatch:
 
 jobs:
-  # ELK 스택 배포 (ELK 서버)
   deploy-elk:
-    runs-on: ubuntu-latest # GitHub Actions 러너 환경
+    runs-on: ubuntu-latest
 
     env:
-      PROJECT_NAME: HealthPower # 프로젝트 이름을 환경 변수로 정의
+      PROJECT_NAME: HealthPower
 
     steps:
-      - name: Checkout source code # GitHub 레포지토리 코드 체크아웃
+      - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Decode PEM key for ELK EC2 # EC2 접속을 위한 PEM 키 디코딩 및 권한 설정
+      - name: Decode PEM key for ELK EC2
         run: |
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/elk_homepem.pem
           chmod 600 ${{ github.workspace }}/elk_homepem.pem
 
-      - name: Prepare ELK EC2 directories and Sync ELK project files # ELK 서버에 디렉토리 생성 및 파일 동기화
+      - name: Prepare ELK EC2 directories and Sync ELK project files
         run: |
-          # ELK 프로젝트의 기본 경로를 동적으로 정의합니다.
-          # 이 변수는 GitHub Actions 러너 환경에서 확장됩니다.
           ELK_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
           
-          # ELK 서버에 디렉토리 생성 (HealthPower/elk)
-          # SSH 명령 내부의 변수는 여기서 ${{ ... }} 형태로 직접 확장됩니다.
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} "mkdir -p \"${ELK_BASE_PROJECT_DIR}/elk\""
 
-          # 로컬의 elk/ 디렉토리 내용을 ELK 서버의 해당 경로로 동기화
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" elk/ ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }}:"${ELK_BASE_PROJECT_DIR}/elk/"
 
-      - name: Ensure Docker, Docker Compose (v2) and Java are installed on ELK EC2 # ELK 서버에 Docker, Docker Compose, Java 설치 확인 및 설치
+      - name: Ensure Docker, Docker Compose (v2) and Java are installed on ELK EC2
         run: |
-          # SSH 명령 내에서 << EOF를 사용하여 GitHub Actions 변수 확장을 허용합니다.
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << EOF
             echo "--- Starting Docker/Java/Compose installation check for ELK ---"
-            sudo apt update # 패키지 목록 업데이트
-            sudo apt upgrade -y # 기존 패키지 업그레이드
+            sudo apt update
+            sudo apt upgrade -y
 
-            # Docker 설치 확인 및 설치 로직
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
               echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
           
-              sudo apt update # Docker 리포지토리 추가 후 패키지 목록 다시 업데이트 (매우 중요)
+              sudo apt update
           
               sudo apt install -y docker-ce docker-ce-cli containerd.io
               sudo systemctl start docker
               sudo systemctl enable docker
             fi
-            # 현재 사용자(ubuntu)를 docker 그룹에 추가하여 sudo 없이 docker 명령 사용 가능하게 함 (로그인 후 적용)
-            if ! id -nG "\$USER" | grep -qw "docker"; then # \$USER는 ssh 접속 유저를 의미
+            if ! id -nG "\$USER" | grep -qw "docker"; then
               echo "Adding user '\$USER' to docker group..."
               sudo usermod -aG docker "\$USER"
             fi
 
-            # Docker Compose v2 (plugin) 설치 확인 및 설치 로직
             if ! docker compose version &> /dev/null; then
               echo "Docker Compose v2 not found, attempting installation via apt..."
               sudo apt install -y docker-compose-plugin
           
-              # apt 설치 실패 시 curl을 통한 Docker Compose v1 설치로 폴백
               if ! docker compose version &> /dev/null; then
                 echo "apt installation failed for docker-compose-plugin. Falling back to manual Docker Compose v1 installation."
                 sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
                 sudo chmod +x /usr/local/bin/docker-compose
-                # /usr/bin 에도 심볼릭 링크를 걸어 PATH에 확실히 추가
                 if [ ! -f /usr/bin/docker-compose ]; then
                   sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
                 fi
@@ -82,7 +70,6 @@ jobs:
               echo "Docker Compose v2 already installed."
             fi
 
-            # Java 17 JRE 설치 (ELK 스택은 Java 17을 권장함)
             if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"17\." ; then
               echo "Java 17 JRE not found, installing openjdk-17-jre..."
               sudo apt install -y openjdk-17-jre
@@ -97,16 +84,12 @@ jobs:
             echo "--- End of Docker/Java/Compose installation check ---"
           EOF
 
-      - name: Run ELK Docker Compose on ELK EC2 # ELK 서버에서 Docker Compose 실행
+      - name: Run ELK Docker Compose on ELK EC2
         run: |
-          # 이 변수는 GitHub Actions 러너 환경에서 확장됩니다.
           ELK_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}" 
           
-          # SSH 명령 내에서 << EOF를 사용하여 GitHub Actions 변수 확장을 허용합니다.
-          # 이제 "${ELK_BASE_PROJECT_DIR}/elk"가 정확한 경로로 EC2에 전달됩니다.
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << EOF
-            cd "${ELK_BASE_PROJECT_DIR}/elk" # ELK 스택의 docker-compose.yml이 있는 디렉토리로 이동
-            # Docker Compose v2 명령을 먼저 시도하고, 없으면 v1 명령으로 폴백
+            cd "${ELK_BASE_PROJECT_DIR}/elk" 
             if command -v docker && docker compose version &> /dev/null; then
                 echo "Using 'docker compose' (v2) command."
                 sudo docker compose up -d --build --remove-orphans
@@ -119,59 +102,49 @@ jobs:
             fi
           EOF
 
-  # --- 애플리케이션 배포 (애플리케이션 서버) ---
   deploy-app:
     runs-on: ubuntu-latest
-    needs: deploy-elk # ELK 배포가 성공하면 이 Job 실행
+    needs: deploy-elk
 
     env:
-      PROJECT_NAME: HealthPower # 프로젝트 이름을 환경 변수로 정의
+      PROJECT_NAME: HealthPower
 
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Set up Java 21 # Spring Boot 빌드를 위한 Java 21 설정
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Grant execute permission for Gradle # Gradle Wrapper 실행 권한 부여
+      - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
 
-      - name: Clean old JARs # 기존 빌드된 JAR 파일 삭제
+      - name: Clean old JARs
         run: rm -f healthpower-api/build/libs/*.jar
 
-      - name: Build Spring Boot application(bootJar for healthpower-api) # Spring Boot 애플리케이션 빌드
+      - name: Build Spring Boot application(bootJar for healthpower-api)
         run: ./gradlew healthpower-api:bootJar
 
-      - name: Decode PEM key for APP EC2 # APP EC2 접속을 위한 PEM 키 디코딩 및 권한 설정
+      - name: Decode PEM key for APP EC2
         run: |
           echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/app_homepem.pem
           chmod 600 ${{ github.workspace }}/app_homepem.pem
 
-      - name: Prepare APP EC2 directories and Sync APP project files # APP 서버에 디렉토리 생성 및 파일 동기화
+      - name: Prepare APP EC2 directories and Sync APP project files
         run: |
-          # 이 변수는 GitHub Actions 러너 환경에서 확장됩니다.
           APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}" 
-          
-          # APP 서버에 디렉토리 생성 (HealthPower/healthpower-api)
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "mkdir -p ${APP_BASE_PROJECT_DIR}/healthpower-api"
-
-          # 빌드된 JAR 파일만 APP 서버의 해당 경로로 동기화 (전체 프로젝트 아님)
-          API_JAR_PATH="${{ github.workspace }}/healthpower-api/build/libs/healthpower-api-0.0.1-SNAPSHOT.jar" 
+          API_JAR_PATH="${{ github.workspace }}/healthpower-api/build/libs/healthpower-api-0.0.1-SNAPSHOT.jar"
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" "${API_JAR_PATH}" ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:"${APP_BASE_PROJECT_DIR}/healthpower-api/"
-
-          # deploy.sh 스크립트도 동기화 (프로젝트 루트에 있다면)
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:${APP_BASE_PROJECT_DIR}/
 
-      - name: Create .env file on APP EC2 # APP 서버에 환경 변수 파일 (.env) 생성
+      - name: Create .env file on APP EC2
         run: |
-          # 이 변수는 GitHub Actions 러너 환경에서 확장됩니다.
           APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}" 
           
-          # SSH 명령 내에서 << EOF를 사용하여 GitHub Actions 변수 확장을 허용합니다.
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << EOF
             cat > ${APP_BASE_PROJECT_DIR}/.env << INNER_EOF
             JWT_SECRET=${{ secrets.JWT_SECRET }}
@@ -184,21 +157,16 @@ jobs:
             DB_URL=${{ secrets.DB_URL }}
             DB_USERNAME=${{ secrets.DB_USERNAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            # ECR을 사용한다면 ECR_REGISTRY와 IMAGE_TAG도 여기에 추가
-            # ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
-            # IMAGE_TAG=latest
             INNER_EOF
           EOF"
 
-      - name: Ensure Docker (and Java for host execution) are installed on APP EC2 # APP 서버에 Docker, Docker Compose, Java 설치 확인 및 설치
+      - name: Ensure Docker (and Java for host execution) are installed on APP EC2
         run: |
-          # SSH 명령 내에서 << EOF를 사용하여 GitHub Actions 변수 확장을 허용합니다.
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << EOF
             echo "--- Starting Docker/Java installation check for APP ---"
-            sudo apt update # 패키지 목록 업데이트
-            sudo apt upgrade -y # 기존 패키지 업그레이드
+            sudo apt update
+            sudo apt upgrade -y
 
-            # Java 21 JRE 설치 (Spring Boot 애플리케이션 실행을 위해 필요)
             if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"21\." ; then
               echo "Java 21 JRE not found, installing openjdk-21-jre..."
               sudo apt install -y openjdk-21-jre
@@ -206,38 +174,33 @@ jobs:
               echo "Java 21 JRE already installed."
             fi
 
-            # Docker 설치
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
               echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
           
-              sudo apt update # Docker 리포지토리 추가 후 패키지 목록 다시 업데이트 (매우 중요)
+              sudo apt update
           
               sudo apt install -y docker-ce docker-ce-cli containerd.io
               sudo systemctl start docker
               sudo systemctl enable docker
             fi
-            # 현재 사용자(ubuntu)를 docker 그룹에 추가
             if ! id -nG "\$USER" | grep -qw "docker"; then
               echo "Adding user '\$USER' to docker group..."
               sudo usermod -aG docker "\$USER"
             fi
 
-            # Docker Compose v2 (plugin) 설치 확인 및 설치 (APP 서버에서는 JAR 실행이므로 필수 아님. ELK와 일관성 위해 유지)
             if ! docker compose version &> /dev/null; then
               echo "Docker Compose v2 not found on APP server, installing via apt..."
               sudo apt install -y docker-compose-plugin
               if ! docker compose version &> /dev/null; then
                 echo "WARNING: Docker Compose v2 installation failed or is not recognized on APP server after apt install."
-                # APP 서버에서 docker-compose가 필수적이지 않으므로 exit 1은 하지 않습니다.
               fi
             else
               echo "Docker Compose v2 already installed on APP server."
             fi
 
-            # Docker network 생성 (애플리케이션 서버에서 사용할 backend 네트워크)
             if ! docker network ls | grep -q "backend"; then
                 echo "Creating Docker network 'backend'..."
                 sudo docker network create backend
@@ -245,20 +208,16 @@ jobs:
             echo "--- Installation checks complete for APP ---"
           EOF
 
-      - name: Execute deploy script on APP EC2 # APP 서버에서 애플리케이션 실행
+      - name: Execute deploy script on APP EC2
         run: |
-          # 이 변수는 GitHub Actions 러너 환경에서 확장됩니다.
           APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}" 
           
-          # SSH 명령 내에서 << EOF를 사용하여 GitHub Actions 변수 확장을 허용합니다.
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << EOF
-            # deploy.sh 스크립트 실행 권한 부여 및 실행
             chmod +x "${APP_BASE_PROJECT_DIR}/deploy.sh"
           
-            # .env 파일을 소스로 로드하여 환경 변수 설정
             if [ -f "${APP_BASE_PROJECT_DIR}/.env" ]; then
-              set -a # 자동으로 export 되도록 설정
-              . "${APP_BASE_PROJECT_DIR}/.env" # .env 파일 로드
+              set -a
+              . "${APP_BASE_PROJECT_DIR}/.env"
               set +a
               echo "Environment variables loaded from .env"
             else
@@ -269,21 +228,20 @@ jobs:
             "${APP_BASE_PROJECT_DIR}/deploy.sh"
           EOF
 
-  # --- 배포 성공/실패 알림 ---
   notify-slack:
     runs-on: ubuntu-latest
-    needs: [deploy-elk, deploy-app] # deploy-elk 와 deploy-app Job 모두 완료된 후에 실행
-    if: always() # 어떤 경우에도 (성공/실패) 실행되도록 설정
+    needs: [deploy-elk, deploy-app]
+    if: always()
 
     steps:
-      - name: Slack Notify - 성공 # 두 Job 모두 성공했을 때 Slack 알림
+      - name: Slack Notify - 성공
         if: success() && needs.deploy-elk.result == 'success' && needs.deploy-app.result == 'success'
         run: |
           curl -X POST -H 'Content-type: application/json' \
             --data '{"text":"✅ HealthPower 전체 서버 배포 성공! :sparkles:"}' \
             ${{ secrets.SLACK_ALERT_WEBHOOK }}
 
-      - name: Slack Notify - 실패 # 두 Job 중 하나라도 실패했을 때 Slack 알림
+      - name: Slack Notify - 실패
         if: failure() || needs.deploy-elk.result == 'failure' || needs.deploy-app.result == 'failure'
         run: |
           curl -X POST -H 'Content-type: application/json' \
