@@ -71,6 +71,7 @@ public class PaymentController {
         //res.put("failUrl", "http://localhost:8080/payment/fail");
 
         //실서버
+        //실서버
         res.put("redirectUrl", "http://43.202.228.171:8080/payment");
         res.put("successUrl", "http://43.202.228.171:8080/payment/success");
         res.put("failUrl", "http://43.202.228.171:8080/payment/fail");
