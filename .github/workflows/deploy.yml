@@ -31,11 +31,12 @@ jobs:
 
       - name: Ensure Docker, Docker Compose (v2) and Java are installed on ELK EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << 'EOF' # IMPORTANT: Use 'EOF' to prevent local shell expansion
             echo "--- Starting Docker/Java/Compose installation check for ELK ---"
             sudo apt update
             sudo apt upgrade -y
 
+            # Docker 설치
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
@@ -51,32 +52,39 @@ jobs:
             if ! id -nG "\$USER" | grep -qw "docker"; then
               echo "Adding user '\$USER' to docker group..."
               sudo usermod -aG docker "\$USER"
+              # Ensure group membership is applied for the current shell session
+              newgrp docker || echo "WARNING: newgrp docker failed. Docker group membership might not be active immediately."
             fi
           
+            # Attempt to remove old docker-compose (v1) if present
             echo "Attempting to remove old docker-compose (v1) if present..."
-            sudo apt remove -y docker-compose || true
+            sudo apt remove -y docker-compose || true # Ignore errors if not installed
             sudo rm -f /usr/local/bin/docker-compose || true
             sudo rm -f /usr/bin/docker-compose || true
 
-            if ! docker compose version &> /dev/null; then
-              echo "Docker Compose v2 not found, attempting installation via apt..."
-              sudo apt install -y docker-compose-plugin
-          
-              export PATH="\$PATH:/usr/lib/docker/cli-plugins/"
-          
-              if ! docker compose version &> /dev/null; then
-                echo "apt installation failed for docker-compose-plugin. Falling back to manual Docker Compose v1 installation."
-                sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-                sudo chmod +x /usr/local/bin/docker-compose
-                if [ ! -f /usr/bin/docker-compose ]; then
-                  sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-                fi
-                echo "WARNING: 'docker compose' (v2) command might not work. Workflow will attempt to use 'docker-compose' (v1) if 'docker compose' fails."
-              fi
+            # Install Docker Compose v2 (plugin)
+            echo "Attempting to install Docker Compose v2 (plugin)..."
+            sudo apt install -y docker-compose-plugin
+
+            # Explicitly add the typical Docker Compose v2 plugin path to PATH for this session
+            export PATH="\$PATH:/usr/lib/docker/cli-plugins/:/usr/local/lib/docker/cli-plugins/"
+
+            # Verify Docker Compose v2
+            if docker compose version &> /dev/null; then
+              echo "Docker Compose v2 installed and recognized successfully."
             else
-              echo "Docker Compose v2 already installed."
+              echo "ERROR: Docker Compose v2 is NOT recognized after apt installation and PATH adjustment. This is critical."
+              echo "Attempting a final fallback to manual v1 install, but deployment might still fail."
+              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+              if [ ! -f /usr/bin/docker-compose ]; then
+                sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+              fi
+              echo "Manual Docker Compose v1 installation completed as a last resort."
+              # We will still try to use v2 first in the next step, but this makes the failure more apparent if v2 isn't found.
             fi
 
+            # Java 17 JRE 설치
             if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"17\." ; then
               echo "Java 17 JRE not found, installing openjdk-17-jre..."
               sudo apt install -y openjdk-17-jre
@@ -84,10 +92,14 @@ jobs:
               echo "Java 17 JRE already installed."
             fi
           
+            # Elasticsearch를 위한 vm.max_map_count 설정
+            echo "Setting vm.max_map_count for Elasticsearch..."
+            sudo sysctl -w vm.max_map_count=262144
+
             echo "--- Installation checks complete for ELK ---"
             echo "Verifying docker and docker compose versions:"
             docker version
-            docker compose version || docker-compose version || echo "Docker Compose (v1 or v2) not found or not in PATH."
+            docker compose version || docker-compose version || echo "Neither Docker Compose v1 nor v2 found." # Provide clear output
             echo "--- End of Docker/Java/Compose installation check ---"
           EOF
 
@@ -96,17 +108,23 @@ jobs:
           ELK_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}" 
           
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << EOF
+            # IMPORTANT: Re-export PATH in this new SSH session to ensure v2 is found
+            export PATH="\$PATH:/usr/lib/docker/cli-plugins/:/usr/local/lib/docker/cli-plugins/"
+
             cd "${ELK_BASE_PROJECT_DIR}/elk" 
+            echo "Attempting to start ELK stack with Docker Compose..."
             if command -v docker && docker compose version &> /dev/null; then
                 echo "Using 'docker compose' (v2) command."
                 sudo docker compose up -d --build --remove-orphans
             elif command -v docker-compose &> /dev/null; then
                 echo "Using 'docker-compose' (v1) command."
+                echo "WARNING: Docker Compose v2 was not found or accessible. Falling back to v1. This may cause issues."
                 sudo docker-compose up -d --build --remove-orphans
             else
                 echo "Error: Neither 'docker compose' nor 'docker-compose' command found. Cannot start ELK."
                 exit 1
             fi
+            echo "ELK Docker Compose command executed."
           EOF
 
   deploy-app:
