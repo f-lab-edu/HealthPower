@@ -52,10 +52,17 @@ jobs:
               echo "Adding user '\$USER' to docker group..."
               sudo usermod -aG docker "\$USER"
             fi
+          
+            echo "Attempting to remove old docker-compose (v1) if present..."
+            sudo apt remove -y docker-compose || true
+            sudo rm -f /usr/local/bin/docker-compose || true
+            sudo rm -f /usr/bin/docker-compose || true
 
             if ! docker compose version &> /dev/null; then
               echo "Docker Compose v2 not found, attempting installation via apt..."
               sudo apt install -y docker-compose-plugin
+          
+              export PATH="\$PATH:/usr/lib/docker/cli-plugins/"
           
               if ! docker compose version &> /dev/null; then
                 echo "apt installation failed for docker-compose-plugin. Falling back to manual Docker Compose v1 installation."
