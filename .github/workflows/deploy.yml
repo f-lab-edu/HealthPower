@@ -51,14 +51,23 @@ jobs:
               sudo systemctl start docker
               sudo systemctl enable docker
             fi
+          
             if ! id -nG "$USER" | grep -qw "docker"; then
               echo "Adding user '$USER' to docker group..."
               sudo usermod -aG docker "$USER"
             fi
-            if ! command -v docker-compose &> /dev/null; then
-              echo "docker-compose not found, installing..."
+          
+            if ! docker compose version &> /dev/null; then
+              echo "Docker Compose v2 not found, installing via apt..."
               sudo apt install -y docker-compose-plugin
+              if ! docker compose version &> /dev/null; then
+                echo "ERROR: Docker Compose v2 installation failed or is not recognized after apt install."
+                exit 1 # 강제로 워크플로우를 실패시킴
+              fi
+            else
+              echo "Docker Compose v2 already installed."
             fi
+          
             if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"21\." ; then
               echo "Java 17 JRE not found, installing..."
               sudo apt install -y openjdk-21-jre
