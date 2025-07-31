@@ -33,10 +33,6 @@ services:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     networks:
       - backend
 
