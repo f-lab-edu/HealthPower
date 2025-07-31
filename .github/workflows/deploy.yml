@@ -38,6 +38,9 @@ jobs:
       - name: Ensure Docker and Docker Compose are installed on ELK EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} << 'EOF'
+            sudo apt update
+            sudo apt upgrade -y
+        
             if ! command -v docker &> /dev/null; then
               echo "Docker not found, installing..."
               sudo apt update
@@ -52,8 +55,7 @@ jobs:
             fi
             if ! command -v docker-compose &> /dev/null; then
               echo "docker-compose not found, installing..."
-              sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
+              sudo apt install -y docker-compose-plugin
             fi
           EOF
 
