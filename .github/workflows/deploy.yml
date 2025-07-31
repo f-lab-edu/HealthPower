@@ -63,9 +63,9 @@ jobs:
               echo "Docker Compose v2 already installed."
             fi
           
-            if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"21\." ; then
+            if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"17\." ; then
               echo "Java 17 JRE not found, installing..."
-              sudo apt install -y openjdk-21-jre
+              sudo apt install -y openjdk-17-jre
             fi
             
             echo "--- Installation checks complete ---"
