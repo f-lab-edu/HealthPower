@@ -12,7 +12,6 @@ jobs:
 
     env:
       PROJECT_NAME: HealthPower
-      ELK_PROJECT_PATH_ON_EC2: /home/ubuntu/${{ env.PROJECT_NAME }}
 
     steps:
       - name: Checkout source code
@@ -25,8 +24,9 @@ jobs:
 
       - name: Sync ELK project files to ELK EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} "mkdir -p \"${{ env.ELK_BASE_PATH_ON_EC2 }}/elk\""
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" elk/ ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }}:"${{ env.ELK_BASE_PATH_ON_EC2 }}/elk/"
+          ELK_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }} "mkdir -p \"${ELK_BASE_PROJECT_DIR}/elk\""
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" elk/ ${{ secrets.EC2_USER }}@${{ secrets.ELK_EC2_HOST }}:"${ELK_BASE_PROJECT_DIR}/elk/"
 
       - name: Ensure Docker, Docker Compose (v2) and Java are installed on ELK EC2
         run: |
