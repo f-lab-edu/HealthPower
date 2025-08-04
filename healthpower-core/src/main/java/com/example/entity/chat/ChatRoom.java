@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table
+@Table(name = "chat_room")
 public class ChatRoom {
 
     @Id
