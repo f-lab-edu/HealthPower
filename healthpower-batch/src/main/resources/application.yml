@@ -5,6 +5,11 @@ spring:
 #    username: root
 #    password: 1234
 #    driver-class-name: com.mysql.cj.jdbc.Driver
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health
   datasource:
     url: jdbc:mysql://healthpowerdb.cxqwus40uhci.ap-northeast-2.rds.amazonaws.com:3306/healthpowerdb?useSSL=false&serverTimezone=Asia/Seoul
     username: admin
