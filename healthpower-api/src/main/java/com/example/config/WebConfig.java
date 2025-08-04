@@ -37,7 +37,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://15.165.17.171:8080")
+                //실서버 주소
+                .allowedOrigins("http://43.202.228.171:8080")
+                //.allowedOrigins("http://15.165.17.171:8080")
                 .allowedOriginPatterns("*") // 개발 중엔 * 허용
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

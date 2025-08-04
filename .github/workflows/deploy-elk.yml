@@ -1,62 +1,91 @@
 name: Deploy ELK to EC2
 
 on:
-  workflow_dispatch:        # 수동 실행
+  workflow_dispatch:
 
 jobs:
   deploy-elk:
     runs-on: ubuntu-latest
 
+    env:
+      PROJECT_NAME: HealthPower
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout source code
+        uses: actions/checkout@v3
 
-      # 1) PEM 복원
-      - name: Decode PEM
+      - name: Decode PEM key for ELK EC2
         run: |
-          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/homepem.pem
-          chmod 600 ${{ github.workspace }}/homepem.pem
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/elk_homepem.pem
+          chmod 600 ${{ github.workspace }}/elk_homepem.pem
 
-      # 2) 필수 패키지 (Docker & Compose) 설치
-      - name: Install Docker on ELK
+      - name: Prepare ELK EC2 directories and Sync ELK project files
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} <<'EOS'
-            set -e
-            command -v docker >/dev/null || {
-              sudo apt update && sudo apt -y install docker.io
-              sudo systemctl enable --now docker
-            }
-            command -v docker-compose >/dev/null || {
-              sudo curl -sSL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) \
-                   -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
-            }
-          EOS
+          ELK_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
+          
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} "mkdir -p \"${ELK_BASE_PROJECT_DIR}/elk\""
 
-      # 3) ELK 파일 업로드
-      - name: Copy compose & config
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem" elk/ ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:"${ELK_BASE_PROJECT_DIR}/elk/"
+
+      - name: Ensure Docker, Docker Compose (v2) and Java are installed on ELK EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} "mkdir -p ~/elk/logstash"
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-              elk/docker-compose.yml \
-              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:~/elk/
-          scp -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-              elk/logstash/logstash.conf \
-              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }}:~/elk/logstash/
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} << 'EOF'
+            echo "--- Starting Docker/Compose installation check for ELK ---"
+            sudo apt update
+            sudo apt upgrade -y
 
-      # 4) ELK 스택 재기동
-      - name: Restart ELK stack
+            # Docker 설치
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found, installing..."
+              sudo apt install -y apt-transport-https ca-certificates curl software-properties-common gnupg lsb-release
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+              echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+              sudo apt update
+              sudo apt install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
+            if ! id -nG "\$USER" | grep -qw "docker"; then
+              echo "Adding user '\$USER' to docker group..."
+              sudo usermod -aG docker "\$USER"
+              newgrp docker || true
+            fi
+          
+            # 이전 버전 docker-compose(v1) 제거
+            sudo apt remove -y docker-compose || true
+            sudo rm -f /usr/local/bin/docker-compose || true
+            sudo rm -f /usr/bin/docker-compose || true
+
+            # Docker Compose v2 (plugin) 설치
+            echo "Installing Docker Compose v2 (plugin)..."
+            sudo apt install -y docker-compose-plugin
+
+            # Elasticsearch를 위한 vm.max_map_count 설정
+            echo "Setting vm.max_map_count for Elasticsearch..."
+            sudo sysctl -w vm.max_map_count=262144
+
+            echo "--- Installation checks complete for ELK ---"
+          EOF
+
+      - name: Run ELK Docker Compose on ELK EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/homepem.pem \
-              ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} <<'EOS'
-          set -e
-          cd ~/elk
+          ELK_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}" 
+          
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/elk_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.ELK_HOST }} << EOF
+            # docker compose (v2)가 인식되도록 PATH를 재설정
+            export PATH="\$PATH:/usr/lib/docker/cli-plugins/:/usr/local/lib/docker/cli-plugins/"
 
-          # 이미지 가져오기 및 컨테이너 재생성
-          sudo docker-compose pull                       # ← sudo 추가
-          sudo docker-compose up -d --force-recreate     # ← sudo 추가
-
-          # 불필요 이미지 정리
-          sudo docker image prune -f
-          EOS
+            cd "${ELK_BASE_PROJECT_DIR}/elk" 
+            echo "Attempting to start ELK stack with Docker Compose..."
+          
+            if command -v docker && docker compose version &> /dev/null; then
+                echo "Using 'docker compose' (v2) command."
+                sudo docker compose pull
+                sudo docker compose up -d --build --remove-orphans
+            else
+                echo "Critical Error: 'docker compose' (v2) command not found."
+                exit 1 
+            fi
+          
+            echo "ELK Docker Compose command executed."
+          EOF
