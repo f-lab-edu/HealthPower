@@ -43,6 +43,7 @@ jobs:
           API_JAR_PATH="${{ github.workspace }}/healthpower-api/build/libs/healthpower-api-0.0.1-SNAPSHOT.jar"
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" "${API_JAR_PATH}" ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:"${APP_BASE_PROJECT_DIR}/healthpower-api/"
           rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:${APP_BASE_PROJECT_DIR}/
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" docker-compose.bluegreen.yml ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:${APP_BASE_PROJECT_DIR}/
 
       - name: Create .env file on APP EC2
         run: |
