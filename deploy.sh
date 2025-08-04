@@ -4,6 +4,7 @@
 PROJECT_ROOT="/home/ubuntu/HealthPower" # EC2 서버에 프로젝트가 클론될 경로
 DOCKER_COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.bluegreen.yml"
 NGINX_CONF_PATH="${PROJECT_ROOT}/nginx/conf.d/default.conf"
+LOG_FILE="${PROJECT_ROOT}/deployment.log"
 
 # 현재 활성화된 서비스 포트를 기록할 파일 (EC2 서버의 /tmp 디렉토리 등)
 CURRENT_PORT_STATE_FILE="/tmp/healthpower_current_port.txt"
@@ -15,6 +16,9 @@ CURRENT_PORT_STATE_FILE="/tmp/healthpower_current_port.txt"
 # (deploy.yml에서 'Execute deploy script on EC2' 스텝 안에 추가)
 
 # 초기 포트 설정 (파일이 없으면 spring-blue의 포트인 8081부터 시작)
+echo "" > "$LOG_FILE"
+echo ">> 배포 시작: $(date)" | tee -a "$LOG_FILE"
+
 if [ ! -f "$CURRENT_PORT_STATE_FILE" ]; then
     echo "8081" > "$CURRENT_PORT_STATE_FILE"
 fi
@@ -31,51 +35,51 @@ else
     NEXT_SERVICE_PORT=8081
 fi
 
-echo ">> 현재 서비스 중인 컨테이너: $CURRENT_APP_NAME (호스트 포트: $CURRENT_SERVICE_PORT)"
-echo ">> 다음 배포할 컨테이너: $NEXT_APP_NAME (호스트 포트: $NEXT_SERVICE_PORT)"
+echo ">> 현재 서비스 중인 컨테이너: $CURRENT_APP_NAME (호스트 포트: $CURRENT_SERVICE_PORT)" | tee -a "$LOG_FILE"
+echo ">> 다음 배포할 컨테이너: $NEXT_APP_NAME (호스트 포트: $NEXT_SERVICE_PORT)" | tee -a "$LOG_FILE"
 
 # --- 1. Docker Compose로 새 컨테이너 실행 (빌드 및 기동) ---
-echo ">> Docker Compose로 $NEXT_APP_NAME 컨테이너 실행 (빌드 및 기동)..."
+echo ">> Docker Compose로 $NEXT_APP_NAME 컨테이너 실행 (빌드 및 기동)..." | tee -a "$LOG_FILE"
 cd "$PROJECT_ROOT" || exit 1
 
-# [추가] `redis` 컨테이너가 있으면 강제로 제거합니다.
-# 이로 인해 데이터가 삭제되므로 주의해야 합니다. (개발 환경에서만 사용 권장)
-echo ">> 기존 redis 컨테이너를 제거합니다."
-docker compose -f "$DOCKER_COMPOSE_FILE" rm -f redis
+echo ">> 기존 redis 컨테이너를 제거합니다." | tee -a "$LOG_FILE"
+docker compose -f "$DOCKER_COMPOSE_FILE" rm -f redis | tee -a "$LOG_FILE"
 
-# .env 파일 대신, GitHub Actions에서 넘겨받은 환경 변수를 사용하도록 docker compose 명령에 직접 전달
-# 이 부분은 GitHub Actions의 'Execute deploy script on EC2' 스텝에서 구성됩니다.
-docker compose -f "$DOCKER_COMPOSE_FILE" up -d --build --force-recreate "$NEXT_APP_NAME"
+docker compose -f "$DOCKER_COMPOSE_FILE" up -d --build --force-recreate "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
 if [ $? -ne 0 ]; then
-    echo "ERROR: $NEXT_APP_NAME 컨테이너 실행 실패."
+    echo "ERROR: $NEXT_APP_NAME 컨테이너 실행 실패." | tee -a "$LOG_FILE"
     exit 1
 fi
-echo ">> $NEXT_APP_NAME 컨테이너 실행 완료."
+echo ">> $NEXT_APP_NAME 컨테이너 실행 완료." | tee -a "$LOG_FILE"
 
-# --- [추가] 컨테이너 로그를 확인하는 부분 ---
-echo ">> $NEXT_APP_NAME 컨테이너 로그 확인 중..."
-docker compose -f "$DOCKER_COMPOSE_FILE" logs "$NEXT_APP_NAME"
+# --- [수정] 컨테이너 로그를 캡처하고 출력하는 부분 ---
+echo ">> $NEXT_APP_NAME 컨테이너 로그 확인 중..." | tee -a "$LOG_FILE"
+# 컨테이너가 시작될 시간을 줍니다.
+sleep 10
+# 컨테이너 로그를 파일에 캡처합니다.
+docker compose -f "$DOCKER_COMPOSE_FILE" logs "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
+# --- [수정 끝] ---
 
 # --- 2. 헬스 체크 ---
-echo ">> 헬스 체크 시작 ($NEXT_APP_NAME)..."
+echo ">> 헬스 체크 시작 ($NEXT_APP_NAME)..." | tee -a "$LOG_FILE"
 HEALTH_CHECK_URL="http://127.0.0.1:$NEXT_SERVICE_PORT/actuator/health"
 HEALTH_STATUS="DOWN"
 for i in {1..120}; do
-    echo ">> (시도 $i/120) $NEXT_APP_NAME 컨테이너 헬스 체크 중..."
+    echo ">> (시도 $i/120) $NEXT_APP_NAME 컨테이너 헬스 체크 중..." | tee -a "$LOG_FILE"
     STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_CHECK_URL")
     if [ "$STATUS_CODE" -eq 200 ]; then
         HEALTH_STATUS="UP"
-        echo ">> 헬스 체크 성공 ($NEXT_APP_NAME). 상태 코드: $STATUS_CODE"
+        echo ">> 헬스 체크 성공 ($NEXT_APP_NAME). 상태 코드: $STATUS_CODE" | tee -a "$LOG_FILE"
         break
     else
-        echo ">> 헬스 체크 ($NEXT_APP_NAME) 실패 (상태 코드: $STATUS_CODE). 1초 후 재시도..."
+        echo ">> 헬스 체크 ($NEXT_APP_NAME) 실패 (상태 코드: $STATUS_CODE). 1초 후 재시도..." | tee -a "$LOG_FILE"
         sleep 1
     fi
 
     if [ $i -eq 120 ]; then
-        echo "ERROR: 헬스 체크 120회 실패. 배포 롤백 ($NEXT_APP_NAME 컨테이너 중지)."
-        docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
-        docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
+        echo "ERROR: 헬스 체크 120회 실패. 배포 롤백 ($NEXT_APP_NAME 컨테이너 중지)." | tee -a "$LOG_FILE"
+        docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
+        docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
         exit 1
     fi
 done
