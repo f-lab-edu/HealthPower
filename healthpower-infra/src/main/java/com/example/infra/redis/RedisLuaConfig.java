@@ -6,23 +6,23 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+
 @Configuration
 public class RedisLuaConfig {
 
-//    @Bean
-//    public RedisScript<Long> claimScript() throws IOException {
+    @Bean
+    public RedisScript<Long> claimScript() throws IOException {
 //        String script = Files.readString(ResourceUtils.getFile("classpath:lua/claim.lua").toPath());
 //        return RedisScript.of(script, Long.class);
-//    }
 
-    @Bean
-    public RedisScript<Boolean> claimScript() {
-        DefaultRedisScript<Boolean> redisScript = new DefaultRedisScript<>();
+        String script = new String(Files.readAllBytes(new ClassPathResource("lua/claim.lua").getFile().toPath()), StandardCharsets.UTF_8);
 
-        // 문제의 원인이었던 부분. getFile() 대신 ClassPathResource 사용
-        redisScript.setLocation(new ClassPathResource("lua/claim.lua"));
-
-        redisScript.setResultType(Boolean.class);
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText(script);
+        redisScript.setResultType(Long.class);
         return redisScript;
     }
 }
