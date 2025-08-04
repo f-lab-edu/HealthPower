@@ -38,6 +38,11 @@ echo ">> 다음 배포할 컨테이너: $NEXT_APP_NAME (호스트 포트: $NEXT_
 echo ">> Docker Compose로 $NEXT_APP_NAME 컨테이너 실행 (빌드 및 기동)..."
 cd "$PROJECT_ROOT" || exit 1
 
+# [추가] `redis` 컨테이너가 있으면 강제로 제거합니다.
+# 이로 인해 데이터가 삭제되므로 주의해야 합니다. (개발 환경에서만 사용 권장)
+echo ">> 기존 redis 컨테이너를 제거합니다."
+docker compose -f "$DOCKER_COMPOSE_FILE" rm -f redis
+
 # .env 파일 대신, GitHub Actions에서 넘겨받은 환경 변수를 사용하도록 docker compose 명령에 직접 전달
 # 이 부분은 GitHub Actions의 'Execute deploy script on EC2' 스텝에서 구성됩니다.
 docker compose -f "$DOCKER_COMPOSE_FILE" up -d --build --force-recreate "$NEXT_APP_NAME"
