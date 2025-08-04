@@ -47,6 +47,10 @@ if [ $? -ne 0 ]; then
 fi
 echo ">> $NEXT_APP_NAME 컨테이너 실행 완료."
 
+# --- [추가] 컨테이너 로그를 확인하는 부분 ---
+echo ">> $NEXT_APP_NAME 컨테이너 로그 확인 중..."
+docker-compose -f "$DOCKER_COMPOSE_FILE" logs "$NEXT_APP_NAME"
+
 # --- 2. 헬스 체크 ---
 echo ">> 헬스 체크 시작 ($NEXT_APP_NAME)..."
 HEALTH_CHECK_URL="http://127.0.0.1:$NEXT_SERVICE_PORT/actuator/health"
