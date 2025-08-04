@@ -40,7 +40,7 @@ cd "$PROJECT_ROOT" || exit 1
 
 # .env 파일 대신, GitHub Actions에서 넘겨받은 환경 변수를 사용하도록 docker compose 명령에 직접 전달
 # 이 부분은 GitHub Actions의 'Execute deploy script on EC2' 스텝에서 구성됩니다.
-docker compose -f "$DOCKER_COMPOSE_FILE" up -d --build --force-recreate "$NEXT_APP_NAME"
+docker-compose -f "$DOCKER_COMPOSE_FILE" up -d --build --force-recreate "$NEXT_APP_NAME"
 if [ $? -ne 0 ]; then
     echo "ERROR: $NEXT_APP_NAME 컨테이너 실행 실패."
     exit 1
@@ -65,8 +65,8 @@ for i in {1..120}; do
 
     if [ $i -eq 120 ]; then
         echo "ERROR: 헬스 체크 120회 실패. 배포 롤백 ($NEXT_APP_NAME 컨테이너 중지)."
-        docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
-        docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
+        docker-compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
+        docker-compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
         exit 1
     fi
 done
@@ -76,29 +76,29 @@ echo ">> Nginx 설정 파일 변경 ($CURRENT_SERVICE_PORT -> $NEXT_SERVICE_PORT
 sudo sed -i "s|server 127.0.0.1:$CURRENT_SERVICE_PORT;|server 127.0.0.1:$NEXT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
 if [ $? -ne 0 ]; then
     echo "ERROR: Nginx 설정 파일 변경 실패."
-    docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
-    docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
+    docker-compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
+    docker-compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
     exit 1
 fi
 echo ">> Nginx 설정 파일 변경 완료."
 
 # --- 4. Nginx 컨테이너 재로드 ---
 echo ">> Nginx 컨테이너 재로드..."
-docker compose -f "$DOCKER_COMPOSE_FILE" exec nginx nginx -s reload
+docker-compose -f "$DOCKER_COMPOSE_FILE" exec nginx nginx -s reload
 if [ $? -ne 0 ]; then
     echo "ERROR: Nginx 컨테이너 재로드 실패. 배포 중단."
     sudo sed -i "s|server 127.0.0.1:$NEXT_SERVICE_PORT;|server 127.0.0.1:$CURRENT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
-    docker compose -f "$DOCKER_COMPOSE_FILE" exec nginx nginx -s reload
-    docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
-    docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
+    docker-compose -f "$DOCKER_COMPOSE_FILE" exec nginx nginx -s reload
+    docker-compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME"
+    docker-compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME"
     exit 1
 fi
 echo ">> Nginx 트래픽 전환 성공."
 
 # --- 5. 이전 버전 종료 ---
 echo ">> 이전 서비스 컨테이너 ($CURRENT_APP_NAME) 중지 및 삭제..."
-docker compose -f "$DOCKER_COMPOSE_FILE" stop "$CURRENT_APP_NAME"
-docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$CURRENT_APP_NAME"
+docker-compose -f "$DOCKER_COMPOSE_FILE" stop "$CURRENT_APP_NAME"
+docker-compose -f "$DOCKER_COMPOSE_FILE" rm -f "$CURRENT_APP_NAME"
 echo ">> 이전 서비스 컨테이너 중지 및 삭제 완료."
 
 # --- 6. 다음 배포를 위해 현재 포트 업데이트 ---

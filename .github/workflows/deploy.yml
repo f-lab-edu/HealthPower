@@ -94,10 +94,10 @@ jobs:
               sudo usermod -aG docker "\$USER"
             fi
 
-            if ! docker compose version &> /dev/null; then
+            if ! command -v docker-compose &> /dev/null; then
               echo "Docker Compose v2 not found on APP server, installing via apt..."
               sudo apt install -y docker-compose
-              if ! docker compose version &> /dev/null; then
+              if ! command -v docker-compose &> /dev/null; then
                 echo "WARNING: Docker Compose v2 installation failed or is not recognized on APP server after apt install."
               fi
             else
