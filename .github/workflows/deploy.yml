@@ -61,7 +61,7 @@ jobs:
             DB_USERNAME=${{ secrets.DB_USERNAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             INNER_EOF
-          EOF"
+          EOF
 
       - name: Ensure Docker (and Java for host execution) are installed on APP EC2
         run: |
