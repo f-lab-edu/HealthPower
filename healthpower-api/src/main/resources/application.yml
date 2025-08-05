@@ -33,7 +33,7 @@ spring:
     host: localhost
     port: 6379
   kafka:
-    bootstrap-servers: kafka:9094
+    bootstrap-servers: kafka:9092
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
