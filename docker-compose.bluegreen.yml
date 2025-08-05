@@ -31,6 +31,12 @@ services:
       - backend
     ports:
       - "6379:6379"
+    # Redis 컨테이너의 헬스 체크 추가
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 50
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -109,8 +115,8 @@ services:
       - "433:433" #https 고려
     depends_on:
       spring-blue:
-        condition: service_started
+        condition: service_healthy
       spring-green:
-        condition: service_started
+        condition: service_healthy
     networks:
       - backend
