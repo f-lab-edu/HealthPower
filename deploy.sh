@@ -60,7 +60,7 @@ echo ">> 로그 확인 완료." | tee -a "$LOG_FILE"
 
 # --- 3. Nginx 설정 파일 변경 ---
 echo ">> Nginx 설정 파일 변경 ($CURRENT_SERVICE_PORT -> $NEXT_SERVICE_PORT)..."
-sudo sed -i "s|server 127.0.0.1:$CURRENT_SERVICE_PORT;|server 127.0.0.1:$NEXT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
+sudo sed -i "s|proxy_pass http:\/\/127.0.0.1:$CURRENT_SERVICE_PORT;|proxy_pass http:\/\/127.0.0.1:$NEXT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
 if [ $? -ne 0 ]; then
     echo "ERROR: Nginx 설정 파일 변경 실패. 배포 롤백." | tee -a "$LOG_FILE"
     docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME" | tee -a "$LOG_FILE"

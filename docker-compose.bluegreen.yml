@@ -75,9 +75,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 60s
-    # 컨테이너가 예기치 않게 종료될 경우 재시작하도록 설정
-    command: bash -c "bin/kafka-server-start.sh config/server.properties"
-
 
   spring-blue: &app_base
     build:
