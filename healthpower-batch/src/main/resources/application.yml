@@ -34,6 +34,8 @@ spring:
     level:
       root: info
       com.example: info
+      org.springframework.data.redis: debug # Redis 관련 로그 레벨을 DEBUG로 변경
+      io.lettuce: debug # Redis 클라이언트 로그 레벨을 DEBUG로 변경
   batch:
     job:
       name: inactiveUserJob
