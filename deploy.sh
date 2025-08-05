@@ -1,15 +1,19 @@
 #!/bin/bash
 
 # --- 변수 설정 ---
-PROJECT_ROOT="/home/ubuntu/HealthPower" # EC2 서버에 프로젝트가 클론될 경로
+# PROJECT_ROOT: Project root directory on the EC2 server
+PROJECT_ROOT="/home/ubuntu/HealthPower"
+# DOCKER_COMPOSE_FILE: Path to the Docker Compose file for Blue/Green deployment
 DOCKER_COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.bluegreen.yml"
+# NGINX_CONF_PATH: Path to the Nginx configuration file
 NGINX_CONF_PATH="${PROJECT_ROOT}/nginx/conf.d/default.conf"
+# LOG_FILE: Path to the deployment log file
 LOG_FILE="${PROJECT_ROOT}/deployment.log"
 
-# 현재 활성화된 서비스 포트를 기록할 파일 (EC2 서버의 /tmp 디렉토리 등)
+# CURRENT_PORT_STATE_FILE: File to store the currently active service port
 CURRENT_PORT_STATE_FILE="/tmp/healthpower_current_port.txt"
 
-# 초기 포트 설정 (파일이 없으면 spring-blue의 포트인 8081부터 시작)
+# Initial port setup (starts with 8081 if no file exists)
 echo "" > "$LOG_FILE"
 echo ">> 배포 시작: $(date)" | tee -a "$LOG_FILE"
 
@@ -32,18 +36,59 @@ fi
 echo ">> 현재 서비스 중인 컨테이너: $CURRENT_APP_NAME (호스트 포트: $CURRENT_SERVICE_PORT)" | tee -a "$LOG_FILE"
 echo ">> 다음 배포할 컨테이너: $NEXT_APP_NAME (호스트 포트: $NEXT_SERVICE_PORT)" | tee -a "$LOG_FILE"
 
-# --- 1. Docker Compose로 새 컨테이너 실행 (빌드 및 기동) ---
+# --- Automatic Nginx configuration file creation ---
+# If the Nginx configuration file does not exist, create a new one.
+if [ ! -f "$NGINX_CONF_PATH" ]; then
+    echo ">> Nginx 설정 파일이 없어 새로 생성합니다..." | tee -a "$LOG_FILE"
+    # Create the directory if it doesn't exist
+    mkdir -p "${PROJECT_ROOT}/nginx/conf.d"
+    # Write the default configuration to the file using a here document
+    cat <<EOF > "$NGINX_CONF_PATH"
+# HealthPower/nginx/conf.d/default.conf
+upstream app_current {
+    # This part is dynamically changed by the deployment script.
+    server 127.0.0.1:8081;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your_domain.com your_server_ip;
+
+    location / {
+        proxy_pass http://app_current;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    location /actuator/health {
+        proxy_pass http://app_current/actuator/health;
+        proxy_set_header Host \$host;
+    }
+}
+EOF
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Nginx 설정 파일 생성 실패. 배포 중단." | tee -a "$LOG_FILE"
+        exit 1
+    fi
+    echo ">> Nginx 설정 파일 생성 완료." | tee -a "$LOG_FILE"
+fi
+
+
+# --- 1. Run the new container with Docker Compose (build and start) ---
 echo ">> Docker Compose로 $NEXT_APP_NAME 컨테이너 실행 (빌드 및 기동)..." | tee -a "$LOG_FILE"
 cd "$PROJECT_ROOT" || exit 1
 
-# 기존 redis 컨테이너를 제거하지 않고 재활용하도록 수정.
-# 이렇게 하면 Redis에 저장된 데이터가 초기화되지 않습니다.
+# Re-use the existing redis container without removing it.
 echo ">> 기존 redis 컨테이너를 재활용합니다. 컨테이너가 없으면 새로 생성됩니다." | tee -a "$LOG_FILE"
-# `docker compose up -d redis` 명령어를 사용하면 이미 실행 중인 redis 컨테이너는
-# 아무런 작업도 하지 않고, 종료되어 있으면 다시 시작합니다.
 
-# `up --wait`는 `healthcheck`가 통과될 때까지 기다려줍니다.
-# `start_period`를 고려하여 `wait-timeout`을 충분히 길게 설정합니다.
+# `up --wait` waits until the health check passes.
+# Set a sufficient `wait-timeout` considering `start_period`.
 docker compose -f "$DOCKER_COMPOSE_FILE" up -d --build --force-recreate --wait --wait-timeout 300 "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
 if [ $? -ne 0 ]; then
     echo "ERROR: $NEXT_APP_NAME 컨테이너 실행 및 헬스 체크 실패. 배포 롤백." | tee -a "$LOG_FILE"
@@ -53,41 +98,44 @@ if [ $? -ne 0 ]; then
 fi
 echo ">> $NEXT_APP_NAME 컨테이너 실행 완료 및 헬스 체크 성공." | tee -a "$LOG_FILE"
 
-# --- 2. 컨테이너 로그를 캡처하고 출력하는 부분 ---
+# --- 2. Capture and print container logs ---
 echo ">> $NEXT_APP_NAME 컨테이너 로그 확인 중..." | tee -a "$LOG_FILE"
 docker compose -f "$DOCKER_COMPOSE_FILE" logs "$NEXT_APP_NAME" | tail -n 100 | tee -a "$LOG_FILE"
 echo ">> 로그 확인 완료." | tee -a "$LOG_FILE"
 
-# --- 3. Nginx 설정 파일 변경 ---
-echo ">> Nginx 설정 파일 변경 ($CURRENT_SERVICE_PORT -> $NEXT_SERVICE_PORT)..."
-sudo sed -i "s|proxy_pass http:\/\/127.0.0.1:$CURRENT_SERVICE_PORT;|proxy_pass http:\/\/127.0.0.1:$NEXT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
+# --- 3. Change Nginx configuration file ---
+echo ">> Nginx 설정 파일 변경 ($CURRENT_SERVICE_PORT -> $NEXT_SERVICE_PORT)..." | tee -a "$LOG_FILE"
+# Modify the server port in the upstream block using sed
+sudo sed -i "s|server 127.0.0.1:$CURRENT_SERVICE_PORT;|server 127.0.0.1:$NEXT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
 if [ $? -ne 0 ]; then
     echo "ERROR: Nginx 설정 파일 변경 실패. 배포 롤백." | tee -a "$LOG_FILE"
     docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
     docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
     exit 1
 fi
-echo ">> Nginx 설정 파일 변경 완료."
+echo ">> Nginx 설정 파일 변경 완료." | tee -a "$LOG_FILE"
 
-# --- 4. Nginx 컨테이너 재로드 ---
+# --- 4. Reload Nginx container ---
 echo ">> Nginx 컨테이너 재로드..." | tee -a "$LOG_FILE"
 docker compose -f "$DOCKER_COMPOSE_FILE" exec nginx nginx -s reload | tee -a "$LOG_FILE"
 if [ $? -ne 0 ]; then
     echo "ERROR: Nginx 컨테이너 재로드 실패. 배포 중단." | tee -a "$LOG_FILE"
+    # Rollback: Revert Nginx configuration file to the original state
     sudo sed -i "s|server 127.0.0.1:$NEXT_SERVICE_PORT;|server 127.0.0.1:$CURRENT_SERVICE_PORT;|" "$NGINX_CONF_PATH"
     docker compose -f "$DOCKER_COMPOSE_FILE" exec nginx nginx -s reload | tee -a "$LOG_FILE"
+    # Rollback: Remove the newly deployed container
     docker compose -f "$DOCKER_COMPOSE_FILE" stop "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
     docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$NEXT_APP_NAME" | tee -a "$LOG_FILE"
     exit 1
 fi
 echo ">> Nginx 트래픽 전환 성공." | tee -a "$LOG_FILE"
 
-# --- 5. 이전 버전 종료 ---
+# --- 5. Stop the previous version ---
 echo ">> 이전 서비스 컨테이너 ($CURRENT_APP_NAME) 중지 및 삭제..." | tee -a "$LOG_FILE"
 docker compose -f "$DOCKER_COMPOSE_FILE" stop "$CURRENT_APP_NAME" | tee -a "$LOG_FILE"
 docker compose -f "$DOCKER_COMPOSE_FILE" rm -f "$CURRENT_APP_NAME" | tee -a "$LOG_FILE"
 echo ">> 이전 서비스 컨테이너 중지 및 삭제 완료." | tee -a "$LOG_FILE"
 
-# --- 6. 다음 배포를 위해 현재 포트 업데이트 ---
+# --- 6. Update the current port for the next deployment ---
 echo "$NEXT_SERVICE_PORT" > "$CURRENT_PORT_STATE_FILE"
 echo ">> 배포 성공: 이제 $NEXT_SERVICE_PORT 포트($NEXT_APP_NAME 컨테이너) 서비스 중입니다." | tee -a "$LOG_FILE"
