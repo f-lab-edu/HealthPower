@@ -6,24 +6,14 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-
 @Configuration
 public class RedisLuaConfig {
 
     @Bean
-    public RedisScript<Long> claimScript() throws IOException {
-//        String script = Files.readString(ResourceUtils.getFile("classpath:lua/claim.lua").toPath());
-//        return RedisScript.of(script, Long.class);
-
-        // 수정된 부분: File 객체를 직접 얻으려 하지 않고, Spring의 리소스 추상화를 이용
-        String script = new String(Files.readAllBytes(new ClassPathResource("lua/claim.lua").getFile().toPath()), StandardCharsets.UTF_8);
-
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
-        redisScript.setScriptText(script);
-        redisScript.setResultType(Long.class);
+    public RedisScript<Boolean> claimScript() {
+        DefaultRedisScript<Boolean> redisScript = new DefaultRedisScript<>();
+        redisScript.setLocation(new ClassPathResource("lua/claim.lua"));
+        redisScript.setResultType(Boolean.class);
         return redisScript;
     }
 }
