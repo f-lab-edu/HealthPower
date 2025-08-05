@@ -18,6 +18,7 @@ public class RedisLuaConfig {
 //        String script = Files.readString(ResourceUtils.getFile("classpath:lua/claim.lua").toPath());
 //        return RedisScript.of(script, Long.class);
 
+        // 수정된 부분: File 객체를 직접 얻으려 하지 않고, Spring의 리소스 추상화를 이용
         String script = new String(Files.readAllBytes(new ClassPathResource("lua/claim.lua").getFile().toPath()), StandardCharsets.UTF_8);
 
         DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
