@@ -145,6 +145,17 @@ spring:
   config:
     activate:
       on-profile: prod
+  mvc: # <-- 추가
+    locale: ko_KR
+    locale-resolver: fixed
+    hiddenmethod:
+      filter:
+        enabled: true
+  application: # <-- 추가
+    name: HealthPower
+  thymeleaf: # <-- 추가
+    prefix: classpath:/templates/
+    suffix: .html
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -159,7 +170,21 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
     show-sql: true
+  kafka:
+    bootstrap-servers: kafka:9092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.example.infra.kafka
+        spring.json.value.default.type: com.example.infra.kafka.CouponIssuedEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    session: # <-- 추가
+      store-type: redis
 cloud:
   aws:
     credentials:
@@ -195,7 +220,22 @@ slack:
 app:
   upload:
     dir: /home/ubuntu/uploads
+servlet: # <-- 추가
+  multipart: # <-- 추가
+    enabled: true # <-- 추가
+    max-file-size: 10MB # <-- 추가
+    max-request-size: 10MB # <-- 추가
+http: # <-- 추가
+  encoding: # <-- 추가
+    force: true # <-- 추가
+    charset: UTF-8 # <-- 추가
+    enabled: true # <-- 추가
 logstash:
   host: localhost
   port: 5000
+logging: # <-- 추가
+  level: # <-- 추가
+    org.springframework.web.socket: DEBUG # <-- 추가
+    org.springframework.messaging.simp: DEBUG # <-- 추가
+
 
