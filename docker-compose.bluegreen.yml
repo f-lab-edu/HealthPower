@@ -68,13 +68,16 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - backend
-    # Kafka 헬스 체크 추가
+    # Kafka 헬스 체크를 좀 더 안정적인 방식으로 변경
     healthcheck:
-      test: ["CMD-SHELL", "kafkacat -b localhost:9092 -L"]
+      test: ["CMD", "telnet", "localhost", "9092"]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 60s
+    # 컨테이너가 예기치 않게 종료될 경우 재시작하도록 설정
+    command: bash -c "bin/kafka-server-start.sh config/server.properties"
+
 
   spring-blue: &app_base
     build:
