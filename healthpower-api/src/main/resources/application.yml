@@ -1,39 +1,28 @@
+# 모든 프로파일에 공통으로 적용되는 설정
 spring:
-  profiles:
-#    active: local # 실행 시 필요에 따라 prod, dev, local 변경
-    active: prod
-
----
-spring:
-  config:
-    activate:
-      on-profile: local
+  application:
+    name: HealthPower
   mvc:
     locale: ko_KR
     locale-resolver: fixed
     hiddenmethod:
       filter:
         enabled: true
-  application:
-    name: HealthPower
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
-  datasource:
-    url: jdbc:mysql://localhost:3306/springJWT?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
-    username: root
-    password: 1234
-    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-  redis:
-    host: localhost
-    port: 6379
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  session:
+    store-type: redis
   kafka:
-    bootstrap-servers: kafka:9092
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
@@ -43,42 +32,26 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-  session:
-    store-type: redis
-#    실서버수정
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  http:
+    encoding:
+      force: true
+      charset: UTF-8
+      enabled: true
+  profiles:
+    active: prod # 실행 시 필요에 따라 prod, dev, local 변경
+
 jwt:
   secret: "cG93ZXJwb3dlcnRlc3RoZWFsdGhwb3dlcnRoZXN0cG93ZXI="
-
 toss:
   secret: "test_sk_6BYq7GWPVvnRvyQgxoMwVNE5vbo1"
   client: "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm"
-
-app:
-  upload:
-    dir: C:/Users/JJS/Downloads
-servlet:
-  multipart:
-    enabled: true
-    max-file-size: 10MB
-    max-request-size: 10MB
-http:
-  encoding:
-    force: true
-    charset: UTF-8
-    enabled: true
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
 cloud:
   aws:
-    credentials:
-#      실서버수정
-      access-key: ""
-      secret-key: ""
-    s3:
-      bucket: healthpowerbucket
     region:
       static: ap-northeast-2
     stack:
@@ -86,16 +59,59 @@ cloud:
 slack:
   webhook:
     url: https://hooks.slack.com/services/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
-
-spring.jpa.show-sql: true
-spring.jpa.properties.hibernate.format_sql: true
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
 logging:
   level:
     org.springframework.web.socket: DEBUG
     org.springframework.messaging.simp: DEBUG
 
 ---
+# local 프로파일 설정
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/springJWT?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+  cloud:
+    aws:
+      credentials:
+        access-key: ""
+        secret-key: ""
+      s3:
+        bucket: healthpowerbucket
+  app:
+    upload:
+      dir: C:/Users/JJS/Downloads
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+logstash:
+  host: localhost
+  port: 5000
+
+---
+# dev 프로파일 설정
 spring:
   config:
     activate:
@@ -104,17 +120,19 @@ spring:
     url: ${DB_LOCAL_URL}
     username: root
     password: 1234
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: kafka:9092
   cloud:
     aws:
       credentials:
         access-key: ${AWS_ACCESS_KEY:}
         secret-key: ${AWS_SECRET_KEY:}
-      region:
-        static: ap-northeast-2
       s3:
         bucket: ${AWS_S3_BUCKET:dev-default-bucket}
-      stack:
-        auto: false
   jwt:
     secret: ${JWT_SECRET}
   toss:
@@ -129,33 +147,22 @@ spring:
       web:
         exposure:
           include: health,info
-        base-path: /actuator
     endpoint:
       health:
         show-details: always
   slack:
     webhook:
       url: ${SLACK_WEBHOOK_URL}
+  logstash:
+    host: localhost
+    port: 5000
 
 ---
+# prod 프로파일 설정
 spring:
-  redis:
-    host: redis
-    port: 6379
   config:
     activate:
       on-profile: prod
-  mvc: # <-- 추가
-    locale: ko_KR
-    locale-resolver: fixed
-    hiddenmethod:
-      filter:
-        enabled: true
-  application: # <-- 추가
-    name: HealthPower
-  thymeleaf: # <-- 추가
-    prefix: classpath:/templates/
-    suffix: .html
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -164,78 +171,39 @@ spring:
     redis:
       host: redis
       port: 6379
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
-    show-sql: true
   kafka:
     bootstrap-servers: kafka:9092
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: com.example.infra.kafka
-        spring.json.value.default.type: com.example.infra.kafka.CouponIssuedEvent
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    session: # <-- 추가
-      store-type: redis
-cloud:
-  aws:
-    credentials:
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
-    s3:
-      bucket: ${AWS_S3_BUCKET}
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
-jwt:
-  secret: ${JWT_SECRET}
-toss:
-  secret: ${TOSS_SECRET}
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+  jwt:
+    secret: ${JWT_SECRET}
+  toss:
+    secret: ${TOSS_SECRET}
   client: ${TOSS_CLIENT}
-server:
-  port: 8080
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-      base-path: /actuator
+  server:
+    port: 8080
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus
+        base-path: /actuator
   endpoint:
     health:
       show-details: always
     prometheus:
       enabled: true
-slack:
-  webhook:
-    url: ${SLACK_WEBHOOK_URL}
-app:
-  upload:
-    dir: /home/ubuntu/uploads
-servlet: # <-- 추가
-  multipart: # <-- 추가
-    enabled: true # <-- 추가
-    max-file-size: 10MB # <-- 추가
-    max-request-size: 10MB # <-- 추가
-http: # <-- 추가
-  encoding: # <-- 추가
-    force: true # <-- 추가
-    charset: UTF-8 # <-- 추가
-    enabled: true # <-- 추가
-logstash:
-  host: logstash
-  port: 5000
-logging: # <-- 추가
-  level: # <-- 추가
-    org.springframework.web.socket: DEBUG # <-- 추가
-    org.springframework.messaging.simp: DEBUG # <-- 추가
-
-
+  slack:
+    webhook:
+      url: ${SLACK_WEBHOOK_URL}
+  app:
+    upload:
+      dir: /home/ubuntu/uploads
+  logstash:
+    host: logstash
+    port: 5000
