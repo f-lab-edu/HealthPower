@@ -231,7 +231,7 @@ http: # <-- 추가
     charset: UTF-8 # <-- 추가
     enabled: true # <-- 추가
 logstash:
-  host: localhost
+  host: logstash
   port: 5000
 logging: # <-- 추가
   level: # <-- 추가
