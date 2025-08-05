@@ -40,10 +40,10 @@ echo ">> 다음 배포할 컨테이너: $NEXT_APP_NAME (호스트 포트: $NEXT_
 # If the Nginx configuration file does not exist, create a new one.
 if [ ! -f "$NGINX_CONF_PATH" ]; then
     echo ">> Nginx 설정 파일이 없어 새로 생성합니다..." | tee -a "$LOG_FILE"
-    # Create the directory if it doesn't exist
-    mkdir -p "${PROJECT_ROOT}/nginx/conf.d"
-    # Write the default configuration to the file using a here document
-    cat <<EOF > "$NGINX_CONF_PATH"
+    # Create the directory with sudo if it doesn't exist
+    sudo mkdir -p "${PROJECT_ROOT}/nginx/conf.d"
+    # Write the default configuration to the file using a here document with tee and sudo
+    cat <<EOF | sudo tee "$NGINX_CONF_PATH" > /dev/null
 # HealthPower/nginx/conf.d/default.conf
 upstream app_current {
     # This part is dynamically changed by the deployment script.
