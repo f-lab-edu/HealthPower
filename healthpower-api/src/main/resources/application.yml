@@ -1,4 +1,10 @@
-# 모든 프로파일에 공통으로 적용되는 설정
+# 활성화할 프로파일을 명확하게 지정
+spring:
+  profiles:
+    active: prod # 실행 시 필요에 따라 prod, dev, local 변경
+
+---
+# 모든 프로파일에 공통으로 적용되는 기본 설정
 spring:
   application:
     name: HealthPower
@@ -42,8 +48,14 @@ spring:
       force: true
       charset: UTF-8
       enabled: true
-  profiles:
-    active: prod # 실행 시 필요에 따라 prod, dev, local 변경
+  server:
+    port: 8080 # 모든 프로파일에 적용되는 기본 포트
+  management:
+    endpoints:
+      web:
+        base-path: /actuator # 모든 프로파일에 적용되는 Actuator 기본 경로
+        exposure:
+          include: health # 모든 프로파일에서 기본적으로 health 엔드포인트 노출
 
 jwt:
   secret: "cG93ZXJwb3dlcnRlc3RoZWFsdGhwb3dlcnRoZXN0cG93ZXI="
@@ -59,18 +71,13 @@ cloud:
 slack:
   webhook:
     url: https://hooks.slack.com/services/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
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
 logging:
   level:
     org.springframework.web.socket: DEBUG
     org.springframework.messaging.simp: DEBUG
 
 ---
-# local 프로파일 설정
+# local 프로파일 설정 (로컬 개발 환경용)
 spring:
   config:
     activate:
@@ -96,8 +103,6 @@ spring:
   app:
     upload:
       dir: C:/Users/JJS/Downloads
-server:
-  port: 8080
 management:
   endpoints:
     web:
@@ -111,7 +116,7 @@ logstash:
   port: 5000
 
 ---
-# dev 프로파일 설정
+# dev 프로파일 설정 (개발 서버 환경용)
 spring:
   config:
     activate:
@@ -122,10 +127,10 @@ spring:
     password: 1234
   data:
     redis:
-      host: localhost
+      host: localhost # Docker Compose가 아닌 로컬 개발 환경을 상정
       port: 6379
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: kafka:9092 # Docker Compose 컨테이너 이름을 사용
   cloud:
     aws:
       credentials:
@@ -140,16 +145,14 @@ spring:
   app:
     upload:
       dir: /home/ubuntu/uploads
-  server:
-    port: 8080
   management:
     endpoints:
       web:
         exposure:
           include: health,info
-    endpoint:
-      health:
-        show-details: always
+  endpoint:
+    health:
+      show-details: always
   slack:
     webhook:
       url: ${SLACK_WEBHOOK_URL}
@@ -158,7 +161,7 @@ spring:
     port: 5000
 
 ---
-# prod 프로파일 설정
+# prod 프로파일 설정 (운영 서버 환경용)
 spring:
   config:
     activate:
@@ -169,10 +172,10 @@ spring:
     password: ${DB_PASSWORD}
   data:
     redis:
-      host: redis
+      host: redis # Docker Compose 환경에서 Redis 컨테이너 이름
       port: 6379
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: kafka:9092 # Docker Compose 환경에서 Kafka 컨테이너 이름
   cloud:
     aws:
       credentials:
@@ -185,19 +188,16 @@ spring:
   toss:
     secret: ${TOSS_SECRET}
   client: ${TOSS_CLIENT}
-  server:
-    port: 8080
   management:
     endpoints:
       web:
         exposure:
           include: health,info,prometheus
-        base-path: /actuator
-  endpoint:
-    health:
-      show-details: always
-    prometheus:
-      enabled: true
+    endpoint:
+      health:
+        show-details: always
+      prometheus:
+        enabled: true
   slack:
     webhook:
       url: ${SLACK_WEBHOOK_URL}
