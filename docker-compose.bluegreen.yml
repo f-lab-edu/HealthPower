@@ -62,7 +62,7 @@ services:
       dockerfile: Dockerfile
       args:
         JAR_FILE_NAME: healthpower-api-0.0.1-SNAPSHOT.jar
-#    image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+    #    image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
     container_name: spring-blue
     environment: *app-env
     env_file:
@@ -71,7 +71,7 @@ services:
       - "8081:8080"
     depends_on:
       redis:
-        condition: service_started
+        condition: service_healthy
       kafka:
         condition: service_started
     healthcheck:
@@ -90,10 +90,12 @@ services:
       - "8082:8080"
     env_file:
       - .env
-#    image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+    # image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
     depends_on:
-      - redis
-      - kafka
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - backend
 
