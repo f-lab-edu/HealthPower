@@ -15,6 +15,7 @@ jobs:
 
     env:
       PROJECT_NAME: HealthPower
+      ACTIONS_STEP_DEBUG: true # 이 부분을 추가합니다.
 
     steps:
       - name: Checkout source code
