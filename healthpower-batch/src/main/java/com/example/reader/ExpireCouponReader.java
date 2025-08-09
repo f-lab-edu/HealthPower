@@ -22,21 +22,22 @@ import java.util.Optional;
 @Configuration
 public class ExpireCouponReader {
 
-    private Long runTime;
+    // @BeforeStep에서 설정될 runTime 값 (초기화 목적으로 유지)
+    private Long runTimeBeforeStep;
 
     @BeforeStep
     public void beforeStep(StepExecution stepExecution) {
         JobParameters jobParameters = stepExecution.getJobParameters();
-        this.runTime = Optional.ofNullable(jobParameters.getLong("runTime"))
+        this.runTimeBeforeStep = Optional.ofNullable(jobParameters.getLong("runTime"))
                 .orElseGet(System::currentTimeMillis);
-        log.info("ExpireCouponReader - runTime parameter (초기화됨): {}", this.runTime);
+        log.info("ExpireCouponReader - runTime parameter (초기화됨): {}", this.runTimeBeforeStep);
     }
 
     @Bean
     @StepScope
     public JpaPagingItemReader<CouponIssuance> couponReader(EntityManagerFactory entityManagerFactory,
-                                                            StepExecution stepExecution) {
-
+                                                            @Value("#{stepExecution}") StepExecution stepExecution) {
+        // 주입받은 stepExecution을 사용하여 JobParameters에 접근
         JobParameters jobParameters = stepExecution.getJobParameters();
         Long actualRunTime = Optional.ofNullable(jobParameters.getLong("runTime"))
                 .orElseGet(System::currentTimeMillis);

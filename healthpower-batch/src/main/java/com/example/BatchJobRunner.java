@@ -1,6 +1,5 @@
 package com.example;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParameters;
@@ -29,15 +28,25 @@ public class BatchJobRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        JobParameters parameters = new JobParametersBuilder()
-                /*.addLong("runTime", System.currentTimeMillis()) // 파라미터 다르게 해야 중복 실행 허용*/
-                .addLong("cutoff", System.currentTimeMillis()) // 파라미터 다르게 해야 중복 실행 허용
+
+        long currentMillis = System.currentTimeMillis();
+
+        // expireCouponJob을 위한 파라미터 (runTime 사용)
+        JobParameters expireCouponJobParameters = new JobParametersBuilder()
+                .addLong("runTime", currentMillis)
+                .addString("jobId","expireCouponJob_" + currentMillis) //각 Job 실행을 고유하게 식별
                 .toJobParameters();
 
-        JobExecution execution = jobLauncher.run(expireCouponJob, parameters);
-        System.out.println("✅ expireCouponJob 배치 실행 결과: " + execution.getStatus());
+        // inactiveUserJob을 위한 파라미터 (cutoff 사용)
+        JobParameters inactivedUserJobParameters = new JobParametersBuilder()
+                .addLong("cutoff", currentMillis)
+                .addString("jobId", "inactivedUserJob_" + currentMillis) // 각 잡 실행을 고유하게 식별
+                .toJobParameters();
 
-        JobExecution execution2 = jobLauncher.run(inactivedUserJob, parameters);
+        JobExecution execution1 = jobLauncher.run(expireCouponJob, expireCouponJobParameters);
+        System.out.println("✅ expireCouponJob 배치 실행 결과: " + execution1.getStatus());
+
+        JobExecution execution2 = jobLauncher.run(inactivedUserJob, inactivedUserJobParameters);
         System.out.println("✅ inactivedUserJob 배치 실행 결과: " + execution2.getStatus());
     }
 }
