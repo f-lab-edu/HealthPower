@@ -3,6 +3,10 @@ name: Deploy Spring Boot to EC2 Instances
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'healthpower-api/**'  # healthpower-api 폴더 내 변경이 있을 때만 실행
+      - 'healthpower-core/**'    # 의존하는 core 모듈 변경 시에도 실행
+      - 'healthpower-infra/**'   # 의존하는 infra 모듈 변경 시에도 실행
   workflow_dispatch:
 
 jobs:

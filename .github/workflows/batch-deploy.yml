@@ -1,0 +1,97 @@
+name: Deploy Batch Job to EC2
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'healthpower-batch/**'  # healthpower-batch 폴더 내 변경이 있을 때만 실행
+      - 'healthpower-core/**'    # 의존하는 core 모듈 변경 시에도 실행
+      - 'healthpower-infra/**'   # 의존하는 infra 모듈 변경 시에도 실행
+  workflow_dispatch:
+
+jobs:
+  deploy-batch:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: HealthPower
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x ./gradlew
+
+      - name: Clean old JARs
+        # batch 모듈의 JAR 파일만 삭제
+        run: rm -f healthpower-batch/build/libs/*.jar
+
+      - name: Build Batch application
+        # batch 모듈만 빌드
+        run: ./gradlew healthpower-batch:bootJar
+
+      - name: Decode PEM key for APP EC2
+        run: |
+          echo "${{ secrets.EC2_KEY_B64 }}" | base64 -d > ${{ github.workspace }}/app_homepem.pem
+          chmod 600 ${{ github.workspace }}/app_homepem.pem
+
+      - name: Prepare APP EC2 directories and Sync project files
+        run: |
+          APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
+          
+          # batch 모듈 디렉토리만 생성
+               ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "mkdir -p ${APP_BASE_PROJECT_DIR}/healthpower-batch"
+          
+          # batch JAR 파일만 전송
+               BATCH_JAR_PATH="${{ github.workspace }}/healthpower-batch/build/libs/healthpower-batch-0.0.1-SNAPSHOT.jar"
+               rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" "${BATCH_JAR_PATH}" ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:"${APP_BASE_PROJECT_DIR}/healthpower-batch"
+          
+          # batch 전용 배포 스크립트도 함께 전송
+               rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" batch-deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:${APP_BASE_PROJECT_DIR}/
+
+      - name: Create .env file on APP EC2
+        run: |
+          APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << EOF
+            cat > ${APP_BASE_PROJECT_DIR}/.env << INNER_EOF
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            TOSS_SECRET=${{ secrets.TOSS_SECRET }}
+            TOSS_CLIENT=${{ secrets.TOSS_CLIENT }}
+            SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }}
+            AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+            DB_URL=${{ secrets.DB_URL }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            INNER_EOF
+          EOF
+
+      - name: Ensure Java is installed on APP EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << EOF
+            echo "--- Starting Java installation check for APP ---"
+            sudo apt update
+            sudo apt upgrade -y
+            if ! command -v java &> /dev/null || ! java -version 2>&1 | grep -q "version \"21\." ; then
+              echo "Java 21 JRE not found, installing openjdk-21-jre..."
+              sudo apt install -y openjdk-21-jre
+            else
+              echo "Java 21 JRE already installed."
+            fi
+            echo "--- Installation checks complete for APP ---"
+          EOF
+
+      - name: Execute deploy script on APP EC2
+        run: |
+          APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} << EOF
+            chmod +x "${APP_BASE_PROJECT_DIR}/batch-deploy.sh"
+            echo "Executing batch-deploy.sh..."
+            "${APP_BASE_PROJECT_DIR}/batch-deploy.sh"
+          EOF
