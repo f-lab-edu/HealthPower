@@ -31,9 +31,8 @@ jobs:
         # batch 모듈의 JAR 파일만 삭제
         run: rm -f healthpower-batch/build/libs/*.jar
 
-      - name: Build Batch application
-        # batch 모듈만 빌드
-        run: ./gradlew healthpower-batch:bootJar
+      - name: Build all modules and Batch application
+        run: ./gradlew bootJar
 
       - name: Decode PEM key for APP EC2
         run: |
