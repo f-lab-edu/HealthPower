@@ -1,4 +1,4 @@
-name: Deploy Batch Job to EC2
+name: Deploy Batch Job to EC2 Instance
 
 on:
   push:
