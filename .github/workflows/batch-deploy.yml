@@ -1,4 +1,5 @@
 name: Deploy Batch Job to EC2
+
 on:
   push:
     branches: [ master ]
@@ -9,8 +10,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  deploy-batch:
     runs-on: ubuntu-latest
+
     env:
       PROJECT_NAME: HealthPower
 
@@ -43,15 +45,10 @@ jobs:
         run: |
           APP_BASE_PROJECT_DIR="/home/ubuntu/${{ env.PROJECT_NAME }}"
           
-          # batch 모듈 디렉토리만 생성
-               ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "mkdir -p ${APP_BASE_PROJECT_DIR}/healthpower-batch"
-          
-          # batch JAR 파일만 전송
-               BATCH_JAR_PATH="${{ github.workspace }}/healthpower-batch/build/libs/healthpower-batch-0.0.1-SNAPSHOT.jar"
-               rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" "${BATCH_JAR_PATH}" ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:"${APP_BASE_PROJECT_DIR}/healthpower-batch"
-          
-          # batch 전용 배포 스크립트도 함께 전송
-               rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" batch-deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:${APP_BASE_PROJECT_DIR}/
+          BATCH_JAR_NAME=$(ls -1 ${{ github.workspace }}/healthpower-batch/build/libs/*.jar | xargs basename)
+          ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }} "mkdir -p ${APP_BASE_PROJECT_DIR}/healthpower-batch"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" "${{ github.workspace }}/healthpower-batch/build/libs/${BATCH_JAR_NAME}" ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:"${APP_BASE_PROJECT_DIR}/healthpower-batch"
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ${{ github.workspace }}/app_homepem.pem" batch-deploy.sh ${{ secrets.EC2_USER }}@${{ secrets.APP_EC2_HOST }}:${APP_BASE_PROJECT_DIR}/
 
       - name: Create .env file on APP EC2
         run: |
