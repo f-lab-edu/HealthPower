@@ -21,7 +21,7 @@ public class InActivatedReader {
     @StepScope
     @Bean
     public JpaPagingItemReader<User> InActivatedUserReader(EntityManagerFactory entityManagerFactory,
-                                                           @Value("#{jobParameters['cutoff']}") Long cutoffMillis) {
+                                                           @Value("#{jobParameters['cutoff'] ?: T(java.lang.System).currentTimeMillis()}") Long cutoffMillis) {
         LocalDateTime jobStartTime = Instant.ofEpochMilli(cutoffMillis)
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
