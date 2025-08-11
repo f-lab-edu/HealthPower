@@ -83,6 +83,7 @@ services:
       args:
         JAR_FILE_NAME: healthpower-api-0.0.1-SNAPSHOT.jar
     #    image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+        JWT_SECRET: ${JWT_SECRET}
     container_name: spring-blue
     environment: *app-env
     env_file:
