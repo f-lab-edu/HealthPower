@@ -54,7 +54,7 @@ services:
       retries: 10
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
     depends_on:
       zookeeper:
