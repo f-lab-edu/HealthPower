@@ -66,10 +66,6 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_NODE_ID: 1
-      KAFKA_CFG_CLUSTER_ID: "77b7105e-3ca9-44d1-b2cf-f437f86b4ec8"
-      KAFKA_CLUSTER_ID: "77b7105e-3ca9-44d1-b2cf-f437f86b4ec8"
     networks:
       - backend
     # Kafka 헬스 체크를 좀 더 안정적인 방식으로 변경
