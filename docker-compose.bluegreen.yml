@@ -67,6 +67,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CLUSTER_ID: "8cdd0bf4-5f25-4e2f-8810-f2049dec5e10"
     networks:
       - backend
     # Kafka 헬스 체크를 좀 더 안정적인 방식으로 변경
