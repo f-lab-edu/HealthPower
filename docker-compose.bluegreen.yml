@@ -70,7 +70,7 @@ services:
       - backend
     # Kafka 헬스 체크를 좀 더 안정적인 방식으로 변경
     healthcheck:
-      test: ["CMD", "telnet", "localhost", "9092"]
+      test: ["CMD", "/usr/bin/kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 5s
       retries: 10
