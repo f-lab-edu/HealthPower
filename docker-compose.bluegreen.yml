@@ -77,6 +77,10 @@ services:
       start_period: 60s
 
   spring-blue: &app_base
+    environment:
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
     build:
       context: ./healthpower-api
       dockerfile: Dockerfile
