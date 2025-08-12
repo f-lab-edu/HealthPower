@@ -90,6 +90,7 @@ services:
       - .env
     ports:
       - "8081:8080"
+    restart: always
     depends_on:
       redis:
         condition: service_healthy
@@ -112,6 +113,13 @@ services:
     env_file:
       - .env
     # image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 15
     depends_on:
       redis:
         condition: service_healthy
