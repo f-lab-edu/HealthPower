@@ -8,6 +8,8 @@ ARG JWT_SECRET
 ENV JWT_SECRET=${JWT_SECRET}
 COPY ${JAR_FILE_NAME} ${APP_HOME}/app.jar
 RUN mkdir -p /home/ubuntu/uploads # application-prod.yml의 app.upload.dir과 일치
+# curl 설치 추가
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 VOLUME /home/ubuntu/uploads
 WORKDIR ${APP_HOME}
 ENTRYPOINT ["java", "-jar", "app.jar"]
