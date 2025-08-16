@@ -1,5 +1,12 @@
 name: Build & Push image
 
+on:                # ✅ 실행 조건 추가
+  push:
+    branches:
+      - master     # master 브랜치에 push 될 때 실행
+  pull_request:
+    branches:
+      - master     # master 대상으로 PR 올릴 때 실행
 jobs:
   build:
     runs-on: ubuntu-latest
