@@ -23,6 +23,16 @@ x-app-env: &app-env
   IMAGE_TAG: ${IMAGE_TAG}
 
 services:
+  healthpower-api:
+    image: ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+    container_name: healthpower-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env  # 이 부분을 추가
+    networks:
+      - backend
+
   redis:
     image: redis:7
     container_name: redis
