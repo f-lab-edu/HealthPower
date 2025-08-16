@@ -1,63 +1,157 @@
+version: '3.8'
+
 networks:
-  bg:
-    driver: bridge
+  backend:
+    external:
+      name: backend
 
 x-app-env: &app-env
   JWT_SECRET:       ${JWT_SECRET}
   TOSS_SECRET:      ${TOSS_SECRET}
   TOSS_CLIENT:      ${TOSS_CLIENT}
-  SLACK_WEBHOOK_URL : ${SLACK_WEBHOOK_URL}
+  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
   AWS_ACCESS_KEY:   ${AWS_ACCESS_KEY}
   AWS_SECRET_KEY:   ${AWS_SECRET_KEY}
   AWS_S3_BUCKET:    ${AWS_S3_BUCKET}
   DB_URL:           ${DB_URL}
   DB_USERNAME:      ${DB_USERNAME}
   DB_PASSWORD:      ${DB_PASSWORD}
-  LOGSTASH_HOST:    ${LOGSTASH_HOST}
+  LOGSTASH_HOST:    logstash
+  LOGSTASH_PORT:    5000
   SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
-  REDIS_HOST:       redis
+  ECR_REGISTRY: ${ECR_REGISTRY}
+  IMAGE_TAG: ${IMAGE_TAG}
 
 services:
+  healthpower-api:
+    image: ${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+    container_name: healthpower-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env  # 이 부분을 추가
+    networks:
+      - backend
+
   redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: redis
     expose: [ "6379" ]
-    networks: [ bg ]
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+    # Redis 컨테이너의 헬스 체크 추가
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 50
 
-  spring-blue: &app
-    # GitHub Actions 스크립트에서
-    #   /home/ubuntu/blue-green/spring-blue/
-    # 폴더에 Dockerfile, app.jar, application-prod.properties 를 복사해 둡니다
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - backend
+    # Zookeeper 헬스 체크 추가
+    healthcheck:
+      test: ["CMD-SHELL", "echo srvr | nc localhost 2181 | grep Mode"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy # Zookeeper가 Healthy 상태일 때 Kafka 시작
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - backend
+    # Kafka 헬스 체크를 좀 더 안정적인 방식으로 변경
+    healthcheck:
+      test: ["CMD", "/usr/bin/kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  spring-blue: &app_base
+    environment:
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
     build:
-      context: ./spring-blue              # ← 원격 서버 기준 경로
-      dockerfile: ../Dockerfile           # 루트 Dockerfile 재사용
+      context: ./healthpower-api
+      dockerfile: Dockerfile
+      args:
+        JAR_FILE: "build/libs/healthpower-api-0.0.1-SNAPSHOT.jar"
+        JAR_FILE_NAME: healthpower-api-0.0.1-SNAPSHOT.jar
     container_name: spring-blue
-    environment: *app-env
-    depends_on: [redis]          # ★ redis 먼저 기동
-    expose: ["8080"]
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 0"]
-#      interval: 10s
-#      start_period: 90s                   # 최초 부팅 여유
-#      retries: 12
-    networks: [bg]
+    env_file:
+      - .env
+    ports:
+      - "8081:8080"
+    restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy # Kafka가 Healthy 상태일 때 Spring 시작
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 15
+    networks:
+      - backend
 
   spring-green:
-    <<: *app
+    <<: *app_base
     container_name: spring-green
-    depends_on: [redis]          # ★ redis 먼저 기동
-    build:
-      context: ./spring-green             # Green 색의 빌드 컨텍스트
+    ports:
+      - "8082:8080"
+    env_file:
+      - .env
+    # image: ${ECR_REGISTRY}/healthpower:${IMAGE_TAG}
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 15
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - backend
 
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx-proxy
     volumes:
-      # GitHub Actions 스크립트가 복사해 두는 conf
-      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
     ports:
       - "80:80"
+      - "433:433" #https 고려
     depends_on:
-      - spring-blue
-      - spring-green
-    networks: [bg]
+      spring-blue:
+        condition: service_healthy
+      spring-green:
+        condition: service_healthy
+    networks:
+      - backend
