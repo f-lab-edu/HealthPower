@@ -1,19 +1,12 @@
 #!/bin/bash
 
 # --- 변수 설정 ---
-# PROJECT_ROOT: Project root directory on the EC2 server
 PROJECT_ROOT="/home/ubuntu/HealthPower"
-# DOCKER_COMPOSE_FILE: Path to the Docker Compose file for Blue/Green deployment
 DOCKER_COMPOSE_FILE="${PROJECT_ROOT}/docker-compose.bluegreen.yml"
-# NGINX_CONF_PATH: Path to the Nginx configuration file
 NGINX_CONF_PATH="${PROJECT_ROOT}/nginx/conf.d/default.conf"
-# LOG_FILE: Path to the deployment log file
 LOG_FILE="${PROJECT_ROOT}/deployment.log"
-
-# CURRENT_PORT_STATE_FILE: File to store the currently active service port
 CURRENT_PORT_STATE_FILE="/tmp/healthpower_current_port.txt"
 
-# Initial port setup (starts with 8081 if no file exists)
 echo "" > "$LOG_FILE"
 echo ">> 배포 시작: $(date)" | tee -a "$LOG_FILE"
 
@@ -36,13 +29,30 @@ fi
 echo ">> 현재 서비스 중인 컨테이너: $CURRENT_APP_NAME (호스트 포트: $CURRENT_SERVICE_PORT)" | tee -a "$LOG_FILE"
 echo ">> 다음 배포할 컨테이너: $NEXT_APP_NAME (호스트 포트: $NEXT_SERVICE_PORT)" | tee -a "$LOG_FILE"
 
-# --- Automatic Nginx configuration file creation ---
-# If the Nginx configuration file does not exist, create a new one.
+echo ">> .env 파일 생성..." | tee -a "$LOG_FILE"
+cat <<EOF > "$PROJECT_ROOT/.env"
+JWT_SECRET=${JWT_SECRET}
+TOSS_SECRET=${TOSS_SECRET}
+TOSS_CLIENT=${TOSS_CLIENT}
+SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+AWS_SECRET_KEY=${AWS_SECRET_KEY}
+AWS_S3_BUCKET=${AWS_S3_BUCKET}
+DB_URL=${DB_URL}
+DB_USERNAME=${DB_USERNAME}
+DB_PASSWORD=${DB_PASSWORD}
+ECR_REGISTRY=${ECR_REGISTRY}
+IMAGE_TAG=${IMAGE_TAG}
+EOF
+if [ $? -ne 0 ]; then
+    echo "ERROR: .env 생성 실패. 배포 중단." | tee -a "$LOG_FILE"
+    exit 1
+fi
+echo ">> .env 생성 완료." | tee -a "$LOG_FILE"
+
 if [ ! -f "$NGINX_CONF_PATH" ]; then
     echo ">> Nginx 설정 파일이 없어 새로 생성합니다..." | tee -a "$LOG_FILE"
-    # Create the directory with sudo if it doesn't exist
     sudo mkdir -p "${PROJECT_ROOT}/nginx/conf.d"
-    # Write the default configuration to the file using a here document with tee and sudo
     cat <<EOF | sudo tee "$NGINX_CONF_PATH" > /dev/null
 # HealthPower/nginx/conf.d/default.conf
 upstream app_current {
