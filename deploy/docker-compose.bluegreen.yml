@@ -121,6 +121,7 @@ services:
   spring-green:
     <<: *app_base
     container_name: spring-green
+    image: ${IMAGE_NAME}
     ports:
       - "8082:8080"
     env_file:
