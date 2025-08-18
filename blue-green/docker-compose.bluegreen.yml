@@ -5,22 +5,22 @@ networks:
     external:
       name: backend
 
-x-app-env: &app-env
-  JWT_SECRET:       ${JWT_SECRET}
-  TOSS_SECRET:      ${TOSS_SECRET}
-  TOSS_CLIENT:      ${TOSS_CLIENT}
-  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
-  AWS_ACCESS_KEY:   ${AWS_ACCESS_KEY}
-  AWS_SECRET_KEY:   ${AWS_SECRET_KEY}
-  AWS_S3_BUCKET:    ${AWS_S3_BUCKET}
-  DB_URL:           ${DB_URL}
-  DB_USERNAME:      ${DB_USERNAME}
-  DB_PASSWORD:      ${DB_PASSWORD}
-  LOGSTASH_HOST:    logstash
-  LOGSTASH_PORT:    5000
-  SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
-  ECR_REGISTRY: ${ECR_REGISTRY}
-  IMAGE_TAG: ${IMAGE_TAG}
+#x-app-env: &app-env
+#  JWT_SECRET:       ${JWT_SECRET}
+#  TOSS_SECRET:      ${TOSS_SECRET}
+#  TOSS_CLIENT:      ${TOSS_CLIENT}
+#  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+#  AWS_ACCESS_KEY:   ${AWS_ACCESS_KEY}
+#  AWS_SECRET_KEY:   ${AWS_SECRET_KEY}
+#  AWS_S3_BUCKET:    ${AWS_S3_BUCKET}
+#  DB_URL:           ${DB_URL}
+#  DB_USERNAME:      ${DB_USERNAME}
+#  DB_PASSWORD:      ${DB_PASSWORD}
+#  LOGSTASH_HOST:    logstash
+#  LOGSTASH_PORT:    5000
+#  SPRING_PROFILES_ACTIVE: prod            # ← 스프링 프로필
+#  ECR_REGISTRY: ${ECR_REGISTRY}
+#  IMAGE_TAG: ${IMAGE_TAG}
 
 services:
   healthpower-api:
@@ -91,7 +91,6 @@ services:
       AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
       AWS_SECRET_KEY: ${AWS_SECRET_KEY}
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
-      JWT_SECRET: ${JWT_SECRET}
     build:
       context: ./healthpower-api
       dockerfile: Dockerfile
